@@ -24,14 +24,18 @@ export async function POST(request) {
     const formData = await request.formData();
 
     const title = formData.get("title");
+    const slug = formData.get("slug");
+    const landingPageTitle = formData.get("landingPageTitle");
+    const landingPageSubtitle = formData.get("landingPageSubtitle");
     const description = formData.get("description");
     const price = Number(formData.get("price"));
     const offerPrice = Number(formData.get("offerPrice"));
     const sizes = JSON.parse(formData.get("sizes") || "[]");
     const products = JSON.parse(formData.get("products") || "[]");
+    const bundleOptions = JSON.parse(formData.get("bundleOptions") || "[]");
     const imageFile = formData.get("featuredImage");
 
-    if (!title || products.length === 0 || sizes.length === 0) {
+    if (!title || !slug || products.length === 0 || sizes.length === 0) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
@@ -44,11 +48,15 @@ export async function POST(request) {
 
     const result = await db.collection("combos").insertOne({
       title,
+      slug,
+      landingPageTitle,
+      landingPageSubtitle,
       description,
       price,
       offerPrice,
       sizes,
       products,
+      bundleOptions,
       featuredImage,
       createdAt: new Date(),
       updatedAt: new Date(),

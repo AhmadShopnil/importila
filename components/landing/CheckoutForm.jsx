@@ -6,12 +6,16 @@ import { bundleOptions } from "@/data/products";
 
 const CheckoutForm = () => {
     const { state, updateCustomerInfo, isComplete } = useBundle();
-    const { slots, selectedBundle, selectedSize, customerInfo } = state;
+    const { slots, selectedBundle, selectedSize, customerInfo, selectedBundleData } = state;
 
-    const selectedBundleOption = bundleOptions.find(
+    // Use selectedBundleData from state if available, otherwise find from bundleOptions as fallback
+    const selectedBundleOption = selectedBundleData || bundleOptions.find(
         (b) => b.pieces === selectedBundle
     );
+
     const bundlePrice = selectedBundleOption?.price || 0;
+    const shippingCharge = selectedBundleOption?.shippingCharge || 0;
+    const totalAmount = bundlePrice + shippingCharge;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -30,8 +34,9 @@ const CheckoutForm = () => {
                     image: slot.product.featuredImage || slot.product.image,
                     price: bundlePrice / selectedBundle // Rough estimate per item
                 })),
-                totalAmount: bundlePrice,
-                price: bundlePrice, // Added to match API expectation
+                totalAmount: totalAmount,
+                price: bundlePrice,
+                shippingCharge: shippingCharge,
                 bundleSize: selectedBundle,
                 productSize: selectedSize,
                 productType: "combo",
@@ -90,9 +95,17 @@ const CheckoutForm = () => {
                                     <span className="text-muted-foreground">Bundle Size</span>
                                     <span className="font-semibold">{selectedBundle} Pieces</span>
                                 </div>
-                                <div className="flex justify-between text-sm">
+                                <div className="flex justify-between text-sm mb-2">
                                     <span className="text-muted-foreground">Selected Size</span>
                                     <span className="font-semibold">{selectedSize || "Not selected"}</span>
+                                </div>
+                                <div className="flex justify-between text-sm mb-2">
+                                    <span className="text-muted-foreground">Bundle Price</span>
+                                    <span className="font-semibold">৳{bundlePrice}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Shipping Charge</span>
+                                    <span className="font-semibold">{shippingCharge === 0 ? "Free" : `৳${shippingCharge}`}</span>
                                 </div>
                             </div>
 
@@ -131,7 +144,7 @@ const CheckoutForm = () => {
                             <div className="flex justify-between items-center">
                                 <span className="text-lg font-bold text-foreground">Total</span>
                                 <span className="text-2xl font-extrabold text-primary">
-                                    ৳{bundlePrice}
+                                    ৳{totalAmount}
                                 </span>
                             </div>
                         </div>

@@ -16,9 +16,9 @@ const LandingContent = ({ combo }) => {
 
     return (
         <div className="landing-page-theme min-h-screen bg-background font-nunito overflow-x-hidden  ">
-            <HeroSection />
+            <HeroSection combo={combo} />
 
-            <BundleSelection />
+            <BundleSelection combo={combo} />
 
             {state.selectedBundle && (
                 <ProductSlots />
@@ -32,7 +32,7 @@ const LandingContent = ({ combo }) => {
 
             <DesktopCTA />
             {/* <Footer /> */}
-            <StickyCTA />
+            <StickyCTA combo={combo} />
         </div>
     );
 };

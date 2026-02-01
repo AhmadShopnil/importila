@@ -3,7 +3,8 @@
 import React, { createContext, useContext, useReducer, useCallback } from "react";
 
 const initialState = {
-    selectedBundle: null,
+    selectedBundle: null, // pieces
+    selectedBundleData: null, // full bundle object
     selectedSize: null,
     slots: [],
     activeSlotIndex: null,
@@ -20,10 +21,13 @@ const BundleContext = createContext(null);
 function bundleReducer(state, action) {
     switch (action.type) {
         case "SELECT_BUNDLE":
+            const bundle = action.payload;
+            const pieces = typeof bundle === 'object' ? bundle.pieces : bundle;
             return {
                 ...state,
-                selectedBundle: action.payload,
-                slots: Array(action.payload)
+                selectedBundle: pieces,
+                selectedBundleData: typeof bundle === 'object' ? bundle : null,
+                slots: Array(pieces)
                     .fill(null)
                     .map(() => ({ product: null, selectedColor: null })),
                 activeSlotIndex: 0,

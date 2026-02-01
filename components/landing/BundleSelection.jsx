@@ -37,21 +37,28 @@ const BundleCard = ({
 
             <div className="mb-3">
                 <span className="text-2xl font-bold text-primary">৳{bundle?.price}</span>
-                <span className="text-sm text-muted-foreground line-through ml-2">
-                    ৳{bundle.originalPrice}
-                </span>
+                {bundle.originalPrice > 0 && (
+                    <span className="text-sm text-muted-foreground line-through ml-2">
+                        ৳{bundle.originalPrice}
+                    </span>
+                )}
             </div>
 
-            <div className="inline-block bg-mint text-primary text-xs font-bold px-3 py-1 rounded-full">
-                Save {bundle.savings}
+            <div className="flex flex-col gap-2">
+                <div className="inline-block bg-mint/20 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full w-fit">
+                    Save {bundle.savings}
+                </div>
+                <div className={`text-[11px] font-semibold ${bundle.shippingCharge === 0 ? "text-green-600" : "text-muted-foreground"}`}>
+                    {bundle.shippingCharge === 0 ? "✓ Free Shipping" : `+ ৳${bundle.shippingCharge} Shipping`}
+                </div>
             </div>
         </button>
     );
 };
 
-const BundleSelection = () => {
+const BundleSelection = ({ combo }) => {
     const { state, selectBundle } = useBundle();
-    // selectBundle(3)
+    const options = combo?.bundleOptions?.length > 0 ? combo.bundleOptions : bundleOptions;
 
     return (
         <section id="bundle-section" className="py-16 bg-background">
@@ -66,14 +73,17 @@ const BundleSelection = () => {
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-5xl mx-auto">
-                    {bundleOptions.map((bundle) => (
-                        <BundleCard
-                            key={bundle?.pieces}
-                            bundle={bundle}
-                            isSelected={state?.selectedBundle === bundle?.pieces}
-                            onSelect={() => selectBundle(bundle?.pieces)}
-                        />
-                    ))}
+                    {options.map((bundle) => {
+                        const savings = bundle.savings || (bundle.originalPrice ? `৳${bundle.originalPrice - bundle.price}` : null);
+                        return (
+                            <BundleCard
+                                key={bundle?.pieces}
+                                bundle={{ ...bundle, savings }}
+                                isSelected={state?.selectedBundle === bundle?.pieces}
+                                onSelect={() => selectBundle(bundle)}
+                            />
+                        )
+                    })}
                 </div>
             </div>
         </section>

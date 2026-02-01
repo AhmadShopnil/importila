@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, UploadCloud, Edit3, Lock, Plus, Trash2, X, Search } from "lucide-react"
 import { BASE_URL } from "@/utils/baseUrl"
-
 
 export default function EditComboPage() {
   const { id } = useParams()
@@ -18,26 +17,56 @@ export default function EditComboPage() {
   const [sizes, setSizes] = useState([])
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(false)
+  const [slugEditMode, setSlugEditMode] = useState(false)
+  const [title, setTitle] = useState("")
+  const [slug, setSlug] = useState("")
+  const [imagePreview, setImagePreview] = useState(null)
+  const [bundleOptions, setBundleOptions] = useState([])
 
-// Fetch All Products
+  // Fetch All Products
   useEffect(() => {
     fetch(`${BASE_URL}/api/products`)
       .then(res => res.json())
       .then(setProducts)
   }, [])
 
-  //  Fetch Combo -
+  // Fetch Combo
   useEffect(() => {
     fetch(`${BASE_URL}/api/combos/${id}`)
       .then(res => res.json())
       .then(data => {
         setComboData(data)
+        setTitle(data.title || "")
+        setSlug(data.slug || "")
         setSelectedProducts(data.products || [])
         setSizes(data.sizes || [])
+        setBundleOptions(data.bundleOptions || [])
+        setImagePreview(data.featuredImage || null)
       })
   }, [id])
 
-// Select Product 
+  /* ---------- Slug Logic ---------- */
+  const handleTitleChange = (e) => {
+    const val = e.target.value
+    setTitle(val)
+    if (!slugEditMode) {
+      setSlug(val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''))
+    }
+  }
+
+  const handleSlugChange = (e) => {
+    setSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'))
+  }
+
+  /* ---------- Image Preview ---------- */
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setImagePreview(URL.createObjectURL(file))
+    }
+  }
+
+  /* ---------- Select Product ---------- */
   const addProduct = (product) => {
     if (selectedProducts.find(p => p.productId === product._id)) return
 
@@ -46,20 +75,15 @@ export default function EditComboPage() {
       {
         ...product,
         selectedVarrient
-
       }
     ])
   }
 
   const handleSelectVarrient = (v, index) => {
     setSelectedVarrient(v)
-    setColor(index, v)
-  }
-  /* ---------- Set Color ---------- */
-  const setColor = (index, variant) => {
     const updated = [...selectedProducts]
-    updated[index].colorName = variant.colorName
-    updated[index].colorHex = variant.colorHex
+    updated[index].colorName = v.colorName
+    updated[index].colorHex = v.colorHex
     setSelectedProducts(updated)
   }
 
@@ -72,6 +96,21 @@ export default function EditComboPage() {
     )
   }
 
+  /* ---------- Bundle Options Handlers ---------- */
+  const addBundleOption = () => {
+    setBundleOptions([...bundleOptions, { pieces: 0, price: 0, originalPrice: 0, shippingCharge: 0, popular: false }])
+  }
+
+  const removeBundleOption = (index) => {
+    setBundleOptions(bundleOptions.filter((_, i) => i !== index))
+  }
+
+  const updateBundleOption = (index, field, value) => {
+    const updated = [...bundleOptions]
+    updated[index][field] = field === "popular" ? value : Number(value)
+    setBundleOptions(updated)
+  }
+
   /* ---------- Submit ---------- */
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -80,6 +119,8 @@ export default function EditComboPage() {
     const formData = new FormData(e.target)
     formData.append("products", JSON.stringify(selectedProducts))
     formData.append("sizes", JSON.stringify(sizes))
+    formData.append("bundleOptions", JSON.stringify(bundleOptions))
+    formData.append("slug", slug)
     formData.append("existingFeaturedImage", comboData.featuredImage || "")
 
     const res = await fetch(`${BASE_URL}/api/combos/${id}`, {
@@ -97,179 +138,395 @@ export default function EditComboPage() {
     }
   }
 
-  if (!comboData) return <p>Loading...</p>
+  if (!comboData) return <div className="flex items-center justify-center min-h-[400px]">
+    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+  </div>
 
   const filteredProducts = products.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
-    <div className=" space-y-8">
+    <div className=" py-8 space-y-8">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <Link
+            href="/admin/combos"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Combo List
+          </Link>
+          <h1 className="text-3xl font-bold tracking-tight">Edit Combo</h1>
+        </div>
+      </div>
 
-      <Link
-        href="/admin/combos"
-        className="inline-flex items-center gap-2 md:text-lg text-blue-500 mb-6"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Combo list
-      </Link>
-      <h1 className="text-3xl font-bold">Edit Combo</h1>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
 
-      <form onSubmit={handleSubmit} className="space-y-10">
+        {/* LEFT COLUMN: Main Info */}
+        <div className="lg:col-span-8 space-y-8">
 
-        {/* ================= BASIC INFO ================= */}
-        <section className="bg-white border rounded-xl p-6 space-y-4">
-          <h2 className="text-lg font-semibold">Combo Information</h2>
+          {/* ================= BASIC INFO ================= */}
+          <section className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
+            <div className="flex items-center gap-2 border-b border-border pb-4">
+              <h2 className="text-xl font-bold">Combo Information</h2>
+            </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <input
-              name="title"
-              placeholder="Combo Title"
-              required
-              className="border rounded-lg px-4 py-2 w-full"
-              defaultValue={comboData.title}
-            />
-            <input
-              name="price"
-              type="number"
-              placeholder="Price"
-              className="border rounded-lg px-4 py-2 w-full"
-              defaultValue={comboData.price}
-            />
-            <input
-              name="offerPrice"
-              type="number"
-              placeholder="Offer Price"
-              className="border rounded-lg px-4 py-2 w-full"
-              defaultValue={comboData.offerPrice}
-            />
-          </div>
-
-          <textarea
-            name="description"
-            placeholder="Description"
-            className="border rounded-lg px-4 py-2 w-full"
-            rows={3}
-            defaultValue={comboData.description}
-          />
-
-          <input type="file" name="featuredImage" />
-        </section>
-
-        {/* ================= SIZES ================= */}
-        <section className="bg-white border rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-3">Available Sizes (Combo)</h2>
-          <div className="flex gap-3 flex-wrap">
-            {["SM", "M", "L", "XL"].map(size => (
-              <label key={size} className="flex items-center gap-2 border px-3 py-2 rounded-lg cursor-pointer">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Internal Title *</label>
                 <input
-                  type="checkbox"
-                  checked={sizes.includes(size)}
-                  onChange={() => toggleSize(size)}
+                  name="title"
+                  value={title}
+                  onChange={handleTitleChange}
+                  placeholder="e.g. Kids Summer Collection 2024"
+                  required
+                  className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
-                {size}
-              </label>
-            ))}
-          </div>
-        </section>
+              </div>
 
-        {/* ================= PRODUCT PICKER ================= */}
-        <section className="grid lg:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Slug *</label>
+                <div className="relative">
+                  <input
+                    name="slug_display"
+                    value={slug}
+                    onChange={handleSlugChange}
+                    readOnly={!slugEditMode}
+                    placeholder="kids-summer-combo"
+                    required
+                    className={`flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${!slugEditMode ? 'bg-muted cursor-not-allowed' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setSlugEditMode(!slugEditMode)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-muted rounded-lg transition-colors"
+                    title={slugEditMode ? "Lock Slug" : "Edit Slug"}
+                  >
+                    {slugEditMode ? <Lock className="w-4 h-4 text-primary" /> : <Edit3 className="w-4 h-4 text-muted-foreground" />}
+                  </button>
+                </div>
+              </div>
 
-          {/* PRODUCT LIST */}
-          <div className="bg-white border rounded-xl p-6">
-            <h2 className="text-lg font-semibold mb-3">Select Products</h2>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Landing Page Title</label>
+                <input
+                  name="landingPageTitle"
+                  defaultValue={comboData.landingPageTitle}
+                  placeholder="e.g. Adorable Kids Dress Sets"
+                  className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                />
+              </div>
 
-            <input
-              type="text"
-              placeholder="Search product..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="border rounded-lg px-3 py-2 w-full mb-3"
-            />
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Landing Page Subtitle</label>
+                <input
+                  name="landingPageSubtitle"
+                  defaultValue={comboData.landingPageSubtitle}
+                  placeholder="e.g. Mix, Match & Save Big!"
+                  className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                />
+              </div>
 
-            <div className="max-h-87.5 overflow-y-auto space-y-2">
-              {filteredProducts.map(product => (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Base Price (Original)</label>
+                <input
+                  name="price"
+                  type="number"
+                  defaultValue={comboData.price}
+                  placeholder="0.00"
+                  className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Base Offer Price</label>
+                <input
+                  name="offerPrice"
+                  type="number"
+                  defaultValue={comboData.offerPrice}
+                  placeholder="0.00"
+                  className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Description</label>
+              <textarea
+                name="description"
+                defaultValue={comboData.description}
+                placeholder="Details about this combo..."
+                className="flex min-h-[120px] w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+            </div>
+          </section>
+
+          {/* ================= BUNDLE OPTIONS ================= */}
+          <section className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
+            <div className="flex justify-between items-center border-b border-border pb-4">
+              <h2 className="text-xl font-bold">Bundle Options (Packs)</h2>
+              <button
+                type="button"
+                onClick={addBundleOption}
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition-all"
+              >
+                <Plus className="w-4 h-4" /> Add Pack Option
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {bundleOptions.map((opt, idx) => (
+                <div key={idx} className="bg-muted/30 border border-border rounded-2xl p-4 space-y-4 relative group transition-all hover:bg-muted/50">
+                  <button
+                    type="button"
+                    onClick={() => removeBundleOption(idx)}
+                    className="absolute top-4 right-4 text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Pieces</label>
+                      <input
+                        type="number"
+                        value={opt.pieces}
+                        onChange={(e) => updateBundleOption(idx, "pieces", e.target.value)}
+                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Price</label>
+                      <input
+                        type="number"
+                        value={opt.price}
+                        onChange={(e) => updateBundleOption(idx, "price", e.target.value)}
+                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Original</label>
+                      <input
+                        type="number"
+                        value={opt.originalPrice}
+                        onChange={(e) => updateBundleOption(idx, "originalPrice", e.target.value)}
+                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Shipping</label>
+                      <input
+                        type="number"
+                        value={opt.shippingCharge}
+                        onChange={(e) => updateBundleOption(idx, "shippingCharge", e.target.value)}
+                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-2">
+                    <input
+                      type="checkbox"
+                      checked={opt.popular}
+                      onChange={(e) => updateBundleOption(idx, "popular", e.target.checked)}
+                      id={`popular-${idx}`}
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary transition-all cursor-pointer"
+                    />
+                    <label htmlFor={`popular-${idx}`} className="text-sm font-medium cursor-pointer">Mark as Most Popular</label>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ================= PRODUCT PICKER ================= */}
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* PRODUCT LIST */}
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4 flex flex-col h-[600px]">
+              <div className="flex items-center justify-between border-b border-border pb-4">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  Select Products
+                </h2>
+                <span className="text-xs font-semibold bg-muted px-2 py-1 rounded-full">{filteredProducts.length} Available</span>
+              </div>
+
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-sm focus:bg-background transition-all outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div className="flex-1 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+                {filteredProducts?.map(product => (
+                  <button
+                    type="button"
+                    key={product._id}
+                    onClick={() => addProduct(product)}
+                    className="w-full group flex items-center justify-between p-3 rounded-xl border border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg overflow-hidden border border-border flex-shrink-0">
+                        <img src={product.featuredImage} alt="" className="w-full h-full object-cover" />
+                      </div>
+                      <span className="text-sm font-medium line-clamp-1">{product?.name}</span>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                      <Plus size={16} />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* SELECTED PRODUCTS */}
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4 flex flex-col h-[600px]">
+              <div className="flex items-center justify-between border-b border-border pb-4">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  Selected Items
+                </h2>
+                <span className="text-xs font-semibold bg-primary/10 text-primary px-2 py-1 rounded-full">{selectedProducts.length} Added</span>
+              </div>
+
+              <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
+                {selectedProducts?.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-50">
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                      <Trash2 size={24} />
+                    </div>
+                    <p className="text-sm font-medium">No products selected</p>
+                  </div>
+                ) : (
+                  selectedProducts.map((p, index) => (
+                    <div key={p.productId || p._id} className="bg-muted/10 border border-border rounded-2xl p-4 relative group animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedProducts(prev => prev.filter(item => (item.productId || item._id) !== (p.productId || p._id)))}
+                        className="absolute -top-2 -right-2 w-7 h-7 bg-card border border-border rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive/30 shadow-sm transition-all z-10"
+                      >
+                        <X size={14} />
+                      </button>
+
+                      <div className="flex gap-4">
+                        <div className="w-14 h-14 rounded-xl overflow-hidden border border-border flex-shrink-0">
+                          <img src={p.featuredImage} alt="" className="w-full h-full object-cover" />
+                        </div>
+                        <div className="space-y-2 flex-1">
+                          <h4 className="text-sm font-bold line-clamp-1 pr-6">{p.name}</h4>
+                          <div className="flex gap-2 flex-wrap">
+                            {p?.variants?.map(v => (
+                              <button
+                                type="button"
+                                key={v.sku}
+                                onClick={() => handleSelectVarrient(v, index)}
+                                className={`w-7 h-7 rounded-lg border-2 transition-all hover:scale-110 ${p.colorName === v.colorName ? 'ring-2 ring-primary ring-offset-2 border-transparent' : 'border-border'}`}
+                                style={{ backgroundColor: v.colorHex }}
+                                title={v.colorName}
+                              />
+                            ))}
+                          </div>
+                          {p.colorName && (
+                            <p className="text-[11px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded w-fit">
+                              COLOR: {p.colorName}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* RIGHT COLUMN: Settings & Actions */}
+        <div className="lg:col-span-4 space-y-8">
+
+          {/* ================= FEATURED IMAGE ================= */}
+          <section className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
+            <h2 className="text-lg font-bold">Featured Image</h2>
+            <div className="relative">
+              <div className={`border-2 border-dashed rounded-2xl p-4 transition-all flex flex-col items-center justify-center gap-3 group relative overflow-hidden ${imagePreview ? 'border-primary/30' : 'border-border hover:border-primary/50 bg-muted/20'}`}>
+                {imagePreview ? (
+                  <div className="relative w-full aspect-square rounded-xl overflow-hidden group">
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setImagePreview(null)}
+                      className="absolute top-2 right-2 p-2 bg-background/80 backdrop-blur-sm rounded-lg opacity-0 group-hover:opacity-100 transition-all text-destructive"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary transition-transform group-hover:scale-110">
+                      <UploadCloud size={32} />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-bold text-foreground">Click to upload image</p>
+                      <p className="text-xs text-muted-foreground mt-1">SVG, PNG, JPG (max. 5MB)</p>
+                    </div>
+                  </>
+                )}
+                <input
+                  type="file"
+                  name="featuredImage"
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* ================= SIZES ================= */}
+          <section className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
+            <h2 className="text-lg font-bold">Available Sizes</h2>
+            <div className="grid grid-cols-2 gap-2">
+              {["1-2 Years", "2-3 Years", "3-4 Years", "4-5 Years", "5-6 Years", "6-7 Years", "7-8 Years", "8-9 Years", "9-10 Years", "10-11 Years", "11-12 Years", "12-13 Years"].map(size => (
                 <button
+                  key={size}
                   type="button"
-                  key={product._id}
-                  onClick={() => addProduct(product)}
-                  className="w-full text-left border rounded-lg px-3 py-2 hover:bg-gray-50"
+                  onClick={() => toggleSize(size)}
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all border ${sizes.includes(size) ? 'bg-primary/10 border-primary text-primary' : 'bg-background border-border hover:bg-muted'}`}
                 >
-                  {product.name}
+                  {size}
+                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${sizes.includes(size) ? 'bg-primary border-transparent' : 'border-border'}`}>
+                    {sizes.includes(size) && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </div>
                 </button>
               ))}
             </div>
+          </section>
+
+          {/* ================= SUBMIT ================= */}
+          <div className="sticky top-8 space-y-4">
+            <button
+              disabled={loading}
+              className="w-full bg-[#1E556E] text-white py-4 rounded-2xl text-lg font-bold shadow-lg shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Updating Combo...
+                </>
+              ) : (
+                "Update Combo"
+              )}
+            </button>
+            <p className="text-xs text-center text-muted-foreground">
+              Make sure all information is correct before updating.
+            </p>
           </div>
 
-
-          {/* SELECTED PRODUCTS */}
-          <div className="bg-white border rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-semibold">Selected Products</h2>
-
-            {selectedProducts.length === 0 && (
-              <p className="text-sm text-gray-500">
-                No products selected yet
-              </p>
-            )}
-
-            {selectedProducts?.map((p, index) => {
-              const product = products.find(pr => pr._id === p.productId)
-
-              /* ---------- REMOVE PRODUCT ---------- */
-              const removeProduct = () => {
-                setSelectedProducts(prev => prev.filter(item => item._id !== p._id))
-              }
-
-              return (
-                <div key={p.productId} className="border rounded-lg p-4 relative">
-                  <h4 className="font-medium mb-2">{p.name}</h4>
-
-                  {/* Remove button */}
-                  <button
-                    type="button"
-                    onClick={removeProduct}
-                    className="absolute top-2 right-2 text-red-500 font-bold hover:text-red-700"
-                  >
-                    ✕
-                  </button>
-
-                  <div className="flex gap-2 flex-wrap mt-2">
-                    {p?.variants?.map(v => (
-                      <button
-                        type="button"
-                        key={v?.sku}
-                        onClick={() => handleSelectVarrient(v, index)}
-                        // onClick={() => setColor(index, v)}
-                        className={`px-3 py-1 rounded border text-white text-sm
-                ${p.colorName === v?.colorName ? "ring-2 ring-black" : ""}
-              `}
-                        style={{ backgroundColor: v.colorHex }}
-                      >
-                        {v.colorName}
-                      </button>
-                    ))}
-                  </div>
-
-                  {p.colorName && (
-                    <p className="text-sm mt-2">
-                      Selected Color: <b>{p.colorName}</b>
-                    </p>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-
-        </section>
-
-        {/* ================= SUBMIT ================= */}
-        <button
-          disabled={loading}
-          className="bg-black text-white px-8 py-3 rounded-lg text-lg"
-        >
-          {loading ? "Updating..." : "Update Combo"}
-        </button>
+        </div>
       </form>
     </div>
   )

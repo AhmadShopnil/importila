@@ -2,7 +2,7 @@
 
 import { Gift, Truck, Shield, Star } from "lucide-react";
 
-const HeroSection = () => {
+const HeroSection = ({ combo }) => {
     const scrollToBundles = () => {
         document.getElementById("bundle-section")?.scrollIntoView({ behavior: "smooth" });
     };
@@ -10,11 +10,11 @@ const HeroSection = () => {
     return (
         <section className="relative  gradient-hero overflow-hidden">
             {/* Decorative elements */}
-           
-             <div className="hidden md:flex absolute top-20 left-20 w-16 h-16 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "1s" }} />
+
+            <div className="hidden md:flex absolute top-20 left-20 w-16 h-16 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "1s" }} />
             <div className="hidden md:flex absolute top-40 right-20 w-16 h-16 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "1s" }} />
-              <div className="hidden md:flex absolute bottom-60 right-100 w-10 h-10 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "1s" }} />
-           
+            <div className="hidden md:flex absolute bottom-60 right-100 w-10 h-10 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "1s" }} />
+
             <div className="absolute bottom-20 right-1/3 w-24 h-24 rounded-full bg-mint/30 animate-float" style={{ animationDelay: "1.5s" }} />
 
             <div className="container mx-auto px-4 pt-16 pb-20 flex flex-col items-center justify-center min-h-[85vh]">
@@ -27,13 +27,13 @@ const HeroSection = () => {
                 {/* Main Headline */}
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-center text-foreground leading-tight mb-6
                  animate-slide-up text-balance max-w-4xl">
-                    Adorable Kids Dress Sets <br />
+                    {combo?.landingPageTitle || "Adorable Kids Dress Sets"} <br />
                     <span className="text-primary">Mix, Match & Save Big!</span>
                 </h1>
 
                 {/* Subheadline */}
                 <p className="text-lg md:text-xl text-muted-foreground text-center max-w-2xl mb-8 animate-slide-up" style={{ animationDelay: "0.1s" }}>
-                    Create the perfect wardrobe bundle for your little ones. Choose 3 to 10 pieces and enjoy massive savings on premium quality kids' clothing.
+                    {combo?.landingPageSubtitle || "Create the perfect wardrobe bundle for your little ones. Choose 3 to 10 pieces and enjoy massive savings on premium quality kids' clothing."}
                 </p>
 
                 {/* CTA Button */}

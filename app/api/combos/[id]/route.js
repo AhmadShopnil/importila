@@ -10,9 +10,11 @@ export async function GET(request, context) {
     const { id } = await context.params
     const { db } = await connectToDatabase()
 
-    const combo = await db.collection("combos").findOne({
-      _id: new ObjectId(id),
-    })
+    const query = ObjectId.isValid(id)
+      ? { _id: new ObjectId(id) }
+      : { slug: id }
+
+    const combo = await db.collection("combos").findOne(query)
 
     if (!combo) {
       return NextResponse.json({ error: "Combo not found" }, { status: 404 })
@@ -34,11 +36,15 @@ export async function PUT(request, context) {
     const formData = await request.formData()
 
     const title = formData.get("title")
+    const slug = formData.get("slug")
+    const landingPageTitle = formData.get("landingPageTitle")
+    const landingPageSubtitle = formData.get("landingPageSubtitle")
     const description = formData.get("description")
     const price = Number(formData.get("price"))
     const offerPrice = Number(formData.get("offerPrice"))
     const sizes = JSON.parse(formData.get("sizes") || "[]")
     const products = JSON.parse(formData.get("products") || "[]")
+    const bundleOptions = JSON.parse(formData.get("bundleOptions") || "[]")
 
     const featuredImageFile = formData.get("featuredImage")
     let featuredImage = formData.get("existingFeaturedImage") || null
@@ -53,11 +59,15 @@ export async function PUT(request, context) {
       {
         $set: {
           title,
+          slug,
+          landingPageTitle,
+          landingPageSubtitle,
           description,
           price,
           offerPrice,
           sizes,
           products,
+          bundleOptions,
           featuredImage,
           updatedAt: new Date(),
         },
