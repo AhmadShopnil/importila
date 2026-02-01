@@ -1,0 +1,48 @@
+"use client";
+
+import HeroSection from "@/components/landing/HeroSection";
+import BundleSelection from "@/components/landing/BundleSelection";
+import SizeSelection from "@/components/landing/SizeSelection";
+import ProductSlots from "@/components/landing/ProductSlots";
+import ProductGrid from "@/components/landing/ProductGrid";
+import CheckoutForm from "@/components/landing/CheckoutForm";
+import DesktopCTA from "@/components/landing/DesktopCTA";
+import StickyCTA from "@/components/landing/StickyCTA";
+import Footer from "@/components/landing/Footer";
+import { BundleProvider, useBundle } from "@/context/BundleContext";
+
+const LandingContent = ({ combo }) => {
+    const { state } = useBundle();
+
+    return (
+        <div className="landing-page-theme min-h-screen bg-background font-nunito overflow-x-hidden  ">
+            <HeroSection />
+
+            <BundleSelection />
+
+            {state.selectedBundle && (
+                <ProductSlots />
+            )}
+
+            <ProductGrid combo={combo} />
+
+            <SizeSelection sizes={combo?.sizes} />
+
+            <CheckoutForm />
+
+            <DesktopCTA />
+            {/* <Footer /> */}
+            <StickyCTA />
+        </div>
+    );
+};
+
+const ComboLandingPage = ({ combo }) => {
+    return (
+        <BundleProvider>
+            <LandingContent combo={combo} />
+        </BundleProvider>
+    );
+};
+
+export default ComboLandingPage

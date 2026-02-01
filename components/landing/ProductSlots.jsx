@@ -1,0 +1,122 @@
+"use client";
+
+import { Plus, X, Check } from "lucide-react";
+import { useBundle } from "@/context/BundleContext";
+
+const ProductSlots = () => {
+    const { state, setActiveSlot, removeFromSlot, updateSlotColor } = useBundle();
+    const { slots, activeSlotIndex } = state;
+
+    if (slots.length === 0) return null;
+
+    return (
+        <section className="py-12 bg-background">
+            <div className="container mx-auto px-4">
+                <div className="text-center mb-8">
+                    <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                        Your Bundle Selection
+                    </h2>
+                    <p className="text-muted-foreground">
+                        Click on a slot to select a product from the collection below
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
+                    {slots?.map((slot, index) => {
+                        const isActive = activeSlotIndex === index;
+                        const isFilled = slot.product !== null;
+
+                        return (
+                            <div
+                                key={index}
+                                onClick={() => setActiveSlot(index)}
+                                className={`relative aspect-square rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300 overflow-hidden ${isActive
+                                    ? "border-accent bg-accent/5 shadow-elevated scale-[1.02]"
+                                    : isFilled
+                                        ? "border-primary/50 bg-card"
+                                        : "border-border bg-muted/30 hover:border-primary/30"
+                                    }`}
+                            >
+                                {/* Slot Label */}
+                                <div
+                                    className={`absolute top-2 left-2 z-10 text-xs font-bold px-2 py-1 rounded-full ${isFilled
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-muted text-muted-foreground"
+                                        }`}
+                                >
+                                    Slot {index + 1}
+                                </div>
+
+                                {isFilled && slot?.product ? (
+                                    <>
+                                        {/* Product Image */}
+                                        <img
+                                            src={slot.product.featuredImage || slot.product.image}
+                                            alt={slot.product.name}
+                                            className="w-full h-full object-cover"
+                                        />
+
+                                        {/* Overlay with info */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-3">
+                                            <p className="text-white text-xs font-semibold truncate mb-2">
+                                                {slot.product.name}
+                                            </p>
+
+                                            {/* Color Selection */}
+                                            <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+                                                {slot.product.displayColors?.map((color) => (
+                                                    <button
+                                                        key={color.name}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            updateSlotColor(index, color.name);
+                                                        }}
+                                                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${slot.selectedColor === color.name
+                                                            ? "border-white scale-110"
+                                                            : "border-transparent hover:scale-105"
+                                                            }`}
+                                                        style={{ backgroundColor: color.hex }}
+                                                        title={color.name}
+                                                    >
+                                                        {slot.selectedColor === color.name && (
+                                                            <Check size={10} className="text-white drop-shadow-lg" />
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Remove Button */}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeFromSlot(index);
+                                            }}
+                                            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:scale-110 transition-transform"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-center p-2">
+                                        <div
+                                            className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center ${isActive ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"
+                                                }`}
+                                        >
+                                            <Plus size={24} />
+                                        </div>
+                                        <span className="text-[10px] md:text-xs font-medium text-muted-foreground">
+                                            {isActive ? "Select Below" : "Add Item"}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </section>
+    );
+};
+
+export default ProductSlots;
