@@ -65,10 +65,10 @@ const BundleSelection = ({ combo }) => {
             <div className="container mx-auto px-4">
                 <div className="text-center mb-12">
                     <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4">
-                        Choose Your Bundle Size
+                        {combo?.bundleTitle || "পছন্দের বান্ডেলটি বেছে নিন"}
                     </h2>
                     <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-                        Select how many pieces you want. The more you bundle, the more you save!
+                        {combo?.bundleSubtitle || "Select how many pieces you want. The more you bundle, the more you save!"}
                     </p>
                 </div>
 

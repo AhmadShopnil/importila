@@ -14,7 +14,7 @@ const ProductGrid = ({ combo }) => {
             <div className="container mx-auto px-4">
                 <div className="text-center mb-10">
                     <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-                        Choose Your Favorite Styles
+                        {combo?.productGridTitle || "Choose Your Favorite Styles"}
                     </h2>
                     <p className="text-muted-foreground">
                         {disabled

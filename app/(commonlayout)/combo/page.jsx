@@ -12,7 +12,7 @@ export default async function page() {
         <section
             id="combos"
             className="
-       py-6 md:py-10
+       py-6 md:py-10 min-h-screen
        
       "
         >
@@ -91,7 +91,7 @@ export default async function page() {
                                     </div>
 
                                     <Link
-                                        href={`/combo/kids/${combo?._id}`}
+                                        href={`/combo/kids/${combo?.slug}`}
                                         className="cursor-pointer w-6 h-6 md:w-8 md:h-8 bg-[#34667B] rounded-full flex items-center justify-center text-white hover:scale-110 transition-transform shadow-md">
                                         <svg className="w-3 h-3 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

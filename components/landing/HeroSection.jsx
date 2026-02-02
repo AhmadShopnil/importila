@@ -17,18 +17,18 @@ const HeroSection = ({ combo }) => {
 
             <div className="absolute bottom-20 right-1/3 w-24 h-24 rounded-full bg-mint/30 animate-float" style={{ animationDelay: "1.5s" }} />
 
-            <div className="container mx-auto px-4 pt-16 pb-20 flex flex-col items-center justify-center min-h-[85vh]">
+            <div className="container mx-auto px-4 pt-16 pb-10 flex flex-col items-center justify-center min-h-[75vh]">
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6 animate-slide-up">
                     <Gift size={18} />
-                    <span className="text-sm font-semibold">Bundle & Save Up To 41%</span>
+                    <span className="text-sm font-semibold">{combo?.heroBadge || "Bundle & Save Up To 41%"}</span>
                 </div>
 
                 {/* Main Headline */}
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-center text-foreground leading-tight mb-6
                  animate-slide-up text-balance max-w-4xl">
                     {combo?.landingPageTitle || "Adorable Kids Dress Sets"} <br />
-                    <span className="text-primary">Mix, Match & Save Big!</span>
+                    {/* <span className="text-primary">Mix, Match & Save Big!</span> */}
                 </h1>
 
                 {/* Subheadline */}
@@ -43,11 +43,11 @@ const HeroSection = ({ combo }) => {
                      duration-300 animate-slide-up mb-12 "
                     style={{ animationDelay: "0.2s" }}
                 >
-                    Chose Your Bundle Now
+                    {combo?.heroCTA || "পছন্দের বান্ডেলটি বেছে নিন"}
                 </button>
 
                 {/* Trust Badges */}
-                <div className="flex flex-wrap justify-center gap-6 md:gap-10 animate-slide-up" style={{ animationDelay: "0.3s" }}>
+                {/* <div className="flex flex-wrap justify-center gap-6 md:gap-10 animate-slide-up" style={{ animationDelay: "0.3s" }}>
                     <div className="flex items-center gap-2 text-muted-foreground">
                         <Truck size={20} className="text-primary" />
                         <span className="text-sm font-medium">Free Shipping</span>
@@ -60,7 +60,7 @@ const HeroSection = ({ combo }) => {
                         <Star size={20} className="text-primary" />
                         <span className="text-sm font-medium">5000+ Happy Parents</span>
                     </div>
-                </div>
+                </div> */}
             </div>
 
             {/* Wave Divider */}

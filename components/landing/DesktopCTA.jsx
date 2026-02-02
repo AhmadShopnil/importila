@@ -2,17 +2,17 @@
 
 import { MessageCircle, Phone } from "lucide-react";
 
-const DesktopCTA = () => {
-    const whatsappNumber = "+8801700000000";
-    const messengerUsername = "yourbrandpage";
+const DesktopCTA = ({ combo }) => {
+    const whatsappNumber = combo?.whatsappNumber || "+8801631314880";
+    const messengerUsername = combo?.messengerUsername || "importila";
 
     const handleWhatsApp = () => {
         const message = encodeURIComponent("Hi! I'm interested in the kids dress bundle. Can you help me?");
-        window.open(`https://wa.me/${whatsappNumber.replace(/\+/g, "")}?text=${message}`, "_blank");
+        window.open(`https://wa.me/${whatsappNumber.replace(/\+/g, "").trim()}?text=${message}`, "_blank");
     };
 
     const handleMessenger = () => {
-        window.open(`https://m.me/${messengerUsername}`, "_blank");
+        window.open(`https://m.me/${messengerUsername.trim()}`, "_blank");
     };
 
     return (
@@ -20,10 +20,10 @@ const DesktopCTA = () => {
             <div className="container mx-auto px-4">
                 <div className="text-center mb-8">
                     <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-                        Need Help? Chat With Us!
+                        {combo?.helpTitle || "Need Help? Chat With Us!"}
                     </h2>
                     <p className="text-muted-foreground">
-                        Our friendly team is ready to assist you with your order
+                        {combo?.helpSubtitle || "Our friendly team is ready to assist you with your order"}
                     </p>
                 </div>
 

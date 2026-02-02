@@ -27,6 +27,22 @@ export async function POST(request) {
     const slug = formData.get("slug");
     const landingPageTitle = formData.get("landingPageTitle");
     const landingPageSubtitle = formData.get("landingPageSubtitle");
+    const landingPageDetails = formData.get("landingPageDetails");
+
+    const heroBadge = formData.get("heroBadge");
+    const heroCTA = formData.get("heroCTA");
+    const bundleTitle = formData.get("bundleTitle");
+    const bundleSubtitle = formData.get("bundleSubtitle");
+    const productGridTitle = formData.get("productGridTitle");
+    const sizeSelectionTitle = formData.get("sizeSelectionTitle");
+    const checkoutFormTitle = formData.get("checkoutFormTitle");
+    const checkoutFormSubtitle = formData.get("checkoutFormSubtitle");
+    const checkoutCTA = formData.get("checkoutCTA");
+    const whatsappNumber = formData.get("whatsappNumber");
+    const messengerUsername = formData.get("messengerUsername");
+    const helpTitle = formData.get("helpTitle");
+    const helpSubtitle = formData.get("helpSubtitle");
+
     const description = formData.get("description");
     const price = Number(formData.get("price"));
     const offerPrice = Number(formData.get("offerPrice"));
@@ -51,6 +67,20 @@ export async function POST(request) {
       slug,
       landingPageTitle,
       landingPageSubtitle,
+      landingPageDetails,
+      heroBadge,
+      heroCTA,
+      bundleTitle,
+      bundleSubtitle,
+      productGridTitle,
+      sizeSelectionTitle,
+      checkoutFormTitle,
+      checkoutFormSubtitle,
+      checkoutCTA,
+      whatsappNumber,
+      messengerUsername,
+      helpTitle,
+      helpSubtitle,
       description,
       price,
       offerPrice,

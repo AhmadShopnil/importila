@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, UploadCloud, Edit3, Lock, Plus, Trash2, X, Search } from "lucide-react"
 import { BASE_URL } from "@/utils/baseUrl"
+import RichTextEditor from "@/components/RichTextEditor"
 
 export default function EditComboPage() {
   const { id } = useParams()
@@ -22,6 +23,7 @@ export default function EditComboPage() {
   const [slug, setSlug] = useState("")
   const [imagePreview, setImagePreview] = useState(null)
   const [bundleOptions, setBundleOptions] = useState([])
+  const [landingPageDetails, setLandingPageDetails] = useState("")
 
   // Fetch All Products
   useEffect(() => {
@@ -42,6 +44,7 @@ export default function EditComboPage() {
         setSizes(data.sizes || [])
         setBundleOptions(data.bundleOptions || [])
         setImagePreview(data.featuredImage || null)
+        setLandingPageDetails(data.landingPageDetails || "")
       })
   }, [id])
 
@@ -121,6 +124,7 @@ export default function EditComboPage() {
     formData.append("sizes", JSON.stringify(sizes))
     formData.append("bundleOptions", JSON.stringify(bundleOptions))
     formData.append("slug", slug)
+    formData.append("landingPageDetails", landingPageDetails)
     formData.append("existingFeaturedImage", comboData.featuredImage || "")
 
     const res = await fetch(`${BASE_URL}/api/combos/${id}`, {
@@ -251,14 +255,116 @@ export default function EditComboPage() {
               </div>
             </div>
 
+            <div className="space-y-4">
+              <label className="text-sm font-semibold text-foreground flex justify-between items-center">
+                <span>Landing Page Details (Rich Content)</span>
+                <span className="text-[10px] text-primary bg-primary/5 px-2 py-1 rounded">Visual Editor</span>
+              </label>
+              <RichTextEditor
+                value={landingPageDetails}
+                onChange={setLandingPageDetails}
+                placeholder="Write detailed product information, feature lists, etc. with style..."
+              />
+              <p className="text-[11px] text-muted-foreground">This content appears in the "Why Choose Importila" section on the landing page.</p>
+            </div>
+
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Description</label>
+              <label className="text-sm font-semibold text-foreground">Internal Description</label>
               <textarea
                 name="description"
                 defaultValue={comboData.description}
-                placeholder="Details about this combo..."
-                className="flex min-h-[120px] w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="Details about this combo for admin reference..."
+                className="flex min-h-[100px] w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               />
+            </div>
+          </section>
+
+          {/* ================= LANDING PAGE CUSTOMIZATION ================= */}
+          <section className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
+            <div className="flex items-center gap-2 border-b border-border pb-4">
+              <h2 className="text-xl font-bold">Landing Page Content & CTA</h2>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Hero Section */}
+              <div className="space-y-4 col-span-2">
+                <h3 className="text-sm font-bold text-primary uppercase tracking-wider">Hero Section</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold">Hero Badge text</label>
+                    <input name="heroBadge" defaultValue={comboData.heroBadge} placeholder="e.g. Bundle & Save Up To 41%" className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold">Hero CTA Button</label>
+                    <input name="heroCTA" defaultValue={comboData.heroCTA} placeholder="e.g. পছন্দের বান্ডেলটি বেছে নিন" className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Bundle & Products Section */}
+              <div className="space-y-4 col-span-2 pt-4 border-t border-border">
+                <h3 className="text-sm font-bold text-primary uppercase tracking-wider">Bundle & Products Section</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold">Bundle Section Title</label>
+                    <input name="bundleTitle" defaultValue={comboData.bundleTitle} placeholder="e.g. পছন্দের বান্ডেলটি বেছে নিন" className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold">Bundle Section Subtitle</label>
+                    <input name="bundleSubtitle" defaultValue={comboData.bundleSubtitle} placeholder="e.g. Select pieces and save!" className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold">Product Grid Title</label>
+                    <input name="productGridTitle" defaultValue={comboData.productGridTitle} placeholder="e.g. Choose Your Favorite Styles" className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold">Size Selection Title</label>
+                    <input name="sizeSelectionTitle" defaultValue={comboData.sizeSelectionTitle} placeholder="e.g. Select Size for Your Bundle" className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Checkout Section */}
+              <div className="space-y-4 col-span-2 pt-4 border-t border-border">
+                <h3 className="text-sm font-bold text-primary uppercase tracking-wider">Checkout Section</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold">Checkout Form Title</label>
+                    <input name="checkoutFormTitle" defaultValue={comboData.checkoutFormTitle} placeholder="e.g. Complete Your Order" className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold">Checkout Form Subtitle</label>
+                    <input name="checkoutFormSubtitle" defaultValue={comboData.checkoutFormSubtitle} placeholder="e.g. Fill in your details..." className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold">Checkout Button Text</label>
+                    <input name="checkoutCTA" defaultValue={comboData.checkoutCTA} placeholder="e.g. Place Order" className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Help & Social Section */}
+              <div className="space-y-4 col-span-2 pt-4 border-t border-border">
+                <h3 className="text-sm font-bold text-primary uppercase tracking-wider">Contact & Support</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold">WhatsApp Number</label>
+                    <input name="whatsappNumber" defaultValue={comboData.whatsappNumber} placeholder="e.g. +8801631314880" className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold">Messenger Username</label>
+                    <input name="messengerUsername" defaultValue={comboData.messengerUsername} placeholder="e.g. importila" className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold">Help Title</label>
+                    <input name="helpTitle" defaultValue={comboData.helpTitle} placeholder="e.g. Need Help? Chat With Us!" className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold">Help Subtitle</label>
+                    <input name="helpSubtitle" defaultValue={comboData.helpSubtitle} placeholder="e.g. Our team is ready to assist..." className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 

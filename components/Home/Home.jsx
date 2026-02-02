@@ -1,8 +1,10 @@
 
 import Combos from './ComboSection/Combos';
 import HeroSection from './HeroSection/HeroSection';
-import CustomCombo from './CustomComboBanner/CustomCombo';
+
 import { getCombos, getProducts, getSliders } from '../../utils/apiActions';
+
+import ProductsList from './ProductList/ProductList';
 
 
 
@@ -28,7 +30,7 @@ export default async function Home() {
       <HeroSection banners={banners} />
       <Combos combos={combos} />
       {/* <CustomCombo /> */}
-      {/* <ProductsByGender products={products} /> */}
+      <ProductsList products={products} />
 
 
     </div>

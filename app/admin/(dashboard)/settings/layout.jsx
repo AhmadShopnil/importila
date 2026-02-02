@@ -5,12 +5,12 @@ import { usePathname } from "next/navigation"
 import { Store, Globe, Code, Tag, Menu as MenuIcon, Truck, Bell, Shield } from "lucide-react"
 
 const settingsMenu = [
-    {
-        label: "General",
-        href: "/admin/settings",
-        icon: Store,
-        description: "Store information and basic settings"
-    },
+    // {
+    //     label: "General",
+    //     href: "/admin/settings",
+    //     icon: Store,
+    //     description: "Store information and basic settings"
+    // },
     {
         label: "SEO & Meta",
         href: "/admin/settings/seo",
@@ -29,30 +29,30 @@ const settingsMenu = [
         icon: MenuIcon,
         description: "Configure navigation menus"
     },
-    {
-        label: "Order Settings",
-        href: "/admin/settings/orders",
-        icon: Tag,
-        description: "Order prefixes and configurations"
-    },
-    {
-        label: "Shipping & Delivery",
-        href: "/admin/settings/shipping",
-        icon: Truck,
-        description: "Delivery zones and charges"
-    },
-    {
-        label: "Notifications",
-        href: "/admin/settings/notifications",
-        icon: Bell,
-        description: "Email and SMS notifications"
-    },
-    {
-        label: "Advanced",
-        href: "/admin/settings/advanced",
-        icon: Shield,
-        description: "Advanced system settings"
-    },
+    // {
+    //     label: "Order Settings",
+    //     href: "/admin/settings/orders",
+    //     icon: Tag,
+    //     description: "Order prefixes and configurations"
+    // },
+    // {
+    //     label: "Shipping & Delivery",
+    //     href: "/admin/settings/shipping",
+    //     icon: Truck,
+    //     description: "Delivery zones and charges"
+    // },
+    // {
+    //     label: "Notifications",
+    //     href: "/admin/settings/notifications",
+    //     icon: Bell,
+    //     description: "Email and SMS notifications"
+    // },
+    // {
+    //     label: "Advanced",
+    //     href: "/admin/settings/advanced",
+    //     icon: Shield,
+    //     description: "Advanced system settings"
+    // },
     {
         label: "Courier Integration",
         href: "/admin/settings/courier",

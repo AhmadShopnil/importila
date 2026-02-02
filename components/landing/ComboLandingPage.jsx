@@ -9,6 +9,8 @@ import CheckoutForm from "@/components/landing/CheckoutForm";
 import DesktopCTA from "@/components/landing/DesktopCTA";
 import StickyCTA from "@/components/landing/StickyCTA";
 import Footer from "@/components/landing/Footer";
+import ReviewSection from "@/components/landing/ReviewSection";
+import ProductDetails from "@/components/landing/ProductDetails";
 import { BundleProvider, useBundle } from "@/context/BundleContext";
 
 const LandingContent = ({ combo }) => {
@@ -26,11 +28,15 @@ const LandingContent = ({ combo }) => {
 
             <ProductGrid combo={combo} />
 
-            <SizeSelection sizes={combo?.sizes} />
+            <ProductDetails combo={combo} />
 
-            <CheckoutForm />
+            <SizeSelection combo={combo} />
 
-            <DesktopCTA />
+            <ReviewSection />
+
+            <CheckoutForm combo={combo} />
+
+            <DesktopCTA combo={combo} />
             {/* <Footer /> */}
             <StickyCTA combo={combo} />
         </div>

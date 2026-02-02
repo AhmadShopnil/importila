@@ -6,25 +6,43 @@ import { getAdminAuth } from "@/lib/auth"
 /* ================= GET ================= */
 export async function GET(request) {
   try {
-    // console.log("from product api start fetch",)
     const { db } = await connectToDatabase()
     const { searchParams } = new URL(request.url)
-    const category = searchParams.get("category")
+
+    // Filtering
+    const categories = searchParams.get("categories")?.split(",") || []
+    const minPrice = Number(searchParams.get("minPrice")) || 0
+    const maxPrice = Number(searchParams.get("maxPrice")) || Infinity
     const search = searchParams.get("search")
-    const limit = Number.parseInt(searchParams.get("limit") || "50")
-    const isFeatured = searchParams.get("featured") === "true";
+    const isFeatured = searchParams.get("featured") === "true"
+
+    // Pagination
+    const page = Number(searchParams.get("page")) || 1
+    const limit = Number(searchParams.get("limit")) || 12
+    const skip = (page - 1) * limit
+
+    // Sorting
+    const sortStr = searchParams.get("sort") || "newest" // newest, price-asc, price-desc
+    let sortQuery = { createdAt: -1 }
+    if (sortStr === "price-asc") sortQuery = { price: 1 }
+    if (sortStr === "price-desc") sortQuery = { price: -1 }
 
     let query = {}
 
-    if (category) {
-      query.categories = { $in: [category] }
+    if (categories.length > 0) {
+      query.categories = { $in: categories }
     }
 
     if (isFeatured) {
       query.isFeatured = true
     }
 
-    query.isActive = { $ne: false } // Default to active products unless specified otherwise or filtering for inactive
+    query.isActive = { $ne: false }
+
+    // Price range
+    if (minPrice > 0 || maxPrice < Infinity) {
+      query.price = { $gte: minPrice, $lte: maxPrice }
+    }
 
     if (search) {
       query = {
@@ -36,11 +54,29 @@ export async function GET(request) {
       }
     }
 
-    const products = await db.collection("products")
-      .find(query)
-      .limit(limit)
-      .sort({ createdAt: -1 })
-      .toArray()
+    const [products, total] = await Promise.all([
+      db.collection("products")
+        .find(query)
+        .sort(sortQuery)
+        .skip(skip)
+        .limit(limit)
+        .toArray(),
+      db.collection("products").countDocuments(query)
+    ])
+
+    // If page or limit is provided, return the paginated object
+    // otherwise return the array directly for backward compatibility
+    if (searchParams.has("page") || searchParams.has("limit") || searchParams.has("categories")) {
+      return NextResponse.json({
+        products,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
+      })
+    }
 
     return NextResponse.json(products)
   } catch (error) {

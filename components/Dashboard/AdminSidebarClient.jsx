@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation"
 import {
   Menu, X, BarChart3, Package, Tag, ShoppingCart,
   TrendingUp, ChevronsLeft, LayoutList, Settings,
-  ChevronDown, LogOut, GalleryVertical
+  ChevronDown, LogOut, GalleryVertical, MessageSquare
 } from "lucide-react"
 import Image from "next/image"
 import toast from "react-hot-toast"
@@ -37,6 +37,7 @@ const adminNavItems = [
     ],
   },
   { label: "Settings", href: "/admin/settings", icon: Settings },
+  { label: "Reviews", href: "/admin/reviews", icon: MessageSquare },
 ]
 
 export default function AdminSidebarClient() {

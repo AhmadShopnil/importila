@@ -4,7 +4,7 @@ import { Package, MapPin, Phone, User, FileText, CheckCircle } from "lucide-reac
 import { useBundle } from "@/context/BundleContext";
 import { bundleOptions } from "@/data/products";
 
-const CheckoutForm = () => {
+const CheckoutForm = ({ combo }) => {
     const { state, updateCustomerInfo, isComplete } = useBundle();
     const { slots, selectedBundle, selectedSize, customerInfo, selectedBundleData } = state;
 
@@ -75,10 +75,10 @@ const CheckoutForm = () => {
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-10">
                         <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-                            Complete Your Order
+                            {combo?.checkoutFormTitle || "Complete Your Order"}
                         </h2>
                         <p className="text-muted-foreground">
-                            Fill in your details and we'll get your bundle ready
+                            {combo?.checkoutFormSubtitle || "Fill in your details and we'll get your bundle ready"}
                         </p>
                     </div>
 
@@ -219,7 +219,7 @@ const CheckoutForm = () => {
                                     }`}
                             >
                                 <CheckCircle size={20} />
-                                Place Order
+                                {combo?.checkoutCTA || "Place Order"}
                             </button>
 
                             {!isComplete && (

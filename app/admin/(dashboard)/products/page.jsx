@@ -13,7 +13,7 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
-    console.log("products from dashboard")
+    // console.log("products from dashboard")
     fetchProducts()
   }, [])
 

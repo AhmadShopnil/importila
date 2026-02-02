@@ -3,16 +3,17 @@
 
 import { useBundle } from "@/context/BundleContext";
 
-const SizeSelection = ({ sizes }) => {
+const SizeSelection = ({ combo }) => {
     const { state, selectSize } = useBundle();
     const disabled = !state.selectedBundle;
+    const sizes = combo?.sizes;
 
     return (
         <section className="pt-12 ">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-8">
                     <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-                        Select Size for Your Bundle
+                        {combo?.sizeSelectionTitle || "Select Size for Your Bundle"}
                     </h2>
                     <p className="text-muted-foreground">
                         One size applies to all items in your bundle

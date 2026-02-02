@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import toast from "react-hot-toast"
-import { ArrowLeft, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, X, UploadCloud } from "lucide-react"
 import { BASE_URL } from "@/utils/baseUrl"
 import CategoryMultiSelect from "@/components/Dashboard/Products/CategoryMultiSelect"
 
@@ -66,6 +66,13 @@ export default function NewProductPage() {
     setFormData((prev) => ({
       ...prev,
       images: [...prev.images, ...files],
+    }))
+  }
+
+  const removeExtraImage = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
     }))
   }
 
@@ -164,13 +171,13 @@ export default function NewProductPage() {
         method: "POST",
         body: fd,
       })
-      console.log("res",res)
+      console.log("res", res)
 
       if (res.ok) {
         toast.success("Product created successfully")
         router.push("/admin/products")
       } else {
-        
+
         toast.error("Failed  create product")
       }
     } catch (err) {
@@ -303,26 +310,103 @@ export default function NewProductPage() {
             </div>
 
             {/* Images */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-              <div>
-                <label className="form-label">Featured Image *</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFeaturedImage}
-                  className="form-input cursor-pointer"
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+              {/* Featured Image */}
+              <div className="space-y-4">
+                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  Featured Image <span className="text-red-500">*</span>
+                </label>
+                <div className="relative group">
+                  {formData.featuredImage ? (
+                    <div className="relative border border-border rounded-2xl overflow-hidden group h-64 bg-gray-50 flex items-center justify-center shadow-sm">
+                      <img
+                        src={URL.createObjectURL(formData.featuredImage)}
+                        alt="Featured"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center gap-3 backdrop-blur-[2px]">
+                        <div className="relative">
+                          <button
+                            type="button"
+                            className="flex items-center gap-2 bg-white text-gray-900 px-5 py-2.5 rounded-xl text-sm font-bold shadow-xl hover:scale-105 transition-transform"
+                          >
+                            <UploadCloud size={18} />
+                            Change Image
+                          </button>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFeaturedImage}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, featuredImage: null }))}
+                          className="text-white text-xs font-semibold hover:text-red-400 transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 rounded-2xl p-12 transition-all flex flex-col items-center justify-center gap-4 group relative cursor-pointer bg-muted/20">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shadow-inner">
+                        <UploadCloud size={32} />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-bold text-foreground">Upload Featured Image</p>
+                        <p className="text-xs text-muted-foreground mt-1">PNG, JPG or WebP (max. 5MB)</p>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFeaturedImage}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div>
-                <label className="form-label">Extra Images</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleExtraImages}
-                  className="form-input cursor-pointer"
-                />
+              {/* Extra Images */}
+              <div className="space-y-4">
+                <label className="text-sm font-semibold text-foreground">Extra Images (Gallery)</label>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 rounded-2xl p-6 transition-all flex flex-col items-center justify-center gap-3 group relative cursor-pointer bg-muted/20 min-h-[120px]">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shadow-inner">
+                      <Plus size={24} />
+                    </div>
+                    <p className="text-xs font-bold text-foreground">Add Gallery Images</p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleExtraImages}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
+                  </div>
+
+                  {formData.images.length > 0 && (
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+                      {formData.images.map((img, i) => (
+                        <div key={i} className="relative group aspect-square">
+                          <img
+                            src={URL.createObjectURL(img)}
+                            className="w-full h-full rounded-xl border border-border object-cover shadow-sm transition-transform group-hover:scale-[1.02]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeExtraImage(i)}
+                            className="absolute -top-2 -right-2 bg-white rounded-full p-1.5 text-red-500 shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-110 border border-red-50"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </section>
