@@ -1,7 +1,29 @@
+"use client"
+
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
 import Container from "@/components/Container";
+import { useCart } from "@/context/CartContext";
+
+const CartTrigger = () => {
+  const { cartCount, setIsCartOpen } = useCart();
+
+  return (
+    <button
+      onClick={() => setIsCartOpen(true)}
+      className="relative p-2 rounded-full hover:bg-gray-100 transition"
+    >
+      <ShoppingCart className="w-6 h-6 text-gray-700" />
+      {cartCount > 0 && (
+        <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px]
+                         w-4 h-4 rounded-full flex items-center justify-center font-bold">
+          {cartCount}
+        </span>
+      )}
+    </button>
+  );
+};
 
 const Menubar = () => {
   return (
@@ -37,18 +59,7 @@ const Menubar = () => {
 
         {/* Cart */}
         <div className="flex items-center gap-4">
-          {/* <Link
-            href="/cart"
-            className="relative p-2 rounded-full hover:bg-gray-100 transition"
-          >
-            <ShoppingCart className="w-6 h-6 text-gray-700" />
-
-          
-            <span className="absolute -top-1 -right-1 bg-[#5F9498] text-white text-[10px]
-                             w-4 h-4 rounded-full flex items-center justify-center">
-              3
-            </span>
-          </Link> */}
+          <CartTrigger />
         </div>
 
       </Container>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import toast from "react-hot-toast"
-import { ArrowLeft, Plus, Trash2, X, UploadCloud } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, X, UploadCloud, Copy } from "lucide-react"
 import { BASE_URL } from "@/utils/baseUrl"
 import CategoryMultiSelect from "@/components/Dashboard/Products/CategoryMultiSelect"
 
@@ -139,6 +139,18 @@ export default function EditProductPage() {
       ...formData,
       variants: formData.variants.filter((_, i) => i !== index),
     })
+  }
+
+  const duplicateVariant = (index) => {
+    const variantToCopy = formData.variants[index]
+    const newVariant = { ...variantToCopy, sku: "" } // Clear SKU so it can be re-generated if edited
+
+    // Insert after the current index
+    const updatedVariants = [...formData.variants]
+    updatedVariants.splice(index + 1, 0, newVariant)
+
+    setFormData({ ...formData, variants: updatedVariants })
+    toast.success("Variant duplicated")
   }
 
   /* ---------- Submit ---------- */
@@ -520,13 +532,22 @@ export default function EditProductPage() {
                     />
                   </div>
 
-                  <div className="flex items-end">
+                  <div className="flex items-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => duplicateVariant(index)}
+                      className="text-[#1E556E] mb-1.5 hover:scale-110 transition-transform"
+                      title="Duplicate Variant"
+                    >
+                      <Copy className="w-5 h-5" />
+                    </button>
                     <button
                       type="button"
                       onClick={() => removeVariant(index)}
-                      className="text-red-500"
+                      className="text-red-500 mb-1.5 hover:scale-110 transition-transform"
+                      title="Remove Variant"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
                 </div>

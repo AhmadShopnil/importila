@@ -86,7 +86,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
         }
     }
 
-    if (loading) return <Loading />
+    // if (loading) return <Loading />
     if (!order) return <div className="p-10 text-center">Order not found</div>
 
     const statusColors = {
@@ -98,7 +98,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
     }
 
     return (
-        <div className="space-y-6 pb-20 max-w-6xl mx-auto">
+        <div className="space-y-6 pb-6">
             {/* Header Actions */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -108,7 +108,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                             Order Details
-                            <span className="text-gray-400 font-normal">#{order.orderNumber}</span>
+                            <span className="text-gray-400 font-normal">#{order?.orderNumber}</span>
                         </h1>
                         <p className="text-sm text-gray-500 flex items-center gap-1">
                             <Calendar className="w-3.5 h-3.5" />
@@ -146,7 +146,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                         <div className="p-6 border-b border-gray-50 flex items-center justify-between">
                             <h3 className="font-bold text-gray-900 flex items-center gap-2">
                                 <Package className="w-5 h-5 text-[#1E556E]" />
-                                Order Items ({order.items?.length || 0})
+                                Order Items ({order?.items?.length || 0})
                             </h3>
                         </div>
                         <div className="overflow-x-auto">
@@ -190,16 +190,18 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                                 <div className="w-full max-w-[240px] space-y-3">
                                     <div className="flex justify-between text-sm text-gray-500">
                                         <span>Subtotal</span>
-                                        <span className="font-medium text-gray-900">৳ {order.totalPrice?.toLocaleString()}</span>
+                                        <span className="font-medium text-gray-900">৳ {(order.totalAmount - (order.shippingCharge || 0)).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-sm text-gray-500">
-                                        <span>Shipping Fee</span>
-                                        <span className="font-medium text-green-600">Free</span>
+                                        <span>Shipping Fee ({order.deliveryLocation === 'inside' ? 'Inside Dhaka' : 'Outside Dhaka'})</span>
+                                        <span className={`font-medium ${order.shippingCharge > 0 ? 'text-gray-900' : 'text-green-600'}`}>
+                                            {order.shippingCharge > 0 ? `৳ ${order.shippingCharge.toLocaleString()}` : 'Free'}
+                                        </span>
                                     </div>
                                     <div className="h-px bg-gray-200 my-2" />
                                     <div className="flex justify-between text-lg">
                                         <span className="font-bold text-gray-900">Total</span>
-                                        <span className="font-black text-[#1E556E]">৳ {order.totalPrice?.toLocaleString()}</span>
+                                        <span className="font-black text-[#1E556E]">৳ {order.totalAmount?.toLocaleString()}</span>
                                     </div>
                                 </div>
                             </div>

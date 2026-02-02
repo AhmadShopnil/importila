@@ -203,7 +203,7 @@ export default function OrdersPage() {
           recipient_name: order.customerName,
           recipient_address: order.address,
           recipient_phone: order.phone,
-          cod_amount: order.paymentStatus === 'paid' ? 0 : (order.totalPrice || order.offerPrice || order.price || 0),
+          cod_amount: order.paymentStatus === 'paid' ? 0 : (order?.totalAmount || order?.price),
           note: order.note
         }))
 
@@ -278,22 +278,22 @@ export default function OrdersPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border-l-4 border-green-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white border-1 border-green-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
           <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Revenue</p>
           <p className="text-2xl font-bold text-gray-800">৳ {globalStats.totalRevenue.toLocaleString()}</p>
         </div>
 
-        <div className="bg-white border-l-4 border-blue-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white border-1 border-blue-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
           <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Orders</p>
           <p className="text-2xl font-bold text-gray-800">{totalCount}</p>
         </div>
 
-        <div className="bg-white border-l-4 border-orange-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white border-1 border-orange-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
           <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Items Sold</p>
           <p className="text-2xl font-bold text-gray-800">{globalStats.totalItems}</p>
         </div>
 
-        <div className="bg-white border-l-4 border-purple-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white border-1 border-purple-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
           <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Avg Order Value</p>
           <p className="text-2xl font-bold text-gray-800">৳ {totalCount > 0 ? Math.round(globalStats.totalRevenue / totalCount).toLocaleString() : 0}</p>
         </div>
@@ -448,7 +448,7 @@ export default function OrdersPage() {
                         </div>
                       </td>
                       <td className="p-4">
-                        <div className="font-bold text-gray-900">৳ {(order.totalPrice || order.offerPrice || order.price || 0).toLocaleString()}</div>
+                        <div className="font-bold text-gray-900">৳ {(order.totalAmount || order.offerPrice || order.price || 0).toLocaleString()}</div>
                         <div className="text-[10px] text-gray-400 uppercase font-medium">{order.paymentStatus || 'Unpaid'}</div>
                       </td>
                       <td className="p-4">
@@ -558,7 +558,7 @@ export default function OrdersPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-black text-xl text-gray-900">৳ {(order.totalPrice || order.offerPrice || order.price || 0).toLocaleString()}</p>
+                      <p className="font-black text-xl text-gray-900">৳ {(order.totalAmount || order.offerPrice || order.price || 0).toLocaleString()}</p>
                     </div>
                   </div>
 

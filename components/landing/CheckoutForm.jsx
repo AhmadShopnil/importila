@@ -19,6 +19,14 @@ const CheckoutForm = ({ combo }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Phone validation: exactly 11 digits
+        const phoneRegex = /^\d{11}$/;
+        if (!phoneRegex.test(customerInfo.phone)) {
+            alert("Please enter a valid 11-digit phone number.");
+            return;
+        }
+
         if (!isComplete) return;
 
         try {
@@ -54,7 +62,7 @@ const CheckoutForm = ({ combo }) => {
             if (response.ok) {
                 alert("Order placed successfully! We will contact you shortly.");
                 // Clear context or redirect
-                window.location.href = "/thank-you"; // Or wherever you want
+                // window.location.href = "/thank-you"; 
             } else {
                 const error = await response.json();
                 alert(`Error: ${error.error || "Failed to place order"}`);
@@ -175,7 +183,10 @@ const CheckoutForm = ({ combo }) => {
                                     type="tel"
                                     placeholder="Phone Number *"
                                     value={customerInfo.phone}
-                                    onChange={(e) => updateCustomerInfo("phone", e.target.value)}
+                                    minLength={11}
+                                    maxLength={11}
+                                    pattern="\d{11}"
+                                    onChange={(e) => updateCustomerInfo("phone", e.target.value.replace(/\D/g, ''))}
                                     className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-0 outline-none transition-colors text-foreground placeholder:text-muted-foreground"
                                     required
                                 />

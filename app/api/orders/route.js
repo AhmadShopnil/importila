@@ -48,7 +48,7 @@ export async function GET(request) {
           _id: null,
           totalRevenue: {
             $sum: {
-              $ifNull: ["$totalPrice", { $ifNull: ["$offerPrice", { $ifNull: ["$price", 0] }] }]
+              $ifNull: ["$totalAmount", { $ifNull: ["$totalPrice", { $ifNull: ["$offerPrice", { $ifNull: ["$price", 0] }] }] }]
             }
           },
           totalItems: {
@@ -82,7 +82,7 @@ export async function POST(request) {
   try {
     const body = await request.json()
 
-    if (!body.customerName || !body.address || !body.note || !body.phone || !body.items || body.items.length === 0) {
+    if (!body.customerName || !body.address || !body.phone || !body.items || body.items.length === 0) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
@@ -132,7 +132,7 @@ export async function POST(request) {
       { date: today },
       {
         $inc: {
-          totalRevenue: body.totalPrice,
+          totalRevenue: body.totalAmount || body.totalPrice || 0,
           totalOrders: 1,
           totalItems: body.items.reduce((sum, item) => sum + item.quantity, 0),
         },

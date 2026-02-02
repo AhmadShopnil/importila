@@ -5,6 +5,8 @@ import Navbar from "@/components/Header/Navbar"
 import Menubar from "@/components/Header/Menubar"
 import BottomAppBar from "@/components/Footer/BottomAppBar"
 import Footer from "@/components/Footer/Footer"
+import { CartProvider } from "@/context/CartContext"
+import CartDrawer from "@/components/Cart/CartDrawer"
 
 
 export const metadata = {
@@ -34,13 +36,16 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
-        <ProductSelectionProvider>
+        <CartProvider>
+          <ProductSelectionProvider>
 
-          <Menubar />
-          {children}
-          {/* <BottomAppBar /> */}
-          <Analytics />
-        </ProductSelectionProvider>
+            <Menubar />
+            {children}
+            {/* <BottomAppBar /> */}
+            <Analytics />
+            <CartDrawer />
+          </ProductSelectionProvider>
+        </CartProvider>
 
         <div className="">
           <BottomAppBar />

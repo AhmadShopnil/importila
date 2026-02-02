@@ -195,7 +195,7 @@ export default function ComboOrdersPage() {
           recipient_name: order.customerName,
           recipient_address: order.address,
           recipient_phone: order.phone,
-          cod_amount: order.paymentStatus === 'paid' ? 0 : (order.totalPrice || order.offerPrice || order.price || 0),
+          cod_amount: order.paymentStatus === 'paid' ? 0 : (order?.totalAmount || order?.price),
           note: order.note || " "
         }))
 
