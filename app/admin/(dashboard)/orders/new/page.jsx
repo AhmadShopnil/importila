@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ShoppingCart, User, Phone, MapPin, Notebook, Plus, Trash2, Search, CheckCircle, X } from "lucide-react"
+import { ShoppingCart, User, Phone, MapPin, Notebook, Plus, Trash2, Search, CheckCircle, X, Printer, List, Package } from "lucide-react"
 
 import { BASE_URL } from "@/utils/baseUrl"
 
@@ -23,17 +23,61 @@ export default function ManualOrderEntry() {
     const [orderType, setOrderType] = useState("regular") // regular or combo
     const [searchTerm, setSearchTerm] = useState("")
     const [submitting, setSubmitting] = useState(false)
+    const [createdOrder, setCreatedOrder] = useState(null)
     const [selectedProductForVariant, setSelectedProductForVariant] = useState(null)
+    const [activeSlotIndex, setActiveSlotIndex] = useState(null)
 
     const [formData, setFormData] = useState({
         customerName: "",
         phone: "",
         address: "",
-        note: " ",
+        note: "",
         orderSource: "facebook",
+        deliveryLocation: "inside",
+        shippingCharge: 60,
         items: [],
-        totalPrice: 0,
+        totalPrice: 0, // This will be subtotal
+        totalAmount: 0, // This will be subtotal + shipping
     })
+
+    const [shippingRates, setShippingRates] = useState({ inside: 60, outside: 120 })
+
+    useEffect(() => {
+        const fetchRates = async () => {
+            try {
+                const res = await fetch(`${BASE_URL}/api/settings`)
+                if (res.ok) {
+                    const data = await res.json()
+                    setShippingRates({
+                        inside: data.insideDhakaCharge || 60,
+                        outside: data.outsideDhakaCharge || 120
+                    })
+                }
+            } catch (err) {
+                console.error("Failed to fetch shipping rates", err)
+            }
+        }
+        fetchRates()
+    }, [])
+
+    useEffect(() => {
+        setFormData(prev => {
+            const charge = prev.deliveryLocation === "inside" ? shippingRates.inside : shippingRates.outside
+            // Rule from frontend: 3+ items is free shipping (for regular)
+            const totalItems = prev.items.reduce((acc, item) => acc + (item.quantity || 1), 0)
+
+            // For regular: 3+ items free. For combo: always use selected charge.
+            const actualCharge = (orderType === "regular")
+                ? (totalItems >= 3 ? 0 : charge)
+                : charge
+
+            return {
+                ...prev,
+                shippingCharge: actualCharge,
+                totalAmount: prev.totalPrice + actualCharge
+            }
+        })
+    }, [formData.items, formData.deliveryLocation, shippingRates, orderType])
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -55,8 +99,8 @@ export default function ManualOrderEntry() {
                 : `${BASE_URL}/api/products?limit=20`
             const res = await fetch(url)
             const data = await res.json()
-            // The API returns an array directly
-            setProducts(Array.isArray(data) ? data : [])
+            const productsList = Array.isArray(data) ? data : (data.products || [])
+            setProducts(productsList)
         } catch (error) {
             console.error("Failed to fetch products:", error)
         } finally {
@@ -109,13 +153,13 @@ export default function ManualOrderEntry() {
         const newItem = {
             productId: product._id,
             name: product.name,
-            price: product.price,
+            price: product.offerPrice || product.price,
             quantity: 1,
             sku: variant?.sku || product.sku || "N/A",
             design: variant?.design || "",
-            color: variant?.color || "",
+            color: variant?.colorName || variant?.color || "",
             size: variant?.size || "",
-            image: product.image
+            image: product.featuredImage || product.image
         }
 
         setFormData(prev => {
@@ -134,36 +178,63 @@ export default function ManualOrderEntry() {
             }
         })
         setSelectedProductForVariant(null)
+        setActiveSlotIndex(null)
     }
 
-    const addComboItem = (combo, size = "") => {
-        const newItem = {
-            ...combo, // Important to spread the whole combo for the API
-            productId: combo._id,
-            name: combo.title,
-            price: combo.offerPrice || combo.price,
-            quantity: 1,
-            size: size,
-            productType: "combo"
+    const [comboSlots, setComboSlots] = useState([])
+
+    // Update slots when bundle option changes
+    useEffect(() => {
+        if (orderType === "combo" && formData.selectedBundleOption) {
+            const pieces = formData.selectedBundleOption.pieces
+            setComboSlots(Array(pieces).fill(null).map(() => ({ product: null, selectedColor: "" })))
+        }
+    }, [formData.selectedBundleOption, orderType])
+
+    const handleUpdateComboSlot = (slotIndex, product, color = "") => {
+        setComboSlots(prev => {
+            const newSlots = [...prev]
+            newSlots[slotIndex] = { product, selectedColor: color || (product?.colors?.[0]?.name || "N/A") }
+            return newSlots
+        })
+    }
+
+    const addComboItem = (combo, packageOption, size, slots) => {
+        const isComplete = slots.every(s => s.product);
+        if (!isComplete) {
+            alert("Please select products for all slots");
+            return;
         }
 
-        setFormData(prev => {
-            // For manual combo entry, we might only allow one combo or multiple
-            const existing = prev.items.find(i => i.productId === newItem.productId && i.size === size)
-            if (existing) {
-                return {
-                    ...prev,
-                    items: prev.items.map(i => i === existing ? { ...i, quantity: i.quantity + 1 } : i),
-                    totalPrice: prev.totalPrice + newItem.price
-                }
-            }
-            return {
-                ...prev,
-                items: [...prev.items, newItem],
-                totalPrice: prev.totalPrice + newItem.price
-            }
-        })
+        const newItem = {
+            productId: combo._id,
+            name: combo.title,
+            price: packageOption.price,
+            quantity: 1,
+            size: size,
+            productSize: size,
+            bundleSize: packageOption.pieces,
+            shippingCharge: packageOption.shippingCharge,
+            productType: "combo",
+            items: slots.map(slot => ({
+                productId: slot.product._id || slot.product.productId,
+                name: slot.product.name,
+                color: slot.selectedColor,
+                image: slot.product.featuredImage || slot.product.image,
+                price: slot.product.price || 0
+            }))
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            productType: "combo",
+            items: [newItem],
+            totalPrice: newItem.price,
+            shippingCharge: newItem.shippingCharge
+        }))
         setSelectedProductForVariant(null)
+        setActiveSlotIndex(null)
+        setComboSlots([])
     }
 
     const handleRemoveItem = (index) => {
@@ -215,22 +286,44 @@ export default function ManualOrderEntry() {
             let payload;
             if (orderType === "regular") {
                 payload = {
-                    ...formData,
-                    productType: "regular",
-                    totalItems: formData.items.reduce((sum, item) => sum + item.quantity, 0),
-                }
-            } else {
-                // Combo API usually takes single combo per request based on the component logic
-                // But here we might have multiple in items. We'll send the FIRST one as the primary.
-                const comboItem = formData.items[0];
-                payload = {
-                    ...comboItem,
                     customerName: formData.customerName,
                     phone: formData.phone,
                     address: formData.address,
                     note: formData.note,
                     orderSource: formData.orderSource,
-                    productType: "combo"
+                    deliveryLocation: formData.deliveryLocation,
+                    shippingCharge: formData.shippingCharge,
+                    totalAmount: formData.totalAmount,
+                    items: formData.items.map(item => ({
+                        productId: item.productId,
+                        name: item.name,
+                        color: item.color,
+                        size: item.size,
+                        sku: item.sku,
+                        image: item.image,
+                        price: item.price,
+                        quantity: item.quantity
+                    })),
+                    productType: "regular",
+                    status: "pending"
+                }
+            } else {
+                const comboItem = formData.items[0];
+                payload = {
+                    customerName: formData.customerName,
+                    phone: formData.phone,
+                    address: formData.address,
+                    note: formData.note,
+                    orderSource: formData.orderSource,
+                    deliveryLocation: formData.deliveryLocation,
+                    items: comboItem.items, // the products inside the combo
+                    totalAmount: formData.totalAmount,
+                    price: comboItem.price,
+                    shippingCharge: formData.shippingCharge,
+                    bundleSize: comboItem.bundleSize,
+                    productSize: comboItem.size,
+                    productType: "combo",
+                    status: "pending"
                 }
             }
 
@@ -241,8 +334,9 @@ export default function ManualOrderEntry() {
             })
 
             if (res.ok) {
-                alert("Order created successfully!")
-                router.push(orderType === "regular" ? "/admin/orders/regular" : "/admin/orders/combos")
+                const data = await res.json()
+                setCreatedOrder(data)
+                // We don't redirect immediately so the user can see the success modal and print invoice
             } else {
                 const errorData = await res.json()
                 alert(`Error: ${errorData.error || "Failed to create order"}`)
@@ -322,7 +416,15 @@ export default function ManualOrderEntry() {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h3 className="font-semibold truncate">{item.name || item.title}</h3>
-                                                <p className="text-[#1E556E] font-bold">৳ {item.offerPrice || item.price}</p>
+                                                {orderType === "regular" ? (
+                                                    <p className="text-[#1E556E] font-bold">৳ {item.offerPrice || item.price}</p>
+                                                ) : (
+                                                    <p className="text-[#1E556E] font-bold text-xs">
+                                                        ৳ {item.bundleOptions?.length > 0
+                                                            ? `${Math.min(...item.bundleOptions.map(o => o.price))} - ${Math.max(...item.bundleOptions.map(o => o.price))}`
+                                                            : item.offerPrice || item.price}
+                                                    </p>
+                                                )}
                                                 {item.variants && item.variants.length > 0 && (
                                                     <p className="text-xs text-muted-foreground">{item.variants.length} Variants Available</p>
                                                 )}
@@ -354,45 +456,79 @@ export default function ManualOrderEntry() {
                         ) : (
                             <div className="space-y-4">
                                 {formData.items.map((item, index) => (
-                                    <div key={index} className="flex items-center justify-between p-4 bg-muted/40 rounded-xl hover:bg-muted/60 transition-colors">
-                                        <div className="flex-1">
-                                            <h4 className="font-bold">{item.name}</h4>
-                                            <p className="text-sm text-muted-foreground">
-                                                {item.design && <span className="mr-2">Design: {item.design}</span>}
-                                                {item.color && <span className="mr-2">Color: {item.color}</span>}
-                                                {item.size && <span>Size: {item.size}</span>}
-                                            </p>
-                                            <p className="text-[#1E556E] font-medium">৳ {item.price}</p>
-                                        </div>
-                                        <div className="flex items-center gap-6">
-                                            <div className="flex items-center gap-3 bg-white border border-border rounded-lg p-1">
+                                    <div key={index} className="flex flex-col gap-4 p-4 bg-muted/40 rounded-xl hover:bg-muted/60 transition-colors">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className="font-bold">{item.name}</h4>
+                                                    {item.productType === "combo" && (
+                                                        <span className="bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Combo</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {item.design && <span className="mr-2">Design: {item.design}</span>}
+                                                    {item.color && <span className="mr-2">Color: {item.color}</span>}
+                                                    {item.size && <span>Size: {item.size}</span>}
+                                                </p>
+                                                <p className="text-[#1E556E] font-medium">৳ {item.price}</p>
+                                            </div>
+                                            <div className="flex items-center gap-6">
+                                                {item.productType !== "combo" && (
+                                                    <div className="flex items-center gap-3 bg-white border border-border rounded-lg p-1">
+                                                        <button
+                                                            onClick={() => handleUpdateQuantity(index, -1)}
+                                                            className="w-8 h-8 flex items-center justify-center hover:bg-muted font-bold text-lg rounded-md"
+                                                        >
+                                                            -
+                                                        </button>
+                                                        <span className="w-6 text-center font-bold">{item.quantity}</span>
+                                                        <button
+                                                            onClick={() => handleUpdateQuantity(index, 1)}
+                                                            className="w-8 h-8 flex items-center justify-center hover:bg-muted font-bold text-lg rounded-md"
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
+                                                )}
+                                                <p className="w-24 text-right font-bold text-lg">৳ {(item.price * (item.quantity || 1)).toLocaleString()}</p>
                                                 <button
-                                                    onClick={() => handleUpdateQuantity(index, -1)}
-                                                    className="w-8 h-8 flex items-center justify-center hover:bg-muted font-bold text-lg rounded-md"
+                                                    onClick={() => handleRemoveItem(index)}
+                                                    className="text-destructive hover:bg-destructive/10 p-2 rounded-full transition-colors"
                                                 >
-                                                    -
-                                                </button>
-                                                <span className="w-6 text-center font-bold">{item.quantity}</span>
-                                                <button
-                                                    onClick={() => handleUpdateQuantity(index, 1)}
-                                                    className="w-8 h-8 flex items-center justify-center hover:bg-muted font-bold text-lg rounded-md"
-                                                >
-                                                    +
+                                                    <Trash2 className="w-5 h-5" />
                                                 </button>
                                             </div>
-                                            <p className="w-24 text-right font-bold text-lg">৳ {(item.price * item.quantity).toLocaleString()}</p>
-                                            <button
-                                                onClick={() => handleRemoveItem(index)}
-                                                className="text-destructive hover:bg-destructive/10 p-2 rounded-full transition-colors"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
                                         </div>
+
+                                        {/* Nested products for combos */}
+                                        {item.productType === "combo" && item.items && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 pt-4 border-t border-border/50">
+                                                {item.items.map((subItem, sIdx) => (
+                                                    <div key={sIdx} className="flex items-center gap-3 bg-white/50 p-2 rounded-lg border border-border/30">
+                                                        <img src={subItem.image} className="w-10 h-10 rounded object-cover" />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-xs font-bold truncate">{subItem.name}</p>
+                                                            <p className="text-[10px] text-muted-foreground">Color: {subItem.color}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
-                                <div className="pt-6 border-t-2 border-border flex justify-between items-center">
-                                    <span className="text-lg font-semibold text-muted-foreground">Subtotal</span>
-                                    <span className="text-3xl font-extrabold text-[#1E556E]">৳ {formData.totalPrice.toLocaleString()}</span>
+                                <div className="pt-6 border-t-2 border-border space-y-2">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Subtotal</span>
+                                        <span className="text-xl font-bold text-foreground">৳ {formData.totalPrice.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Shipping</span>
+                                        <span className="text-xl font-bold text-foreground">৳ {formData.shippingCharge.toLocaleString()}</span>
+                                    </div>
+                                    <div className="pt-4 border-t border-border/50 flex justify-between items-center">
+                                        <span className="text-lg font-black text-muted-foreground uppercase tracking-widest">Total Amount</span>
+                                        <span className="text-3xl font-black text-[#1E556E]">৳ {formData.totalAmount.toLocaleString()}</span>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -402,7 +538,25 @@ export default function ManualOrderEntry() {
                 {/* Right: Customer Details & Order Source */}
                 <div className="space-y-6">
                     <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl border border-border p-8 space-y-6 sticky top-8">
-                        <h2 className="text-xl font-bold mb-4">Customer Details</h2>
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold">Customer Details</h2>
+                            <div className="flex bg-muted p-1 rounded-lg text-[10px] font-bold">
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, deliveryLocation: "inside" }))}
+                                    className={`px-2 py-1 rounded ${formData.deliveryLocation === "inside" ? "bg-white shadow-sm text-primary" : "text-muted-foreground"}`}
+                                >
+                                    Inside
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, deliveryLocation: "outside" }))}
+                                    className={`px-2 py-1 rounded ${formData.deliveryLocation === "outside" ? "bg-white shadow-sm text-primary" : "text-muted-foreground"}`}
+                                >
+                                    Outside
+                                </button>
+                            </div>
+                        </div>
 
                         <div className="space-y-5">
                             <div className="space-y-1.5">
@@ -499,51 +653,223 @@ export default function ManualOrderEntry() {
 
             {/* Variant Selection Modal */}
             {selectedProductForVariant && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-                        <div className="p-6 border-b border-border flex justify-between items-center">
-                            <h3 className="text-xl font-bold">Select {orderType === "regular" ? "Variant" : "Size"}</h3>
-                            <button onClick={() => setSelectedProductForVariant(null)} className="p-2 hover:bg-muted rounded-full">
-                                <X className="w-5 h-5" />
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+                    <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden transition-all duration-300 ${orderType === "combo" ? "w-full max-w-5xl" : "w-full max-w-md"}`}>
+                        <div className="p-6 border-b border-border flex justify-between items-center bg-[#1E556E] text-white">
+                            <h3 className="text-xl font-extrabold uppercase tracking-tight">
+                                {orderType === "regular" ? "Select Product Variant" : "Configure Your Combo"}
+                            </h3>
+                            <button onClick={() => { setSelectedProductForVariant(null); setActiveSlotIndex(null); }} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                                <X className="w-6 h-6" />
                             </button>
                         </div>
 
-                        <div className="p-6 max-h-[60vh] overflow-y-auto">
-                            <div className="flex items-center gap-4 mb-6">
-                                <img src={selectedProductForVariant.image || selectedProductForVariant.featuredImage} className="w-16 h-16 rounded-lg object-cover" />
-                                <div>
-                                    <p className="font-bold text-lg">{selectedProductForVariant.name || selectedProductForVariant.title}</p>
-                                    <p className="text-[#1E556E] font-bold">৳ {selectedProductForVariant.offerPrice || selectedProductForVariant.price}</p>
-                                </div>
-                            </div>
-
+                        <div className="p-8 max-h-[85vh] overflow-y-auto custom-scrollbar">
                             {orderType === "regular" ? (
-                                <div className="grid grid-cols-1 gap-3">
-                                    {selectedProductForVariant.variants.map((variant, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => addRegularItem(selectedProductForVariant, variant)}
-                                            className="flex items-center justify-between p-4 border border-border rounded-xl hover:border-[#1E556E] hover:bg-[#1E556E]/5 text-left transition-all"
-                                        >
-                                            <div>
-                                                <p className="font-semibold">{variant.design} {variant.color}</p>
-                                                <p className="text-sm text-muted-foreground">Size: {variant.size} | SKU: {variant.sku}</p>
-                                            </div>
-                                            <Plus className="w-5 h-5 text-[#1E556E]" />
-                                        </button>
-                                    ))}
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-6 p-4 bg-muted/30 rounded-2xl border border-border/50">
+                                        <div className="w-24 h-24 rounded-xl overflow-hidden shadow-sm">
+                                            <img src={selectedProductForVariant.featuredImage || selectedProductForVariant.image} className="w-full h-full object-cover" />
+                                        </div>
+                                        <div>
+                                            <p className="font-black text-xl text-[#1E556E]">{selectedProductForVariant.name}</p>
+                                            <p className="text-primary font-black text-lg">৳ {selectedProductForVariant.offerPrice || selectedProductForVariant.price}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {selectedProductForVariant.variants.map((variant, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => addRegularItem(selectedProductForVariant, variant)}
+                                                className="flex items-center justify-between p-5 border-2 border-border/40 rounded-2xl hover:border-[#1E556E] hover:bg-[#1E556E]/5 hover:shadow-lg transition-all text-left"
+                                            >
+                                                <div>
+                                                    <p className="font-bold text-lg">{variant.design} {variant.color}</p>
+                                                    <p className="font-bold text-muted-foreground bg-muted inline-block px-2 py-0.5 rounded text-xs mt-1">
+                                                        Size: {variant.size} | SKU: {variant.sku}
+                                                    </p>
+                                                </div>
+                                                <div className="bg-[#1E556E] text-white p-2 rounded-xl">
+                                                    <Plus className="w-5 h-5" />
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 gap-3">
-                                    {selectedProductForVariant.sizes.map((size, idx) => (
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                                    {/* Left: Configuration Header & Slots */}
+                                    <div className="lg:col-span-12 flex flex-col md:flex-row gap-6 mb-4 items-center justify-between p-6 bg-[#1E556E]/5 rounded-3xl border border-[#1E556E]/10">
+                                        <div className="flex items-center gap-4">
+                                            <img src={selectedProductForVariant.featuredImage || selectedProductForVariant.image} className="w-16 h-16 rounded-2xl object-cover shadow-md" />
+                                            <div>
+                                                <h4 className="font-black text-2xl text-[#1E556E]">{selectedProductForVariant.title}</h4>
+                                                <p className="font-bold text-primary">৳ {selectedProductForVariant.offerPrice || selectedProductForVariant.price} Base Price</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-4">
+                                            {/* Step 1: Package */}
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">1. Package</label>
+                                                <div className="flex gap-2">
+                                                    {selectedProductForVariant.bundleOptions?.map((opt, idx) => (
+                                                        <button
+                                                            key={idx}
+                                                            onClick={() => setFormData(prev => ({ ...prev, selectedBundleOption: opt }))}
+                                                            className={`px-4 py-2 rounded-xl text-sm font-black border-2 transition-all ${formData.selectedBundleOption === opt ? "bg-[#1E556E] text-white border-[#1E556E] shadow-lg shadow-[#1E556E]/30" : "bg-white border-border hover:border-primary"}`}
+                                                        >
+                                                            {opt.pieces} Pcs
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Step 2: Size */}
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">2. Bundle Size</label>
+                                                <div className="flex gap-2">
+                                                    {selectedProductForVariant.sizes?.map((size, idx) => (
+                                                        <button
+                                                            key={idx}
+                                                            onClick={() => setFormData(prev => ({ ...prev, selectedSize: size }))}
+                                                            className={`px-4 py-2 rounded-xl text-sm font-black border-2 transition-all ${formData.selectedSize === size ? "bg-primary text-white border-primary shadow-lg shadow-primary/30" : "bg-white border-border hover:border-primary"}`}
+                                                        >
+                                                            {size}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="lg:col-span-12 grid grid-cols-1 lg:grid-cols-2 gap-8 mt-4">
+                                        {/* Slot Grid */}
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-center px-1">
+                                                <h5 className="font-black text-muted-foreground uppercase tracking-widest text-xs">3. Fill the Slots</h5>
+                                                <span className="bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+                                                    {comboSlots.filter(s => s.product).length} / {formData.selectedBundleOption?.pieces || 0} Ready
+                                                </span>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[450px] overflow-y-auto pr-2 custom-scrollbar p-1">
+                                                {formData.selectedBundleOption ? (
+                                                    comboSlots.map((slot, sIdx) => (
+                                                        <div
+                                                            key={sIdx}
+                                                            className={`relative group rounded-2xl border-2 transition-all duration-300 ${activeSlotIndex === sIdx ? "ring-4 ring-primary/20 border-primary shadow-xl" : "border-border hover:border-primary/50"}`}
+                                                        >
+                                                            {!slot.product ? (
+                                                                <button
+                                                                    onClick={() => setActiveSlotIndex(sIdx)}
+                                                                    className="w-full aspect-[4/3] flex flex-col items-center justify-center gap-3 bg-muted/10"
+                                                                >
+                                                                    <div className="w-12 h-12 rounded-full bg-white shadow-sm border border-border flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                                        <Plus className="w-6 h-6 text-primary" />
+                                                                    </div>
+                                                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Slot {sIdx + 1}</span>
+                                                                </button>
+                                                            ) : (
+                                                                <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
+                                                                    <img src={slot.product.featuredImage || slot.product.image} className="w-full h-full object-cover" />
+                                                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-4 text-center">
+                                                                        <p className="text-white text-[10px] font-black uppercase mb-2">{slot.product.name}</p>
+                                                                        <div className="flex gap-1.5 flex-wrap justify-center border-t border-white/20 pt-2 mb-3 w-full">
+                                                                            {slot.product.colors?.map(c => (
+                                                                                <button
+                                                                                    key={c.name}
+                                                                                    onClick={(e) => { e.stopPropagation(); handleUpdateComboSlot(sIdx, slot.product, c.name); }}
+                                                                                    style={{ backgroundColor: c.code }}
+                                                                                    className={`w-4 h-4 rounded-full border border-white/50 ring-2 transition-all ${slot.selectedColor === c.name ? "ring-white" : "ring-transparent opacity-50"}`}
+                                                                                    title={c.name}
+                                                                                />
+                                                                            ))}
+                                                                        </div>
+                                                                        <div className="flex gap-2">
+                                                                            <button onClick={() => setActiveSlotIndex(sIdx)} className="p-1.5 bg-white text-primary rounded-lg shadow-lg hover:scale-110 transition-transform"><Search className="w-4 h-4" /></button>
+                                                                            <button onClick={() => handleUpdateComboSlot(sIdx, null)} className="p-1.5 bg-destructive text-white rounded-lg shadow-lg hover:scale-110 transition-transform"><Trash2 className="w-4 h-4" /></button>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="absolute top-2 left-2 px-2 py-0.5 bg-white/90 backdrop-blur rounded text-[8px] font-black uppercase shadow-sm">Slot {sIdx + 1}</div>
+                                                                    <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-[#1E556E] text-white rounded text-[8px] font-black uppercase">Color: {slot.selectedColor}</div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="col-span-full py-20 text-center bg-muted/10 rounded-3xl border-2 border-dashed border-border/50">
+                                                        <Notebook className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
+                                                        <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Select a package above first</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Product Selection for Active Slot */}
+                                        <div className={`space-y-4 transition-all duration-300 ${activeSlotIndex !== null ? "opacity-100 translate-x-0" : "opacity-30 pointer-events-none translate-x-4 grayscale"}`}>
+                                            <div className="flex justify-between items-center px-1">
+                                                <h5 className="font-black text-muted-foreground uppercase tracking-widest text-xs">
+                                                    {activeSlotIndex !== null ? `4. Picking for Slot ${activeSlotIndex + 1}` : "4. Pick a product"}
+                                                </h5>
+                                                {activeSlotIndex !== null && <button onClick={() => setActiveSlotIndex(null)} className="text-[10px] text-primary font-black uppercase flex items-center gap-1 hover:underline"><X className="w-3 h-3" /> Discard</button>}
+                                            </div>
+
+                                            <div className="bg-muted/10 rounded-3xl border-2 border-border/50 overflow-hidden">
+                                                <div className="grid grid-cols-2 sm:grid-cols-2 gap-4 p-4 max-h-[450px] overflow-y-auto custom-scrollbar">
+                                                    {selectedProductForVariant.products?.map(p => (
+                                                        <button
+                                                            key={p._id}
+                                                            onClick={() => {
+                                                                handleUpdateComboSlot(activeSlotIndex, p);
+                                                                // If next slot empty, auto set active to it
+                                                                const nextIdx = comboSlots.findIndex((s, idx) => idx > activeSlotIndex && !s.product);
+                                                                if (nextIdx !== -1) setActiveSlotIndex(nextIdx);
+                                                                else setActiveSlotIndex(null);
+                                                            }}
+                                                            className="flex flex-col bg-white rounded-2xl overflow-hidden border-2 border-border/50 hover:border-primary hover:shadow-xl transition-all group"
+                                                        >
+                                                            <div className="aspect-[4/5] relative">
+                                                                <img src={p.featuredImage || p.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                            </div>
+                                                            <div className="p-3 text-left">
+                                                                <p className="font-black text-[10px] uppercase truncate text-[#1E556E] mb-1">{p.name}</p>
+                                                                <div className="flex gap-1">
+                                                                    {p.colors?.slice(0, 4).map(c => (
+                                                                        <div key={c.name} style={{ backgroundColor: c.code }} className="w-2.5 h-2.5 rounded-full border border-border shadow-sm" title={c.name} />
+                                                                    ))}
+                                                                    {p.colors?.length > 4 && <span className="text-[8px] font-bold text-muted-foreground">+{p.colors.length - 4}</span>}
+                                                                </div>
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Footer */}
+                                    <div className="lg:col-span-12 mt-6 p-6 bg-white border-2 border-border/50 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-6">
+                                        <div className="text-center sm:text-left">
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Configuration Price</p>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-4xl font-black text-[#1E556E]">৳ {formData.selectedBundleOption?.price || 0}</span>
+                                                <span className="bg-[#1E556E]/10 text-[#1E556E] text-[10px] font-black px-2 py-1 rounded-lg">
+                                                    {formData.selectedBundleOption?.pieces || 0} PIECES INCLUDED
+                                                </span>
+                                            </div>
+                                        </div>
+
                                         <button
-                                            key={idx}
-                                            onClick={() => addComboItem(selectedProductForVariant, size)}
-                                            className="p-4 border border-border rounded-xl hover:border-[#1E556E] hover:bg-[#1E556E]/5 font-bold transition-all text-center"
+                                            disabled={!formData.selectedBundleOption || !formData.selectedSize || !comboSlots.every(s => s.product)}
+                                            onClick={() => addComboItem(selectedProductForVariant, formData.selectedBundleOption, formData.selectedSize, comboSlots)}
+                                            className="w-full sm:w-auto px-12 py-5 bg-[#1E556E] text-white rounded-2xl font-black text-lg shadow-xl shadow-[#1E556E]/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-30 disabled:grayscale flex items-center justify-center gap-3"
                                         >
-                                            {size}
+                                            <CheckCircle className="w-6 h-6" /> SAVE CONFIGURATION
                                         </button>
-                                    ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -551,7 +877,212 @@ export default function ManualOrderEntry() {
                 </div>
             )}
 
+            {/* Success Modal */}
+            {createdOrder && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4 animate-in fade-in duration-300">
+                    <div className="bg-white rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                        <div className="bg-[#1E556E] p-8 text-center relative">
+                            <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+                                <div className="absolute top-10 left-10 w-20 h-20 bg-white rounded-full blur-3xl" />
+                                <div className="absolute bottom-10 right-10 w-20 h-20 bg-white rounded-full blur-3xl" />
+                            </div>
+                            <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-4 backdrop-blur-md border border-white/20">
+                                <CheckCircle className="w-10 h-10 text-white" />
+                            </div>
+                            <h3 className="text-2xl font-black text-white mb-2 tracking-tight">Order Created Successfully!</h3>
+                            <p className="text-white/70 font-medium">Order ID: <span className="text-white font-black">#{createdOrder.orderNumber}</span></p>
+                        </div>
+
+                        <div className="p-8 space-y-4">
+                            <button
+                                onClick={() => window.print()}
+                                className="w-full py-4 bg-[#1E556E] text-white rounded-2xl font-black flex items-center justify-center gap-3 shadow-lg shadow-[#1E556E]/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                            >
+                                <Printer className="w-5 h-5" /> PRINT PDF INVOICE
+                            </button>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <button
+                                    onClick={() => {
+                                        setCreatedOrder(null)
+                                        setFormData({
+                                            customerName: "",
+                                            phone: "",
+                                            address: "",
+                                            note: "",
+                                            items: [],
+                                            totalPrice: 0,
+                                            shippingCharge: 60,
+                                            totalAmount: 0,
+                                            orderSource: "website",
+                                            deliveryLocation: "inside"
+                                        })
+                                    }}
+                                    className="py-4 bg-gray-100 text-gray-800 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-all"
+                                >
+                                    <Plus className="w-4 h-4" /> NEW ORDER
+                                </button>
+                                <button
+                                    onClick={() => router.push(orderType === "regular" ? "/admin/orders/regular" : "/admin/orders/combos")}
+                                    className="py-4 border-2 border-gray-100 text-gray-600 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-all"
+                                >
+                                    <List className="w-4 h-4" /> VIEW LIST
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Hidden Printable Invoice Section */}
+            {createdOrder && (
+                <div id="printable-invoice" className="hidden print:block fixed inset-0 bg-white z-[200] p-8 text-black font-sans leading-relaxed">
+                    {/* Invoice Header */}
+                    <div className="flex justify-between items-start border-b-2 border-[#1E556E] pb-8 mb-8">
+                        <div>
+                            <h1 className="text-4xl font-black text-[#1E556E] mb-1">IMPORTILA</h1>
+                            <p className="text-xs font-bold uppercase tracking-widest text-[#1E556E]/60">Your Premium Import Partner</p>
+                        </div>
+                        <div className="text-right">
+                            <h2 className="text-2xl font-black uppercase text-[#1E556E]">INVOICE</h2>
+                            <p className="text-sm font-bold">#{createdOrder.orderNumber}</p>
+                            <p className="text-xs text-gray-500">{new Date(createdOrder.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                        </div>
+                    </div>
+
+                    {/* Customer Info */}
+                    <div className="grid grid-cols-2 gap-12 mb-10">
+                        <div className="space-y-3">
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-1 mb-2">BILL TO RECIPIENT</h3>
+                            <div className="space-y-1">
+                                <p className="font-extrabold text-xl">{createdOrder.customerName}</p>
+                                <p className="font-bold flex items-center gap-2">
+                                    <span className="w-5 h-5 flex items-center justify-center bg-[#1E556E] text-white rounded text-[10px]">P</span>
+                                    {createdOrder.phone}
+                                </p>
+                                <p className="text-sm leading-snug whitespace-pre-wrap">{createdOrder.address}</p>
+                            </div>
+                        </div>
+                        <div className="space-y-3">
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-1 mb-2">SHIPPING INFO</h3>
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-sm py-1 border-b border-dashed border-gray-100">
+                                    <span className="font-bold text-gray-400">Location:</span>
+                                    <span className="font-black uppercase">{createdOrder.deliveryLocation} Dhaka</span>
+                                </div>
+                                <div className="flex justify-between text-sm py-1 border-b border-dashed border-gray-100">
+                                    <span className="font-bold text-gray-400">Source:</span>
+                                    <span className="font-black uppercase">{createdOrder.orderSource}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Item Table */}
+                    <div className="mb-10">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-[#1E556E] text-white">
+                                    <th className="py-3 px-4 rounded-tl-xl text-[10px] font-black uppercase tracking-wider">Product details</th>
+                                    <th className="py-3 px-4 text-[10px] font-black uppercase tracking-wider text-center">Qty</th>
+                                    <th className="py-3 px-4 text-[10px] font-black uppercase tracking-wider text-right">Unit Price</th>
+                                    <th className="py-3 px-4 rounded-tr-xl text-[10px] font-black uppercase tracking-wider text-right">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {orderType === "regular" ? (
+                                    createdOrder.items?.map((item, idx) => (
+                                        <tr key={idx}>
+                                            <td className="py-4 px-4">
+                                                <p className="font-black text-lg text-[#1E556E]">{item.name}</p>
+                                                <p className="text-xs font-bold text-gray-400 mt-1">
+                                                    {item.variantName || `${item.design || ''} ${item.color || ''}`.trim()}
+                                                    {item.size && ` | Size: ${item.size}`}
+                                                </p>
+                                            </td>
+                                            <td className="py-4 px-4 text-center font-black">{item.quantity}</td>
+                                            <td className="py-4 px-4 text-right font-bold">৳ {item.price?.toLocaleString()}</td>
+                                            <td className="py-4 px-4 text-right font-black">৳ {(item.price * item.quantity)?.toLocaleString()}</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td className="py-4 px-4 align-top">
+                                            <p className="font-black text-lg text-[#1E556E]">{createdOrder.name || "Combo Deal"}</p>
+                                            <p className="text-xs font-bold text-gray-400 mt-1">Bundle Size: {createdOrder.bundleSize} Pieces | Size: {createdOrder.productSize}</p>
+                                            <div className="mt-4 grid grid-cols-1 gap-2 border-l-4 border-gray-100 pl-4">
+                                                {createdOrder.items?.map((sub, sIdx) => (
+                                                    <div key={sIdx} className="flex items-center justify-between text-[11px] font-bold">
+                                                        <span>• {sub.name}</span>
+                                                        <span className="text-gray-400 uppercase">{sub.color}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </td>
+                                        <td className="py-4 px-4 text-center font-black">1</td>
+                                        <td className="py-4 px-4 text-right font-bold">৳ {createdOrder.price?.toLocaleString()}</td>
+                                        <td className="py-4 px-4 text-right font-black">৳ {createdOrder.price?.toLocaleString()}</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Totals & Notes */}
+                    <div className="grid grid-cols-12 gap-12 mt-auto">
+                        <div className="col-span-7 bg-gray-50 p-6 rounded-3xl border-2 border-dashed border-gray-200">
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1E556E] mb-3">Order Note / Instructions</h3>
+                            <p className="text-sm font-bold text-gray-500 italic leading-relaxed">
+                                {createdOrder.note || "No special instructions provided."}
+                            </p>
+                        </div>
+                        <div className="col-span-5 space-y-3 pt-4">
+                            <div className="flex justify-between text-sm">
+                                <span className="font-bold text-gray-400">Subtotal:</span>
+                                <span className="font-black">৳ {(createdOrder.totalAmount - createdOrder.shippingCharge)?.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="font-bold text-gray-400">Shipping:</span>
+                                <span className="font-black">৳ {createdOrder.shippingCharge?.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between items-center bg-[#1E556E] text-white p-4 rounded-2xl shadow-xl">
+                                <span className="text-[10px] font-black uppercase tracking-widest">Total Payable</span>
+                                <span className="text-3xl font-black">৳ {createdOrder.totalAmount?.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer Warning for Courier */}
+                    <div className="mt-20 pt-10 border-t-4 border-[#1E556E]/20 flex justify-between items-center grayscale opacity-80">
+                        <div className="space-y-1">
+                            <p className="text-[10px] font-black text-gray-400">Authorized Signature</p>
+                            <div className="w-40 h-10 border-b border-gray-200"></div>
+                        </div>
+                        <div className="text-right space-y-1">
+                            <p className="text-[12px] font-black text-[#1E556E]">IMPORTILA OFFICIAL</p>
+                            <p className="text-[8px] font-bold text-gray-400">Dhaka, Bangladesh | +880 1XXX-XXXXXX</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <style jsx>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-invoice, #printable-invoice * {
+            visibility: visible;
+          }
+          #printable-invoice {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            display: block !important;
+          }
+        }
         .custom-scrollbar::-webkit-scrollbar {
           width: 5px;
         }

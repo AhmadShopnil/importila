@@ -504,13 +504,13 @@ export default function CreateComboPage() {
                         <X size={14} />
                       </button>
 
-                      <div className="flex gap-4">
-                        <div className="w-14 h-14 rounded-xl overflow-hidden border border-border flex-shrink-0">
+                      <div className="flex gap-4 items-center">
+                        <div className="w-14 h-14 rounded-md overflow-hidden border border-border flex-shrink-0">
                           <img src={p.featuredImage} alt="" className="w-full h-full object-cover" />
                         </div>
                         <div className="space-y-2 flex-1">
                           <h4 className="text-sm font-bold line-clamp-1 pr-6">{p.name}</h4>
-                          <div className="flex gap-2 flex-wrap">
+                          {/* <div className="flex gap-2 flex-wrap">
                             {p?.variants?.map(v => (
                               <button
                                 type="button"
@@ -521,12 +521,12 @@ export default function CreateComboPage() {
                                 title={v.colorName}
                               />
                             ))}
-                          </div>
-                          {p.colorName && (
+                          </div> */}
+                          {/* {p.colorName && (
                             <p className="text-[11px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded w-fit">
                               COLOR: {p.colorName}
                             </p>
-                          )}
+                          )} */}
                         </div>
                       </div>
                     </div>
@@ -603,7 +603,9 @@ export default function CreateComboPage() {
           <div className="sticky top-8 space-y-4">
             <button
               disabled={loading}
-              className="w-full bg-[#1E556E] text-white py-4 rounded-2xl text-lg font-bold shadow-lg shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-2"
+              className="w-full bg-[#1E556E] text-white py-3 rounded-xl text-lg font-bold shadow-lg shadow-primary/10
+               hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 
+               disabled:scale-100 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
