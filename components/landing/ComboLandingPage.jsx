@@ -12,6 +12,7 @@ import Footer from "@/components/landing/Footer";
 import ReviewSection from "@/components/landing/ReviewSection";
 import ProductDetails from "@/components/landing/ProductDetails";
 import { BundleProvider, useBundle } from "@/context/BundleContext";
+import SizeChart from "./SizeChart";
 
 const LandingContent = ({ combo }) => {
     const { state } = useBundle();
@@ -29,6 +30,7 @@ const LandingContent = ({ combo }) => {
             <ProductGrid combo={combo} />
 
             <ProductDetails combo={combo} />
+            <SizeChart />
 
             <SizeSelection combo={combo} />
 

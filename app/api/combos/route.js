@@ -44,8 +44,8 @@ export async function POST(request) {
     const helpSubtitle = formData.get("helpSubtitle");
 
     const description = formData.get("description");
-    const price = Number(formData.get("price"));
-    const offerPrice = Number(formData.get("offerPrice"));
+    const price = Number(formData.get("price")) || 0;
+    const offerPrice = Number(formData.get("offerPrice")) || 0;
     const sizes = JSON.parse(formData.get("sizes") || "[]");
     const products = JSON.parse(formData.get("products") || "[]");
     const bundleOptions = JSON.parse(formData.get("bundleOptions") || "[]");

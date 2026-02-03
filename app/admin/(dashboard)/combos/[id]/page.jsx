@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, UploadCloud, Edit3, Lock, Plus, Trash2, X, Search } from "lucide-react"
+import { ArrowLeft, UploadCloud, Edit3, Lock, Plus, Trash2, X, Search, Check } from "lucide-react"
 import { BASE_URL } from "@/utils/baseUrl"
 import RichTextEditor from "@/components/RichTextEditor"
 
@@ -71,7 +71,7 @@ export default function EditComboPage() {
 
   /* ---------- Select Product ---------- */
   const addProduct = (product) => {
-    if (selectedProducts.find(p => p.productId === product._id)) return
+    if (selectedProducts.find(p => (p._id || p.productId) === product._id)) return
 
     setSelectedProducts(prev => [
       ...prev,
@@ -232,27 +232,6 @@ export default function EditComboPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Base Price (Original)</label>
-                <input
-                  name="price"
-                  type="number"
-                  defaultValue={comboData.price}
-                  placeholder="0.00"
-                  className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Base Offer Price</label>
-                <input
-                  name="offerPrice"
-                  type="number"
-                  defaultValue={comboData.offerPrice}
-                  placeholder="0.00"
-                  className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                />
-              </div>
             </div>
 
             <div className="space-y-4">
@@ -469,24 +448,37 @@ export default function EditComboPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
-                {filteredProducts?.map(product => (
-                  <button
-                    type="button"
-                    key={product._id}
-                    onClick={() => addProduct(product)}
-                    className="w-full group flex items-center justify-between p-3 rounded-xl border border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all text-left"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg overflow-hidden border border-border flex-shrink-0">
-                        <img src={product.featuredImage} alt="" className="w-full h-full object-cover" />
+                {filteredProducts?.map(product => {
+                  const isSelected = selectedProducts.some(p => (p._id || p.productId) === product._id);
+                  return (
+                    <button
+                      type="button"
+                      key={product._id}
+                      onClick={() => !isSelected && addProduct(product)}
+                      disabled={isSelected}
+                      className={`w-full group flex items-center justify-between p-3 rounded-xl border transition-all text-left ${isSelected
+                        ? "bg-primary/10 border-primary shadow-sm cursor-not-allowed"
+                        : "border-transparent hover:border-primary/20 hover:bg-primary/5 cursor-pointer"
+                        }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-border flex-shrink-0">
+                          <img src={product.featuredImage} alt="" className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium line-clamp-1">{product?.name}</span>
+                          {isSelected && (
+                            <span className="text-[10px] font-bold text-primary uppercase">Already Selected</span>
+                          )}
+                        </div>
                       </div>
-                      <span className="text-sm font-medium line-clamp-1">{product?.name}</span>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
-                      <Plus size={16} />
-                    </div>
-                  </button>
-                ))}
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isSelected ? "bg-primary text-white" : "bg-muted group-hover:bg-primary group-hover:text-white"
+                        }`}>
+                        {isSelected ? <Check size={16} /> : <Plus size={16} />}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

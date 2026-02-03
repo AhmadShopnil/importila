@@ -101,6 +101,7 @@ export async function POST(request) {
 
     const name = formData.get("name")
     const description = formData.get("description")
+    const richDescription = formData.get("richDescription") || ""
     const categories = JSON.parse(formData.get("categories") || "[]")
     const price = Number(formData.get("price"))
     const offerPrice = Number(formData.get("offerPrice"))
@@ -140,6 +141,7 @@ export async function POST(request) {
     const result = await db.collection("products").insertOne({
       name,
       description,
+      richDescription,
       categories, // Now an array of category IDs
       price,
       offerPrice,

@@ -2,12 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { Package, ShoppingCart, TrendingUp, AlertTriangle, DollarSign, ChartNoAxesCombined } from "lucide-react"
-import Loading from "@/components/Loader/Loading"
-import MonthlyOrdersChart from "@/components/Dashboard/Report/MonthlyOrdersChart"
 import DailyOrdersChart from "@/components/Dashboard/Report/DailyOrdersChart"
 import MonthlyOrdersCompareChart from "@/components/Dashboard/Report/MonthlyOrdersCompareChart"
 import { BASE_URL } from "@/utils/baseUrl"
-import MonthlyOrdersComparePieChart from "@/components/Dashboard/Report/MonthlyOrdersComparePieChart"
 import WebOrderReportChart from "@/components/Dashboard/Report/WebOrderReportChart"
 
 
@@ -86,7 +83,7 @@ export default function AdminDashboard() {
     },
     {
       label: "Low Stock Items",
-      value: stats.lowStockItems,
+      value: stats?.lowStockItems,
       icon: AlertTriangle,
       color: "bg-red-100 text-red-600",
       cardStyle: "border border-red-200 bg-white"

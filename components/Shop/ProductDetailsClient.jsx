@@ -268,6 +268,30 @@ const ProductDetailsClient = ({ product }) => {
                 </div>
             </Container>
 
+            {/* Rich Content / Product Details Section */}
+            {product.richDescription && (
+                <div className="border-t border-border mt-16 py-16 bg-muted/5">
+                    <Container>
+                        <div className="max-w-4xl mx-auto">
+                            <h2 className="text-2xl font-black uppercase tracking-widest mb-10 text-center">Product Detail</h2>
+                            <div
+                                className="rich-content-area break-words overflow-x-hidden
+                                [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-xl [&_img]:my-4
+                                [&_iframe]:max-w-full [&_iframe]:aspect-video [&_iframe]:rounded-xl
+                                [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_pre]:bg-muted [&_pre]:p-4 [&_pre]:rounded-lg
+                                [&_table]:block [&_table]:overflow-x-auto [&_table]:w-full
+                                [&_h1]:text-2xl md:[&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-4
+                                [&_h2]:text-xl md:[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mb-3
+                                [&_p]:mb-4 [&_p]:leading-relaxed
+                                [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-4
+                                [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-4"
+                                dangerouslySetInnerHTML={{ __html: product.richDescription }}
+                            />
+                        </div>
+                    </Container>
+                </div>
+            )}
+
             <CheckoutModal
                 isOpen={isCheckoutModalOpen}
                 onClose={() => setIsCheckoutModalOpen(false)}

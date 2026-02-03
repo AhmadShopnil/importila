@@ -7,6 +7,7 @@ import toast from "react-hot-toast"
 import { ArrowLeft, Plus, Trash2, X, UploadCloud, Copy } from "lucide-react"
 import { BASE_URL } from "@/utils/baseUrl"
 import CategoryMultiSelect from "@/components/Dashboard/Products/CategoryMultiSelect"
+import RichTextEditor from "@/components/RichTextEditor"
 
 /* ---------- SKU Generator ---------- */
 const generateSKU = (color, size) => {
@@ -35,6 +36,7 @@ export default function EditProductPage() {
     isFeatured: false,
     isActive: true,
     designName: "",
+    richDescription: "",
   })
 
   /* ---------- Fetch Categories ---------- */
@@ -73,6 +75,7 @@ export default function EditProductPage() {
           isFeatured: !!data.isFeatured,
           isActive: data.isActive !== undefined ? !!data.isActive : true,
           designName: data.designName || "",
+          richDescription: data.richDescription || "",
           purchasePrice: data.purchasePrice ? String(data.purchasePrice) : "",
           variants: data.variants.map((v) => ({
             ...v,
@@ -195,6 +198,7 @@ export default function EditProductPage() {
       fd.append("isFeatured", formData.isFeatured)
       fd.append("isActive", formData.isActive)
       fd.append("designName", formData.designName)
+      fd.append("richDescription", formData.richDescription)
 
       // Featured image (File or URL)
       if (formData.featuredImage instanceof File) {
@@ -346,8 +350,20 @@ export default function EditProductPage() {
               </div>
             </div>
 
+            <div className="mt-5 space-y-4">
+              <label className="text-sm font-semibold text-foreground flex justify-between items-center">
+                <span>Detailed Description (Rich Content)</span>
+                <span className="text-[10px] text-primary bg-primary/5 px-2 py-1 rounded">Visual Editor</span>
+              </label>
+              <RichTextEditor
+                value={formData.richDescription}
+                onChange={(content) => setFormData(prev => ({ ...prev, richDescription: content }))}
+                placeholder="Write detailed product information, specifications, etc..."
+              />
+            </div>
+
             <div className="mt-5">
-              <label className="form-label">Description</label>
+              <label className="form-label">Short Description</label>
               <textarea
                 rows={3}
                 name="description"

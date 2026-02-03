@@ -14,8 +14,8 @@ export default function ProductDetails({ combo }) {
             <div className="absolute top-0 right-0 w-1/3 h-full bg-primary/5 -skew-x-12 translate-x-1/2" />
 
             <div className="container mx-auto px-4 relative z-10">
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-card border border-border rounded-xl p-4 sm:p-8 md:p-12 shadow-2xl shadow-primary/5 ">
+                <div className="max-w-7xl mx-auto">
+                    <div className="bg-card border border-border rounded-md p-4 sm:p-8 md:p-12 shadow-2xl shadow-primary/5 ">
 
                         {/* Rich Content Area */}
                         <div

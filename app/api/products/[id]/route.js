@@ -54,6 +54,7 @@ export async function PUT(request, context) {
 
     const name = formData.get("name")
     const description = formData.get("description")
+    const richDescription = formData.get("richDescription") || ""
     const categories = JSON.parse(formData.get("categories") || "[]")
     const price = Number(formData.get("price"))
     const offerPrice = Number(formData.get("offerPrice"))
@@ -104,6 +105,7 @@ export async function PUT(request, context) {
         $set: {
           name,
           description,
+          richDescription,
           categories,
           price,
           offerPrice,

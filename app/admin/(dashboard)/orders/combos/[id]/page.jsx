@@ -206,13 +206,13 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
                                         <span className="font-medium text-gray-900 ">৳ {(order.price || 0).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-sm text-indigo-600 font-bold">
-                                        <span>Bundle Discount</span>
-                                        <span className="">- ৳ {((order?.totalAmount || 0) - (order.offerPrice || order?.price || 0)).toLocaleString()}</span>
+                                        <span>Shiping charge </span>
+                                        <span className="">+ ৳ {(order.shippingCharge || 0).toLocaleString()}</span>
                                     </div>
                                     <div className="h-px bg-indigo-100 my-2" />
                                     <div className="flex justify-between text-lg">
                                         <span className="font-bold text-gray-900">Paid Amount</span>
-                                        <span className="font-black text-indigo-700">৳ {(order.offerPrice || order.totalPrice || order.price).toLocaleString()}</span>
+                                        <span className="font-black text-indigo-700">৳ {(order.totalAmount || (order?.price + order?.shippingCharge)).toLocaleString()}</span>
                                     </div>
                                 </div>
                             </div>
