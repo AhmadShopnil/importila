@@ -47,10 +47,12 @@ export async function PUT(request) {
 
     try {
         const body = await request.json()
+        const { _id, type, ...updateDataWithoutId } = body
         const { db } = await connectToDatabase()
 
         const updateData = {
-            ...body,
+            ...updateDataWithoutId,
+            type: "general", // Enforce type
             updatedAt: new Date()
         }
 

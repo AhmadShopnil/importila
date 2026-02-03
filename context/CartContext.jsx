@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { trackAddToCart } from '@/utils/gtm'
 
 const CartContext = createContext()
 
@@ -49,6 +50,7 @@ export const CartProvider = ({ children }) => {
                 quantity
             }]
         })
+        trackAddToCart(product, variant, quantity)
         setIsCartOpen(true)
     }
 

@@ -3,7 +3,6 @@ import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { Toaster } from "react-hot-toast"
 import { ProductSelectionProvider } from "@/context/ProductSelectionContext"
-import TrackingScripts from "@/components/TrackingScripts"
 import { BASE_URL } from "@/utils/baseUrl"
 
 
@@ -71,19 +70,7 @@ export default async function RootLayout({ children }) {
           {children}
           <Analytics />
 
-          {/* Tracking Scripts */}
-          <TrackingScripts
-            gtmId={settings?.googleTagManagerId || ""}
-            fbPixelId={settings?.facebookPixelId || ""}
-            gaId={settings?.googleAnalyticsId || ""}
-            tiktokPixelId={settings?.tiktokPixelId || ""}
-            snapchatPixelId={settings?.snapchatPixelId || ""}
-            enableGTM={settings?.enableGTM || false}
-            enableFBPixel={settings?.enableFBPixel || false}
-            enableGA={settings?.enableGA || false}
-            enableTikTok={settings?.enableTikTok || false}
-            enableSnapchat={settings?.enableSnapchat || false}
-          />
+
         </ProductSelectionProvider>
       </body>
     </html>

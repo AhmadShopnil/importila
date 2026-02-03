@@ -33,6 +33,7 @@ const adminNavItems = [
     icon: BarChart3,
     children: [
       { label: "Sales Report", href: "/admin/reports" },
+      { label: "Best Selling", href: "/admin/reports/best-selling" },
       { label: "Source Analysis", href: "/admin/reports/sources" },
     ],
   },

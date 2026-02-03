@@ -7,6 +7,10 @@ import BottomAppBar from "@/components/Footer/BottomAppBar"
 import Footer from "@/components/Footer/Footer"
 import { CartProvider } from "@/context/CartContext"
 import CartDrawer from "@/components/Cart/CartDrawer"
+import { GoogleTagManager } from '@next/third-parties/google'
+import { BASE_URL } from "@/utils/baseUrl"
+import PageViewTracker from "@/components/Tracking/PageViewTracker"
+import { Suspense } from 'react'
 
 
 export const metadata = {
@@ -32,13 +36,34 @@ export const metadata = {
   },
 }
 
-export default function RootLayout({ children }) {
+async function getSettings() {
+  try {
+    const res = await fetch(`${BASE_URL}/api/settings`, {
+      cache: "no-store",
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch (error) {
+    console.error("Failed to fetch settings:", error)
+    return null
+  }
+}
+
+export default async function RootLayout({ children }) {
+  const settings = await getSettings()
+  const gtmId = settings?.googleTagManagerId || settings?.gtmId
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
         <CartProvider>
           <ProductSelectionProvider>
 
+            {settings?.enableGTM && gtmId && (
+              <GoogleTagManager gtmId={gtmId} />
+            )}
+            <Suspense fallback={null}>
+              <PageViewTracker />
+            </Suspense>
             <Menubar />
             {children}
             {/* <BottomAppBar /> */}

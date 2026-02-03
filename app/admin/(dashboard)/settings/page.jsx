@@ -34,7 +34,9 @@ export default function GeneralSettingsPage() {
 
     const fetchSettings = async () => {
         try {
-            const res = await fetch(`${BASE_URL}/api/settings`)
+            const res = await fetch(`/api/settings`, {
+                credentials: "include"
+            })
             const data = await res.json()
             if (res.ok) {
                 setSettings(prev => ({ ...prev, ...data }))
@@ -52,16 +54,18 @@ export default function GeneralSettingsPage() {
         setSaving(true)
 
         try {
-            const res = await fetch(`${BASE_URL}/api/settings`, {
+            const res = await fetch(`/api/settings`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(settings),
+                credentials: "include"
             })
 
             if (res.ok) {
                 toast.success("Settings saved successfully!")
             } else {
-                toast.error("Failed to save settings")
+                const errorData = await res.json().catch(() => ({}))
+                toast.error(errorData.error || "Failed to save settings")
             }
         } catch (error) {
             console.error("Failed to save settings:", error)

@@ -4,6 +4,7 @@ import { useCart } from "@/context/CartContext"
 import { X, CheckCircle, User, Phone, MapPin, FileText, ShoppingBag } from "lucide-react"
 import { useState, useEffect } from "react"
 import { BASE_URL } from "@/utils/baseUrl"
+import { trackBeginCheckout, trackPurchase } from "@/utils/gtm"
 
 const CheckoutModal = ({ isOpen, onClose, items, total }) => {
     const { clearCart } = useCart()
@@ -35,6 +36,12 @@ const CheckoutModal = ({ isOpen, onClose, items, total }) => {
         }
         if (isOpen) fetchRates()
     }, [isOpen])
+
+    useEffect(() => {
+        if (isOpen && items?.length > 0) {
+            trackBeginCheckout(items, total)
+        }
+    }, [isOpen, items, total])
 
     const totalItems = items.reduce((acc, item) => acc + item.quantity, 0)
     const shippingCharge = totalItems >= 3 ? 0 : (deliveryLocation === "inside" ? shippingRates.inside : shippingRates.outside)
@@ -86,6 +93,8 @@ const CheckoutModal = ({ isOpen, onClose, items, total }) => {
             })
 
             if (response.ok) {
+                const data = await response.json()
+                trackPurchase(data.orderId || data.result?.insertedId || 'order_' + Date.now(), finalTotal, items)
                 alert("Order placed successfully! We will contact you shortly.")
                 clearCart()
                 onClose()

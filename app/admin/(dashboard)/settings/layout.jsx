@@ -5,12 +5,12 @@ import { usePathname } from "next/navigation"
 import { Store, Globe, Code, Tag, Menu as MenuIcon, Truck, Bell, Shield } from "lucide-react"
 
 const settingsMenu = [
-    // {
-    //     label: "General",
-    //     href: "/admin/settings",
-    //     icon: Store,
-    //     description: "Store information and basic settings"
-    // },
+    {
+        label: "General",
+        href: "/admin/settings",
+        icon: Store,
+        description: "Store information and basic settings"
+    },
     {
         label: "SEO & Meta",
         href: "/admin/settings/seo",

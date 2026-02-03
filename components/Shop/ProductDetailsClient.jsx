@@ -1,16 +1,23 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { ShoppingCart, Zap, Heart, Share2, Check, Minus, Plus, Star, ShieldCheck, Truck, RefreshCw } from "lucide-react"
 import Container from "@/components/Container"
 import { useCart } from "@/context/CartContext"
 import CheckoutModal from "@/components/Cart/CheckoutModal"
+import { trackViewItem } from "@/utils/gtm"
 
 const ProductDetailsClient = ({ product }) => {
     const { addToCart } = useCart()
     const [selectedImage, setSelectedImage] = useState(product.featuredImage)
     const [quantity, setQuantity] = useState(1)
     const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false)
+
+    useEffect(() => {
+        if (product) {
+            trackViewItem(product)
+        }
+    }, [product])
 
     // Derived State for Variants
     const allVariants = product.variants || []

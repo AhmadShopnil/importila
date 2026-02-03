@@ -3,6 +3,8 @@
 import { Package, MapPin, Phone, User, FileText, CheckCircle } from "lucide-react";
 import { useBundle } from "@/context/BundleContext";
 import { bundleOptions } from "@/data/products";
+import { trackBeginCheckout, trackPurchase } from "@/utils/gtm";
+import { useEffect } from "react";
 
 const CheckoutForm = ({ combo }) => {
     const { state, updateCustomerInfo, isComplete } = useBundle();
@@ -16,6 +18,19 @@ const CheckoutForm = ({ combo }) => {
     const bundlePrice = selectedBundleOption?.price || 0;
     const shippingCharge = selectedBundleOption?.shippingCharge || 0;
     const totalAmount = bundlePrice + shippingCharge;
+
+    useEffect(() => {
+        if (slots?.length > 0) {
+            const items = slots.filter(s => s.product).map(s => ({
+                ...s.product,
+                quantity: 1,
+                selectedColor: s.selectedColor
+            }));
+            if (items.length > 0) {
+                trackBeginCheckout(items, totalAmount);
+            }
+        }
+    }, [slots, totalAmount]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -60,6 +75,14 @@ const CheckoutForm = ({ combo }) => {
             });
 
             if (response.ok) {
+                const responseData = await response.json();
+                const purchaseItems = slots.filter(s => s.product).map(s => ({
+                    ...s.product,
+                    quantity: 1,
+                    selectedColor: s.selectedColor
+                }));
+                trackPurchase(responseData.orderId || responseData.result?.insertedId || 'order_' + Date.now(), totalAmount, purchaseItems);
+
                 alert("Order placed successfully! We will contact you shortly.");
                 // Clear context or redirect
                 // window.location.href = "/thank-you"; 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Calendar, Truck } from "lucide-react"
+import { Calendar, Truck, TrendingUp } from "lucide-react"
 import Loading from "@/components/Loader/Loading"
 import { BASE_URL } from "@/utils/baseUrl"
 
@@ -42,11 +42,11 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl sm:text-4xl font-bold text-[#1E556E]">Sales Reports</h1>
-        <div className="flex items-center gap-2">
-          {/* <Link href="/admin/reports/courier" className="flex items-center gap-2 bg-[#1E556E] text-white px-4 py-2 rounded-lg shadow-sm hover:bg-[#1E556E]/90 transition">
-            <Truck className="w-5 h-5" />
-            <span className="hidden sm:inline">Courier Reports</span>
-          </Link> */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href="/admin/reports/best-selling" className="flex items-center gap-2 bg-[#1E556E] text-white px-4 py-2 rounded-lg shadow-sm hover:bg-[#1E556E]/90 transition">
+            <TrendingUp className="w-5 h-5" />
+            <span className="">Best Selling Report</span>
+          </Link>
           <div className="flex items-center gap-2 bg-white border border-border rounded-lg px-4 py-2 shadow-sm">
             <Calendar className="w-5 h-5 text-muted-foreground" />
             <input

@@ -19,7 +19,9 @@ export default function CourierSettingsPage() {
 
     const fetchSettings = async () => {
         try {
-            const res = await fetch(`${BASE_URL}/api/settings/courier`)
+            const res = await fetch(`${BASE_URL}/api/settings/courier`, {
+                credentials: "include"
+            })
             if (res.ok) {
                 const data = await res.json()
                 setConfig(data)
@@ -41,6 +43,7 @@ export default function CourierSettingsPage() {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(config),
+                credentials: "include"
             })
 
             if (res.ok) {
