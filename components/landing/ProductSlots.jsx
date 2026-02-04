@@ -57,10 +57,17 @@ const ProductSlots = () => {
                                         />
 
                                         {/* Overlay with info */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-3">
-                                            <p className="text-white text-xs font-semibold truncate mb-2">
-                                                {slot.product.name}
+                                        <div className="absolute inset-0 bg-white flex flex-col justify-end p-3">
+                                            <p className="text-black text-sm md:text-base font-semibold truncate mb-2">
+                                                {slot?.product.name}
                                             </p>
+                                            <p className="text-black text-sm md:text-base font-bold truncate mb-2">
+                                                Selected Colour:
+                                            </p>
+                                            <p className="text-black text-sm md:text-base font-semibold truncate mb-2">
+                                                {slot?.selectedColor}
+                                            </p>
+
 
                                             {/* Color Selection */}
                                             <div className="flex gap-1.5 overflow-x-auto no-scrollbar">

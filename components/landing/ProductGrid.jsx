@@ -145,17 +145,29 @@ const ProductGrid = ({ combo }) => {
 
 
                             <div className="grid grid-cols-2 gap-3">
-                                {getUniqueColors(selectedProductForColor.variants).map((variant, i) => (
+                                {getUniqueColors(selectedProductForColor?.variants).map((variant, i) => (
                                     <button
                                         key={i}
                                         onClick={() => confirmColorAndAdd(variant.colorName)}
-                                        className="flex items-center gap-2 p-3 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
+                                        className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
                                     >
-                                        <div
-                                            className="w-6 h-6 rounded-full border shadow-sm"
-                                            style={{ backgroundColor: variant.colorHex }}
-                                        />
-                                        <span className="text-sm font-semibold truncate">{variant.colorName}</span>
+                                        {variant?.image && (
+                                            <div className="w-full h-full rounded-md overflow-hidden mb-4 border border-border shadow-soft">
+                                                <img
+                                                    key={i}
+                                                    src={variant?.image}
+                                                    alt={variant.colorName}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                        )}
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className="w-6 h-6 rounded-full border shadow-sm"
+                                                style={{ backgroundColor: variant.colorHex }}
+                                            />
+                                            <span className="text-sm font-semibold truncate">{variant.colorName}</span></div>
+
                                     </button>
                                 ))}
                             </div>
