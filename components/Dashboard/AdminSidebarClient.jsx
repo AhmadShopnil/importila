@@ -35,7 +35,7 @@ const adminNavItems = [
     children: [
       { label: "Sales Report", href: "/admin/reports" },
       { label: "Best Selling", href: "/admin/reports/best-selling" },
-      { label: "Source Analysis", href: "/admin/reports/sources" },
+      // { label: "Source Analysis", href: "/admin/reports/sources" },
     ],
   },
   { label: "Settings", href: "/admin/settings", icon: Settings },

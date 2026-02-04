@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function ThankYouPage() {
     return (
-        <div className="min-h-[70vh] flex items-center justify-center bg-background py-16 md:py-24">
+        <div className="min-h-screen flex items-center justify-center bg-background py-16 md:py-24">
             <Container>
                 <div className="max-w-2xl mx-auto text-center">
                     <div className="mb-8 flex justify-center">
@@ -46,7 +46,7 @@ export default function ThankYouPage() {
                         </Link>
                     </div>
 
-                    <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10 inline-flex items-center gap-3">
+                    {/* <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10 inline-flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-[#1C546D] flex items-center justify-center text-white">
                             <PhoneCall size={18} />
                         </div>
@@ -54,7 +54,7 @@ export default function ThankYouPage() {
                             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Need Help?</p>
                             <p className="text-sm font-bold text-[#1C546D]">Call or WhatsApp: +880 1XXX-XXXXXX</p>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </Container>
         </div>

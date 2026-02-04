@@ -1,22 +1,21 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Package, ShoppingCart, TrendingUp, AlertTriangle, DollarSign, ChartNoAxesCombined } from "lucide-react"
 import DailyOrdersChart from "@/components/Dashboard/Report/DailyOrdersChart"
 import MonthlyOrdersCompareChart from "@/components/Dashboard/Report/MonthlyOrdersCompareChart"
-import { BASE_URL } from "@/utils/baseUrl"
 import WebOrderReportChart from "@/components/Dashboard/Report/WebOrderReportChart"
 
 
 
-export default function AdminDashboard() {
-  const API_URL = BASE_URL;
-  const now = new Date()
-  const [filter, setFilter] = useState("all")
-  const [month, setMonth] = useState(now.getMonth() + 1)
-  const [year, setYear] = useState(now.getFullYear())
+import { useGetDashboardStatsQuery } from "@/lib/redux/api/dashboardApi"
 
-  const [stats, setStats] = useState({
+export default function AdminDashboard() {
+  const [filter, setFilter] = useState("all")
+  const [month, setMonth] = useState(new Date().getMonth() + 1)
+  const [year, setYear] = useState(new Date().getFullYear())
+
+  const { data: stats = {
     totalProducts: 0,
     totalOrders: 0,
     totalRevenue: 0,
@@ -25,32 +24,7 @@ export default function AdminDashboard() {
     lowStockItems: 0,
     statusDistribution: [],
     sourceDistribution: []
-  })
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true)
-        let url = `${API_URL}/api/admin/stats?filter=${filter}`
-        if (filter === "month") {
-          url += `&month=${month}&year=${year}`
-        }
-        const res = await fetch(url)
-        const data = await res.json()
-
-        if (res.ok) {
-          setStats(data)
-        }
-      } catch (error) {
-        console.error("Failed to fetch stats:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchStats()
-  }, [filter, month, year])
+  }, isLoading: loading } = useGetDashboardStatsQuery({ filter, month, year })
 
   const statCards = [
     {

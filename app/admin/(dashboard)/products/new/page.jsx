@@ -16,9 +16,11 @@ const generateSKU = (color, size) => {
   return `${color.replace(/\s+/g, "-").toUpperCase()}-${size.toUpperCase()}`
 }
 
+import { useCreateProductMutation } from "@/lib/redux/api/productApi"
+
 export default function NewProductPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const [createProduct, { isLoading: loading }] = useCreateProductMutation()
   const [categories, setCategories] = useState([])
 
   const [formData, setFormData] = useState({
@@ -186,8 +188,6 @@ export default function NewProductPage() {
       }
     }
 
-    setLoading(true)
-
     try {
       const fd = new FormData()
 
@@ -213,24 +213,12 @@ export default function NewProductPage() {
           stock: Number(v.stock),
         }))
       ))
-      // toast.success("try to created ")
-      const res = await fetch(`${BASE_URL}/api/products`, {
-        method: "POST",
-        body: fd,
-      })
-      console.log("res", res)
 
-      if (res.ok) {
-        toast.success("Product created successfully")
-        router.push("/admin/products")
-      } else {
-
-        toast.error("Failed  create product")
-      }
+      await createProduct(fd).unwrap()
+      toast.success("Product created successfully")
+      router.push("/admin/products")
     } catch (err) {
-      toast.error("Something went wrong")
-    } finally {
-      setLoading(false)
+      toast.error(err.data?.error || "Failed to create product")
     }
   }
 

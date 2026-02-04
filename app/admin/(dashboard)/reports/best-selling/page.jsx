@@ -65,7 +65,7 @@ export default function BestSellingReportPage() {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-5 shadow-sm">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-blue-500 rounded-lg">
@@ -86,7 +86,7 @@ export default function BestSellingReportPage() {
                     <p className="text-3xl font-bold text-emerald-900">৳ {totalRevenue.toLocaleString()}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-xl p-5 shadow-sm">
+                {/* <div className="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-xl p-5 shadow-sm">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-orange-500 rounded-lg">
                             <TrendingUp className="w-5 h-5 text-white" />
@@ -94,7 +94,7 @@ export default function BestSellingReportPage() {
                         <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold">Total Profit</p>
                     </div>
                     <p className="text-3xl font-bold text-orange-900">৳ {totalProfit.toLocaleString()}</p>
-                </div>
+                </div> */}
 
                 <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-5 shadow-sm">
                     <div className="flex items-center gap-3 mb-2">
@@ -126,7 +126,7 @@ export default function BestSellingReportPage() {
                                 <th className="px-6 py-4 text-left font-bold">Product Information</th>
                                 <th className="px-6 py-4 text-center font-bold">Quantity Sold</th>
                                 <th className="px-6 py-4 text-right font-bold">Revenue</th>
-                                <th className="px-6 py-4 text-right font-bold pr-12">Profit</th>
+                                {/* <th className="px-6 py-4 text-right font-bold pr-12">Profit</th> */}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -166,8 +166,9 @@ export default function BestSellingReportPage() {
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-base text-[#1E556E] group-hover:text-blue-600 transition-colors">{item.name}</p>
-                                                    <p className="text-xs text-muted-foreground font-mono">ID: {item._id}</p>
+                                                    <p className="font-bold text-base text-[#1E556E] group-hover:text-blue-600 transition-colors line-clamp-1">{item.name}</p>
+                                                    {item.designName && <p className="text-xs font-semibold text-muted-foreground italic mb-0.5">{item.designName}</p>}
+                                                    <p className="text-[10px] text-muted-foreground font-mono">ID: {item._id}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -180,10 +181,10 @@ export default function BestSellingReportPage() {
                                             <p className="font-bold text-lg text-emerald-700">৳ {item.totalRevenue.toLocaleString()}</p>
                                             <p className="text-[10px] text-muted-foreground uppercase font-bold">Sales</p>
                                         </td>
-                                        <td className="px-6 py-4 text-right pr-12">
+                                        {/* <td className="px-6 py-4 text-right pr-12">
                                             <p className="font-bold text-lg text-orange-600">৳ {(item.totalProfit || 0).toLocaleString()}</p>
                                             <p className="text-[10px] text-muted-foreground uppercase font-bold">Net Profit</p>
-                                        </td>
+                                        </td> */}
                                     </tr>
                                 ))
                             ) : (

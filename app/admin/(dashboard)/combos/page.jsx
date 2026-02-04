@@ -1,41 +1,22 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { Plus, Search } from "lucide-react"
 import Loading from "@/components/Loader/Loading"
 import ComboTableRow from "@/components/Dashboard/Combos/ComboTableRow"
-import { BASE_URL } from "@/utils/baseUrl"
+import { useGetCombosQuery, useDeleteComboMutation } from "@/lib/redux/api/comboApi"
 
 export default function CombosPage() {
-  const [combos, setCombos] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { data: combos = [], isLoading: loading } = useGetCombosQuery()
+  const [deleteCombo] = useDeleteComboMutation()
   const [searchTerm, setSearchTerm] = useState("")
-
-  useEffect(() => {
-    fetchCombos()
-  }, [])
-
-  const fetchCombos = async () => {
-    try {
-      const res = await fetch(`${BASE_URL}/api/combos`)
-      const data = await res.json()
-      setCombos(data)
-    } catch (error) {
-      console.error("Failed to fetch combos:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this combo?")) return
 
     try {
-      const res = await fetch(`${BASE_URL}/api/combos/${id}`, { method: "DELETE" })
-      if (res.ok) {
-        setCombos((prev) => prev.filter((c) => c._id !== id))
-      }
+      await deleteCombo(id).unwrap()
     } catch (error) {
       console.error("Failed to delete combo:", error)
     }

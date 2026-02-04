@@ -23,49 +23,26 @@ import {
 } from "lucide-react"
 import toast from "react-hot-toast"
 
+import {
+    useGetOrderQuery,
+    useUpdateOrderMutation,
+    useLazyCheckCourierStatusQuery
+} from "@/lib/redux/api/orderApi"
+
 export default function OrderDetailsPage({ params: paramsPromise }) {
     const params = use(paramsPromise)
     const { id } = params
-    const [order, setOrder] = useState(null)
-    const [loading, setLoading] = useState(true)
-    const [updating, setUpdating] = useState(false)
 
-    useEffect(() => {
-        fetchOrder()
-    }, [id])
-
-    const fetchOrder = async () => {
-        try {
-            const res = await fetch(`${BASE_URL}/api/orders/${id}`)
-            const data = await res.json()
-            if (res.ok) setOrder(data)
-            else toast.error("Failed to fetch order details")
-        } catch (error) {
-            console.error(error)
-            toast.error("An error occurred")
-        } finally {
-            setLoading(false)
-        }
-    }
+    const { data: order, isLoading: loading } = useGetOrderQuery(id)
+    const [updateOrder, { isLoading: updating }] = useUpdateOrderMutation()
+    const [checkCourierStatus] = useLazyCheckCourierStatusQuery()
 
     const handleUpdateStatus = async (status) => {
-        setUpdating(true)
         try {
-            const res = await fetch(`${BASE_URL}/api/orders/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status })
-            })
-            if (res.ok) {
-                toast.success(`Order status updated to ${status}`)
-                fetchOrder()
-            } else {
-                toast.error("Failed to update status")
-            }
+            await updateOrder({ id, status }).unwrap()
+            toast.success(`Order status updated to ${status}`)
         } catch (error) {
-            console.error(error)
-        } finally {
-            setUpdating(false)
+            toast.error(error.data?.error || "Failed to update status")
         }
     }
 
@@ -73,11 +50,9 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
         if (!order?.courierConsignmentId) return
         const toastId = toast.loading("Syncing with courier...")
         try {
-            const res = await fetch(`${BASE_URL}/api/courier/check-status?consignmentId=${order.courierConsignmentId}`)
-            const data = await res.json()
+            const data = await checkCourierStatus(order.courierConsignmentId).unwrap()
             if (data.status === 200) {
                 toast.success(`Sync Complete: ${data.delivery_status}`, { id: toastId })
-                fetchOrder()
             } else {
                 toast.error("Courier sync failed", { id: toastId })
             }
@@ -86,8 +61,10 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
         }
     }
 
-    // if (loading) return <Loading />
-    if (!order) return <div className="p-10 text-center">Order not found</div>
+    if (loading) return <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    </div>
+    if (!order) return <div className="p-10 text-center text-muted-foreground">Order not found</div>
 
     const statusColors = {
         pending: "bg-yellow-100 text-yellow-700 border-yellow-200",

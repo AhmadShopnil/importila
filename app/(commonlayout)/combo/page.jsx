@@ -69,33 +69,11 @@ export default async function page() {
                                 {/* Price  */}
                                 <div className="flex items-center justify-between ">
 
-                                    <div className="flex items-center gap-2 text-xs md:text-sm text-[#5F9498]">
-
-                                        {
-                                            (combo?.offerPrice) ?
-                                                <>
-                                                    <span className=" font-bold ">
-                                                        ৳ {combo.offerPrice}
-                                                    </span>
-                                                    <span className=" text-muted-foreground line-through">
-                                                        ৳ {combo?.price}
-                                                    </span>
-                                                </>
-                                                : <>
-                                                    <span className=" font-bold text-primary">
-                                                        ৳ {combo?.price}
-                                                    </span>
-                                                </>
-                                        }
-
-                                    </div>
 
                                     <Link
                                         href={`/combo/kids/${combo?.slug}`}
-                                        className="cursor-pointer w-6 h-6 md:w-8 md:h-8 bg-[#34667B] rounded-full flex items-center justify-center text-white hover:scale-110 transition-transform shadow-md">
-                                        <svg className="w-3 h-3 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                        </svg>
+                                        className="cursor-pointer w-full py-1 mt-1 bg-[#34667B] rounded-md flex items-center justify-center text-white hover:scale-105 transition-transform shadow-md">
+                                        Buy Now
                                     </Link>
                                 </div>
                             </div>

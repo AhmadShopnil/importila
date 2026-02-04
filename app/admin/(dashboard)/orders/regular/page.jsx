@@ -2,112 +2,83 @@
 
 import { useEffect, useState } from "react"
 import Loading from "@/components/Loader/Loading"
-import { BASE_URL } from "@/utils/baseUrl"
 import Link from "next/link"
 
 import { Truck, CheckSquare, Square, RefreshCw, Shield, ShieldAlert, ShieldCheck, List, LayoutGrid, Eye, MoreHorizontal, ExternalLink, Search, Filter, Printer } from "lucide-react"
 import toast from "react-hot-toast"
 
+import {
+  useGetOrdersQuery,
+  useUpdateOrderMutation,
+  useLazyCheckFraudRiskQuery,
+  useSendToCourierMutation,
+  useLazyCheckCourierStatusQuery
+} from "@/lib/redux/api/orderApi"
+
 export default function OrdersPage() {
-  const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
   const [selectedStatus, setSelectedStatus] = useState("")
   const [updatedStatuses, setUpdatedStatuses] = useState({})
   const [saving, setSaving] = useState(false)
   const [selectedOrders, setSelectedOrders] = useState([])
-  const [sendingToCourier, setSendingToCourier] = useState(false)
   const [riskData, setRiskData] = useState({})
-  const [viewType, setViewType] = useState("list") // default to list view
+  const [viewType, setViewType] = useState("list")
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalCount, setTotalCount] = useState(0)
   const [debouncedSearch, setDebouncedSearch] = useState("")
-  const [globalStats, setGlobalStats] = useState({ totalRevenue: 0, totalItems: 0 })
   const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState(null)
+
+  const { data: responseData, isLoading: loading, isFetching } = useGetOrdersQuery({
+    status: selectedStatus,
+    search: debouncedSearch,
+    page: currentPage,
+    limit: 20
+  })
+
+  const orders = responseData?.orders || []
+  const totalPages = responseData?.pagination?.totalPages || 1
+  const totalCount = responseData?.pagination?.totalCount || 0
+  const globalStats = responseData?.summary || { totalRevenue: 0, totalItems: 0 }
+
+  const [updateOrder] = useUpdateOrderMutation()
+  const [checkFraudRisk] = useLazyCheckFraudRiskQuery()
+  const [sendToCourier, { isLoading: sendingToCourier }] = useSendToCourierMutation()
+  const [checkCourierStatus] = useLazyCheckCourierStatusQuery()
 
   // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery)
-      setCurrentPage(1) // Reset to first page on search
+      setCurrentPage(1)
     }, 500)
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  const handleCheckRisk = async (phone) => {
-    if (riskData[phone]) return // Already checked
+  // Reset local state when filters change if needed
+  useEffect(() => {
+    setUpdatedStatuses({})
+    setSelectedOrders([])
+  }, [selectedStatus, debouncedSearch, currentPage])
 
+  const handleCheckRisk = async (phone) => {
+    if (riskData[phone]) return
     const toastId = toast.loading("Analyzing risk...")
     try {
-      const res = await fetch(`${BASE_URL}/api/orders/fraud-check?phone=${phone}`)
-      const data = await res.json()
-
-      if (res.ok) {
-        setRiskData(prev => ({ ...prev, [phone]: data }))
-        toast.dismiss(toastId)
-        if (data.riskLevel === 'High') toast.error(`High Risk Customer! Cancelled/Returned: ${data.cancelled + data.returned}/${data.totalOrders}`)
-        else if (data.riskLevel === 'Medium') toast("Medium Risk Customer", { icon: '⚠️' })
-        else toast.success("Low Risk Customer")
-      } else {
-        toast.error("Failed to check risk", { id: toastId })
-      }
+      const data = await checkFraudRisk(phone).unwrap()
+      setRiskData(prev => ({ ...prev, [phone]: data }))
+      toast.dismiss(toastId)
+      if (data.riskLevel === 'High') toast.error(`High Risk Customer! Cancelled/Returned: ${data.cancelled + data.returned}/${data.totalOrders}`)
+      else if (data.riskLevel === 'Medium') toast("Medium Risk Customer", { icon: '⚠️' })
+      else toast.success("Low Risk Customer")
     } catch (error) {
       toast.error("Error checking risk", { id: toastId })
     }
   }
 
-
   const statuses = ["pending", "confirmed", "shipped", "delivered", "cancelled"]
 
-  // Note: Statistics might still need a separate API or full fetch if we want global stats, 
-  // but for pagination we usually use the totalCount from the paginated response.
-  // For industry standard, we keep the UI responsive.
-
-  const totalRevenue = orders.reduce((sum, order) => {
-    return sum + (order.totalPrice || order.offerPrice || order.price || 0)
-  }, 0)
-
-  const totalItemsCount = orders.reduce((sum, order) => {
-    const itemCount = order.items?.reduce(
-      (itemSum, item) => itemSum + (item.quantity || 0),
-      0
-    ) || 0
-    return sum + itemCount
-  }, 0)
-
+  const totalRevenue = globalStats.totalRevenue
   const totalOrders = totalCount;
-  const totalItems = totalItemsCount;
-
-  useEffect(() => {
-    fetchOrders()
-  }, [selectedStatus, currentPage, debouncedSearch])
-
-  const fetchOrders = async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams()
-      if (selectedStatus) params.append("status", selectedStatus)
-      if (debouncedSearch) params.append("search", debouncedSearch)
-      params.append("page", currentPage.toString())
-      params.append("limit", "20")
-
-      const res = await fetch(`${BASE_URL}/api/orders?${params.toString()}`)
-      const data = await res.json()
-
-      setOrders(data.orders || [])
-      setTotalPages(data.pagination?.totalPages || 1)
-      setTotalCount(data.pagination?.totalCount || 0)
-      setGlobalStats(data.summary || { totalRevenue: 0, totalItems: 0 })
-      setUpdatedStatuses({})
-      setSelectedOrders([])
-    } catch (error) {
-      console.error("Failed to fetch orders:", error)
-      toast.error("Failed to load orders")
-    } finally {
-      setLoading(false)
-    }
-  }
+  const totalItems = globalStats.totalItems;
 
   const handleStatusChange = (orderId, newStatus) => {
     setUpdatedStatuses((prev) => ({
@@ -125,13 +96,7 @@ export default function OrdersPage() {
 
     for (const [orderId, newStatus] of Object.entries(updatedStatuses)) {
       try {
-        const id = orderId
-        const res = await fetch(`${BASE_URL}/api/orders/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: newStatus }),
-        })
-        if (!res.ok) throw new Error(`Failed: ${orderId}`)
+        await updateOrder({ id: orderId, status: newStatus }).unwrap()
         successCount++
       } catch (error) {
         console.error(error)
@@ -140,8 +105,8 @@ export default function OrdersPage() {
     }
 
     toast.success(` ${successCount} orders updated${failCount > 0 ? `, ❌ ${failCount} failed` : ""}`)
-    fetchOrders()
     setSaving(false)
+    setUpdatedStatuses({})
   }
 
   const handleBulkStatusChange = async (newStatus) => {
@@ -155,13 +120,8 @@ export default function OrdersPage() {
 
     for (const orderId of selectedOrders) {
       try {
-        const res = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: newStatus }),
-        })
-        if (res.ok) successCount++
-        else failCount++
+        await updateOrder({ id: orderId, status: newStatus }).unwrap()
+        successCount++
       } catch (error) {
         failCount++
       }
@@ -169,7 +129,6 @@ export default function OrdersPage() {
 
     toast.success(`Updated ${successCount} orders. ${failCount > 0 ? `${failCount} failed.` : ''}`, { id: toastId })
     setSaving(false)
-    fetchOrders()
     setSelectedOrders([])
   }
 
@@ -195,7 +154,6 @@ export default function OrdersPage() {
       return
     }
 
-    setSendingToCourier(true)
     try {
       const selectedOrderDetails = orders
         .filter(o => selectedOrders.includes(o._id))
@@ -208,40 +166,21 @@ export default function OrdersPage() {
           note: order.note
         }))
 
-      const res = await fetch(`${BASE_URL}/api/courier/create-order`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orders: selectedOrderDetails,
-        })
-      })
-
-      const result = await res.json()
-
-      if (res.ok) {
-        toast.success("Orders sent to courier successfully!")
-        fetchOrders()
-        setSelectedOrders([])
-      } else {
-        toast.error(result.error || "Failed to send to courier")
-      }
+      await sendToCourier({ orders: selectedOrderDetails }).unwrap()
+      toast.success("Orders sent to courier successfully!")
+      setSelectedOrders([])
     } catch (error) {
-      toast.error("An error occurred")
+      toast.error(error.data?.error || "An error occurred")
       console.error(error)
-    } finally {
-      setSendingToCourier(false)
     }
   }
 
   const handleCheckStatus = async (consignmentId) => {
     const toastId = toast.loading("Checking status...")
     try {
-      const res = await fetch(`${BASE_URL}/api/courier/check-status?consignmentId=${consignmentId}`)
-      const data = await res.json()
-
+      const data = await checkCourierStatus(consignmentId).unwrap()
       if (data.status === 200) {
         toast.success(`Status: ${data.delivery_status}`, { id: toastId })
-        fetchOrders()
       } else {
         toast.error("Failed to check status", { id: toastId })
       }
@@ -252,6 +191,7 @@ export default function OrdersPage() {
   }
 
   // if (loading) return <Loading />
+
 
   return (
     <div className="space-y-6 pb-20">

@@ -4,41 +4,31 @@ import { useEffect, useState } from "react"
 import { AlertTriangle } from "lucide-react"
 import toast, { Toaster } from "react-hot-toast"
 import Loading from "@/components/Loader/Loading"
-import { BASE_URL } from "@/utils/baseUrl"
+
+import { useGetProductsQuery, useUpdateProductStockMutation } from "@/lib/redux/api/productApi"
 
 export default function StockPage() {
-  const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { data: productsData, isLoading: loading } = useGetProductsQuery()
+  const [updateProductStock] = useUpdateProductStockMutation()
+
   const [filterLowStock, setFilterLowStock] = useState(false)
   const [localStock, setLocalStock] = useState({}) // track input changes
   const [savingStock, setSavingStock] = useState({}) // track saving state per SKU
 
   useEffect(() => {
-    fetchProducts()
-  }, [])
-
-  const fetchProducts = async () => {
-    setLoading(true)
-    try {
-      const res = await fetch(`${BASE_URL}/api/products`)
-      const data = await res.json()
-      setProducts(data)
-
+    if (productsData) {
       // Initialize local stock state
       const stockObj = {}
-      data.forEach((product) => {
+      productsData.forEach((product) => {
         product.variants.forEach((variant) => {
           stockObj[variant.sku] = variant.stock
         })
       })
       setLocalStock(stockObj)
-    } catch (error) {
-      console.error("Failed to fetch products:", error)
-      toast.error("Failed to fetch products")
-    } finally {
-      setLoading(false)
     }
-  }
+  }, [productsData])
+
+  const products = productsData || []
 
   const handleInputChange = (sku, value) => {
     setLocalStock((prev) => ({ ...prev, [sku]: value }))
@@ -60,27 +50,10 @@ export default function StockPage() {
       const updatedVariant = product.variants.find((v) => v.sku === sku)
       if (!updatedVariant) return
 
-      const res = await fetch(`${BASE_URL}/api/products/updatestocks/${productId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variants: [{ ...updatedVariant, stock: newStock }] }),
-      })
-
-      if (!res.ok) throw new Error("Failed to update stock")
-
-      // Update products state locally
-      setProducts((prevProducts) =>
-        prevProducts?.map((p) =>
-          p._id === productId
-            ? {
-              ...p,
-              variants: p.variants.map((v) =>
-                v.sku === sku ? { ...v, stock: newStock } : v
-              ),
-            }
-            : p
-        )
-      )
+      await updateProductStock({
+        id: productId,
+        body: { variants: [{ ...updatedVariant, stock: newStock }] }
+      }).unwrap()
 
       toast.success(`Stock updated for ${sku}`)
     } catch (error) {
@@ -96,6 +69,7 @@ export default function StockPage() {
   // Flatten variants for table
   const allVariants = []
   products.forEach((product) => {
+    if (product.isTrashed) return
     product.variants?.forEach((variant) => {
       allVariants.push({
         productId: product._id,

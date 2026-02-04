@@ -1,5 +1,5 @@
 
-// export  const BASE_URL = process.env.API_URL || 'https://importila-server.vercel.app'
+// export const BASE_URL = process.env.API_URL || 'https://importilabd.com'
 
 
 export const BASE_URL = process.env.API_URL || 'http://localhost:3000'

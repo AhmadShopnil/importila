@@ -7,17 +7,26 @@ import { ArrowLeft, UploadCloud, Edit3, Lock, Plus, Trash2, X, Search, Check } f
 import { BASE_URL } from "@/utils/baseUrl"
 import RichTextEditor from "@/components/RichTextEditor"
 
+import {
+  useGetComboQuery,
+  useUpdateComboMutation
+} from "@/lib/redux/api/comboApi"
+import { useGetProductsQuery } from "@/lib/redux/api/productApi"
+import toast from "react-hot-toast"
+
 export default function EditComboPage() {
   const { id } = useParams()
   const router = useRouter()
 
-  const [products, setProducts] = useState([])
-  const [comboData, setComboData] = useState(null)
+  const { data: productsData } = useGetProductsQuery()
+  const { data: comboData, isLoading: fetchingCombo } = useGetComboQuery(id)
+  const [updateCombo, { isLoading: loading }] = useUpdateComboMutation()
+
+  const products = productsData || []
   const [selectedProducts, setSelectedProducts] = useState([])
   const [selectedVarrient, setSelectedVarrient] = useState({})
   const [sizes, setSizes] = useState([])
   const [search, setSearch] = useState("")
-  const [loading, setLoading] = useState(false)
   const [slugEditMode, setSlugEditMode] = useState(false)
   const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
@@ -25,28 +34,18 @@ export default function EditComboPage() {
   const [bundleOptions, setBundleOptions] = useState([])
   const [landingPageDetails, setLandingPageDetails] = useState("")
 
-  // Fetch All Products
+  // Populates state when comboData is available
   useEffect(() => {
-    fetch(`${BASE_URL}/api/products`)
-      .then(res => res.json())
-      .then(setProducts)
-  }, [])
-
-  // Fetch Combo
-  useEffect(() => {
-    fetch(`${BASE_URL}/api/combos/${id}`)
-      .then(res => res.json())
-      .then(data => {
-        setComboData(data)
-        setTitle(data.title || "")
-        setSlug(data.slug || "")
-        setSelectedProducts(data.products || [])
-        setSizes(data.sizes || [])
-        setBundleOptions(data.bundleOptions || [])
-        setImagePreview(data.featuredImage || null)
-        setLandingPageDetails(data.landingPageDetails || "")
-      })
-  }, [id])
+    if (comboData) {
+      setTitle(comboData.title || "")
+      setSlug(comboData.slug || "")
+      setSelectedProducts(comboData.products || [])
+      setSizes(comboData.sizes || [])
+      setBundleOptions(comboData.bundleOptions || [])
+      setImagePreview(comboData.featuredImage || null)
+      setLandingPageDetails(comboData.landingPageDetails || "")
+    }
+  }, [comboData])
 
   /* ---------- Slug Logic ---------- */
   const handleTitleChange = (e) => {
@@ -117,7 +116,6 @@ export default function EditComboPage() {
   /* ---------- Submit ---------- */
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
 
     const formData = new FormData(e.target)
     formData.append("products", JSON.stringify(selectedProducts))
@@ -125,26 +123,22 @@ export default function EditComboPage() {
     formData.append("bundleOptions", JSON.stringify(bundleOptions))
     formData.append("slug", slug)
     formData.append("landingPageDetails", landingPageDetails)
-    formData.append("existingFeaturedImage", comboData.featuredImage || "")
+    formData.append("existingFeaturedImage", comboData?.featuredImage || "")
 
-    const res = await fetch(`${BASE_URL}/api/combos/${id}`, {
-      method: "PUT",
-      body: formData
-    })
-
-    setLoading(false)
-
-    if (res.ok) {
-      alert("Combo updated successfully!")
+    try {
+      await updateCombo({ id, body: formData }).unwrap()
+      toast.success("Combo updated successfully!")
       router.push("/admin/combos")
-    } else {
-      alert("Failed to update combo")
+    } catch (err) {
+      toast.error(err.data?.error || "Failed to update combo")
     }
   }
 
-  if (!comboData) return <div className="flex items-center justify-center min-h-[400px]">
+  if (fetchingCombo) return <div className="flex items-center justify-center min-h-[400px]">
     <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
   </div>
+
+  if (!comboData) return <div className="text-center py-20 text-muted-foreground">Combo not found</div>
 
   const filteredProducts = products.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase())

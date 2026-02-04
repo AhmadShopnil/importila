@@ -3,6 +3,7 @@ import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { Toaster } from "react-hot-toast"
 import { ProductSelectionProvider } from "@/context/ProductSelectionContext"
+import { Providers } from "@/lib/redux/Providers"
 import { BASE_URL } from "@/utils/baseUrl"
 
 
@@ -64,14 +65,16 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
-        <ProductSelectionProvider>
-          <Toaster position="top-right" />
+        <Providers>
+          <ProductSelectionProvider>
+            <Toaster position="top-right" />
 
-          {children}
-          <Analytics />
+            {children}
+            <Analytics />
 
 
-        </ProductSelectionProvider>
+          </ProductSelectionProvider>
+        </Providers>
       </body>
     </html>
   )

@@ -3,16 +3,24 @@
 import { ArrowLeft, UploadCloud, Edit3, Lock, Plus, Trash2, X, Search, Check } from "lucide-react"
 import { BASE_URL } from "@/utils/baseUrl"
 import RichTextEditor from "@/components/RichTextEditor"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 
+import { useCreateComboMutation } from "@/lib/redux/api/comboApi"
+import { useGetProductsQuery } from "@/lib/redux/api/productApi"
+import toast from "react-hot-toast"
+
 export default function CreateComboPage() {
-  const [products, setProducts] = useState([])
+  const router = useRouter()
+  const { data: productsData } = useGetProductsQuery()
+  const [createCombo, { isLoading: loading }] = useCreateComboMutation()
+
+  const products = productsData || []
   const [selectedProducts, setSelectedProducts] = useState([])
   const [selectedVarrient, setSelectedVarrient] = useState({})
   const [sizes, setSizes] = useState([])
   const [search, setSearch] = useState("")
-  const [loading, setLoading] = useState(false)
   const [slugEditMode, setSlugEditMode] = useState(false)
   const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
@@ -24,13 +32,6 @@ export default function CreateComboPage() {
     { pieces: 6, price: 1800, originalPrice: 3000, shippingCharge: 0, popular: true },
     { pieces: 10, price: 2800, originalPrice: 5000, shippingCharge: 0, popular: false }
   ])
-
-  /* ---------- Fetch Products ---------- */
-  useEffect(() => {
-    fetch(`${BASE_URL}/api/products`)
-      .then(res => res.json())
-      .then(setProducts)
-  }, [])
 
   /* ---------- Slug Logic ---------- */
   const handleTitleChange = (e) => {
@@ -62,7 +63,6 @@ export default function CreateComboPage() {
       {
         ...product,
         selectedVarrient
-
       }
     ])
   }
@@ -107,7 +107,6 @@ export default function CreateComboPage() {
   /* ---------- Submit ---------- */
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
 
     const formData = new FormData(e.target)
     formData.append("products", JSON.stringify(selectedProducts))
@@ -116,29 +115,12 @@ export default function CreateComboPage() {
     formData.append("slug", slug)
     formData.append("landingPageDetails", landingPageDetails)
 
-    const res = await fetch(`${BASE_URL}/api/combos`, {
-      method: "POST",
-      body: formData
-    })
-
-    setLoading(false)
-
-    if (res.ok) {
-      alert("Combo created successfully!")
-      e.target.reset()
-      setSelectedProducts([])
-      setSizes([])
-      setTitle("")
-      setSlug("")
-      setImagePreview(null)
-      setLandingPageDetails("")
-      setBundleOptions([
-        { pieces: 3, price: 990, originalPrice: 1500, shippingCharge: 60, popular: false },
-        { pieces: 6, price: 1800, originalPrice: 3000, shippingCharge: 0, popular: true },
-        { pieces: 10, price: 2800, originalPrice: 5000, shippingCharge: 0, popular: false }
-      ])
-    } else {
-      alert("Failed to create combo")
+    try {
+      await createCombo(formData).unwrap()
+      toast.success("Combo created successfully!")
+      router.push("/admin/combos")
+    } catch (err) {
+      toast.error(err.data?.error || "Failed to create combo")
     }
   }
 

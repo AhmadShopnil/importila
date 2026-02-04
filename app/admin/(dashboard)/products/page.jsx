@@ -1,44 +1,22 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { Plus, Search, Trash2 } from "lucide-react"
 import Loading from "@/components/Loader/Loading"
 import TableRow from "@/components/Dashboard/Products/TableRow"
-import { BASE_URL } from "@/utils/baseUrl"
+
+import { useGetProductsQuery, useDeleteProductMutation } from "@/lib/redux/api/productApi"
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { data: products = [], isLoading: loading } = useGetProductsQuery()
+  const [deleteProduct] = useDeleteProductMutation()
   const [searchTerm, setSearchTerm] = useState("")
-
-  useEffect(() => {
-    // console.log("products from dashboard")
-    fetchProducts()
-  }, [])
-
-  const fetchProducts = async () => {
-    try {
-
-      const res = await fetch(`${BASE_URL}/api/products`)
-      const data = await res.json()
-      //  console.log("products from dashboard",data )
-      setProducts(data)
-    } catch (error) {
-      console.error("Failed to fetch products:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
 
   const handleDelete = async (id) => {
     if (confirm("Are you sure you want to delete this product?")) {
       try {
-        const res = await fetch(`${BASE_URL}/api/products/${id}`, { method: "DELETE" })
-        if (res.ok) {
-          setProducts(products.filter((p) => p._id !== id))
-        }
+        await deleteProduct(id).unwrap()
       } catch (error) {
         console.error("Failed to delete product:", error)
       }

@@ -16,12 +16,17 @@ const generateSKU = (color, size) => {
   return `${color.replace(/\s+/g, "-").toUpperCase()}-${size.toUpperCase()}`
 }
 
+import {
+  useGetProductQuery,
+  useUpdateProductMutation
+} from "@/lib/redux/api/productApi"
+
 export default function EditProductPage() {
   const { id } = useParams()
   const router = useRouter()
 
-  const [loading, setLoading] = useState(false)
-  const [fetching, setFetching] = useState(true)
+  const { data: productData, isLoading: fetching } = useGetProductQuery(id)
+  const [updateProduct, { isLoading: loading }] = useUpdateProductMutation()
   const [categories, setCategories] = useState([])
 
   const [formData, setFormData] = useState({
@@ -60,45 +65,30 @@ export default function EditProductPage() {
     fetchCategories()
   }, [])
 
-  /* ---------- Fetch Product ---------- */
+  /* ---------- Populates formData when productData is available ---------- */
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const res = await fetch(`${BASE_URL}/api/products/${id}`)
-        const data = await res.json()
-        if (!res.ok) {
-          toast.error("Failed to load product")
-          return
-        }
-
-        setFormData({
-          ...data,
-          price: String(data.price),
-          featuredImage: data.featuredImage || null,
-          images: data.images || [],
-          categories: Array.isArray(data.categories)
-            ? data.categories
-            : (data.category ? [data.category] : []),
-          isFeatured: !!data.isFeatured,
-          isActive: data.isActive !== undefined ? !!data.isActive : true,
-          designName: data.designName || "",
-          richDescription: data.richDescription || "",
-          purchasePrice: data.purchasePrice ? String(data.purchasePrice) : "",
-          variants: data.variants.map((v) => ({
-            ...v,
-            stock: String(v.stock),
-            sku: generateSKU(v.colorName, v.size),
-          })),
-        })
-      } catch {
-        toast.error("Something went wrong")
-      } finally {
-        setFetching(false)
-      }
+    if (productData) {
+      setFormData({
+        ...productData,
+        price: String(productData.price),
+        featuredImage: productData.featuredImage || null,
+        images: productData.images || [],
+        categories: Array.isArray(productData.categories)
+          ? productData.categories
+          : (productData.category ? [productData.category] : []),
+        isFeatured: !!productData.isFeatured,
+        isActive: productData.isActive !== undefined ? !!productData.isActive : true,
+        designName: productData.designName || "",
+        richDescription: productData.richDescription || "",
+        purchasePrice: productData.purchasePrice ? String(productData.purchasePrice) : "",
+        variants: productData.variants.map((v) => ({
+          ...v,
+          stock: String(v.stock),
+          sku: generateSKU(v.colorName, v.size),
+        })),
+      })
     }
-
-    fetchProduct()
-  }, [id])
+  }, [productData])
 
   /* ---------- Product fields ---------- */
   const handleChange = (e) => {
@@ -217,7 +207,6 @@ export default function EditProductPage() {
       }
     }
 
-    setLoading(true)
     try {
       const fd = new FormData()
       fd.append("name", formData.name)
@@ -231,14 +220,12 @@ export default function EditProductPage() {
       fd.append("designName", formData.designName)
       fd.append("richDescription", formData.richDescription)
 
-      // Featured image (File or URL)
       if (formData.featuredImage instanceof File) {
         fd.append("featuredImage", formData.featuredImage)
       } else {
         fd.append("featuredImageURL", formData.featuredImage)
       }
 
-      // Extra images (Files or URL strings)
       formData.images.forEach((img) => {
         if (img instanceof File) {
           fd.append("images", img)
@@ -252,31 +239,25 @@ export default function EditProductPage() {
         JSON.stringify(formData.variants.map((v) => ({ ...v, stock: Number(v.stock) })))
       )
 
-      const res = await fetch(`${BASE_URL}/api/products/${id}`, {
-        method: "PUT",
-        body: fd,
-      })
-
-      if (res.ok) {
-        toast.success("Product updated successfully")
-        router.push("/admin/products")
-      } else {
-        toast.error("Update failed")
-      }
-    } catch {
-      toast.error("Something went wrong")
-    } finally {
-      setLoading(false)
+      await updateProduct({ id, body: fd }).unwrap()
+      toast.success("Product updated successfully")
+      router.push("/admin/products")
+    } catch (error) {
+      toast.error(error.data?.error || "Update failed")
     }
   }
 
-  // if (fetching) return <p className="text-center py-10">Loading product...</p>
+  if (fetching) return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <div className="w-8 h-8 border-4 border-[#1E556E] border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  )
 
   return (
     <div className="w-full">
       <Link
         href="/admin/products"
-        className="inline-flex items-center gap-2 md:text-lg text-blue-500 mb-6"
+        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Products
