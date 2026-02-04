@@ -5,8 +5,10 @@ import { useBundle } from "@/context/BundleContext";
 import { bundleOptions } from "@/data/products";
 import { trackBeginCheckout, trackPurchase } from "@/utils/gtm";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const CheckoutForm = ({ combo }) => {
+    const router = useRouter();
     const { state, updateCustomerInfo, isComplete } = useBundle();
     const { slots, selectedBundle, selectedSize, customerInfo, selectedBundleData } = state;
 
@@ -83,9 +85,8 @@ const CheckoutForm = ({ combo }) => {
                 }));
                 trackPurchase(responseData.orderId || responseData.result?.insertedId || 'order_' + Date.now(), totalAmount, purchaseItems);
 
-                alert("Order placed successfully! We will contact you shortly.");
-                // Clear context or redirect
-                // window.location.href = "/thank-you"; 
+                // Redirect to thank you page
+                router.push("/thank-you");
             } else {
                 const error = await response.json();
                 alert(`Error: ${error.error || "Failed to place order"}`);

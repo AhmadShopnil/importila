@@ -12,7 +12,7 @@ const BundleCard = ({
     return (
         <button
             onClick={onSelect}
-            className={`relative p-6 rounded-2xl border-2 transition-all duration-300 text-left w-full ${isSelected
+            className={`relative p-3 md:p-6 rounded-2xl border-2 transition-all duration-300 text-left w-full ${isSelected
                 ? "border-primary bg-primary/5 shadow-elevated scale-[1.02]"
                 : "border-border bg-card hover:border-primary/50 hover:shadow-card"
                 }`}
@@ -31,12 +31,12 @@ const BundleCard = ({
             )}
 
             <div className="mb-2">
-                <span className="text-4xl font-extrabold text-foreground">{bundle?.pieces}</span>
+                <span className="text-2xl md:text-4xl font-extrabold text-foreground">{bundle?.pieces}</span>
                 <span className="text-lg font-semibold text-muted-foreground ml-1">Pieces</span>
             </div>
 
             <div className="mb-3">
-                <span className="text-2xl font-bold text-primary">৳{bundle?.price}</span>
+                <span className="text-xl md:text-2xl font-bold text-primary">৳{bundle?.price}</span>
                 {bundle.originalPrice > 0 && (
                     <span className="text-sm text-muted-foreground line-through ml-2">
                         ৳{bundle.originalPrice}

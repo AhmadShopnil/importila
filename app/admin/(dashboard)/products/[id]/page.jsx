@@ -42,6 +42,9 @@ export default function EditProductPage() {
 
   const [showFeaturedMediaPicker, setShowFeaturedMediaPicker] = useState(false)
   const [showGalleryMediaPicker, setShowGalleryMediaPicker] = useState(false)
+  const [variantImagePicker, setVariantImagePicker] = useState({ open: false, index: null })
+  const [selectedVariantIndexes, setSelectedVariantIndexes] = useState([])
+  const [showBulkImagePicker, setShowBulkImagePicker] = useState(false)
 
   /* ---------- Fetch Categories ---------- */
   useEffect(() => {
@@ -128,7 +131,7 @@ export default function EditProductPage() {
       ...prev,
       variants: [
         ...prev.variants,
-        { colorName: "", colorHex: "#000000", size: "", stock: "", sku: "" },
+        { colorName: "", colorHex: "#000000", size: "", stock: "", sku: "", image: "" },
       ],
     }))
   }
@@ -150,14 +153,38 @@ export default function EditProductPage() {
 
   const duplicateVariant = (index) => {
     const variantToCopy = formData.variants[index]
-    const newVariant = { ...variantToCopy, sku: "" } // Clear SKU so it can be re-generated if edited
+    const newVariant = { ...variantToCopy, sku: "" }
 
-    // Insert after the current index
     const updatedVariants = [...formData.variants]
     updatedVariants.splice(index + 1, 0, newVariant)
 
     setFormData({ ...formData, variants: updatedVariants })
     toast.success("Variant duplicated")
+  }
+
+  const toggleVariantSelection = (index) => {
+    setSelectedVariantIndexes(prev =>
+      prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+    )
+  }
+
+  const selectAllVariants = () => {
+    if (selectedVariantIndexes.length === formData.variants.length) {
+      setSelectedVariantIndexes([])
+    } else {
+      setSelectedVariantIndexes(formData.variants.map((_, i) => i))
+    }
+  }
+
+  const applyBulkImage = (url) => {
+    const updated = [...formData.variants]
+    selectedVariantIndexes.forEach(index => {
+      updated[index].image = url
+    })
+    setFormData({ ...formData, variants: updated })
+    setShowBulkImagePicker(false)
+    setSelectedVariantIndexes([])
+    toast.success(`Image applied to ${selectedVariantIndexes.length} variants`)
   }
 
   /* ---------- Submit ---------- */
@@ -520,24 +547,81 @@ export default function EditProductPage() {
 
           {/* Variants */}
           <section>
-            <div className="flex justify-between mb-4">
-              <h2 className="text-lg font-semibold">Variants & Stock</h2>
-              <button
-                type="button"
-                onClick={addVariant}
-                className="inline-flex items-center gap-1 text-primary"
-              >
-                <Plus className="w-4 h-4" />
-                Add Variant
-              </button>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+              <div className="flex items-center gap-4">
+                <h2 className="text-lg font-semibold">Variants & Stock</h2>
+                {formData.variants.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={selectAllVariants}
+                    className="text-xs font-bold text-primary hover:underline"
+                  >
+                    {selectedVariantIndexes.length === formData.variants.length ? "Deselect All" : "Select All"}
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3">
+                {selectedVariantIndexes.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkImagePicker(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-xs font-bold hover:bg-primary/20 transition-colors"
+                  >
+                    <UploadCloud size={14} />
+                    Set Image for Selected ({selectedVariantIndexes.length})
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={addVariant}
+                  className="inline-flex items-center gap-1 text-sm md:text-base text-[#1E556E] font-bold"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Variant
+                </button>
+              </div>
             </div>
 
             <div className="space-y-4">
               {formData.variants.map((variant, index) => (
                 <div
                   key={index}
-                  className="border rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 bg-gray-50"
+                  className={`relative border rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4 items-end transition-colors ${selectedVariantIndexes.includes(index) ? 'bg-primary/5 border-primary/30' : 'bg-gray-50'}`}
                 >
+                  {/* Selection Checkbox */}
+                  <div className="absolute top-4 left-4 z-10">
+                    <input
+                      type="checkbox"
+                      checked={selectedVariantIndexes.includes(index)}
+                      onChange={() => toggleVariantSelection(index)}
+                      className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg h-[80px] w-[80px] mx-auto relative group overflow-hidden bg-white">
+                    {variant.image ? (
+                      <>
+                        <img src={variant.image} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => updateVariant(index, "image", "")}
+                          className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setVariantImagePicker({ open: true, index })}
+                        className="flex flex-col items-center text-gray-400 hover:text-primary transition-colors"
+                      >
+                        <Plus size={20} />
+                        <span className="text-[10px] font-bold">Image</span>
+                      </button>
+                    )}
+                  </div>
                   <div>
                     <label className="form-label">Color Name *</label>
                     <input
@@ -649,6 +733,25 @@ export default function EditProductPage() {
           }}
           folder="products"
           multiple={true}
+        />
+
+        <MediaPicker
+          isOpen={variantImagePicker.open}
+          onClose={() => setVariantImagePicker({ open: false, index: null })}
+          onSelect={(url) => {
+            updateVariant(variantImagePicker.index, "image", url)
+            setVariantImagePicker({ open: false, index: null })
+          }}
+          folder="products"
+          multiple={false}
+        />
+
+        <MediaPicker
+          isOpen={showBulkImagePicker}
+          onClose={() => setShowBulkImagePicker(false)}
+          onSelect={applyBulkImage}
+          folder="products"
+          multiple={false}
         />
       </div>
     </div>

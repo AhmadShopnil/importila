@@ -266,10 +266,10 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
                             </div>
                         </div>
 
-                        {order.note && (
+                        {order?.note && (
                             <div className="mt-6 p-4 bg-white/10 rounded-xl border border-white/10 backdrop-blur-sm">
-                                <p className="text-[10px] uppercase font-black text-white/40 mb-1">Bundle Note</p>
-                                <p className="text-xs italic opacity-90">"{order?.note}"</p>
+                                <p className="text-[14px] uppercase font-black text-whitemb-1">Bundle Note</p>
+                                <p className="text-sm italic opacity-90">"{order?.note}"</p>
                             </div>
                         )}
                     </div>

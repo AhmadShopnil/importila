@@ -38,6 +38,7 @@ export async function GET(request) {
     }
 
     query.isActive = { $ne: false }
+    query.isTrashed = { $ne: true }
 
     // Price range
     if (minPrice > 0 || maxPrice < Infinity) {
@@ -111,42 +112,49 @@ export async function POST(request) {
     const purchasePrice = Number(formData.get("purchasePrice")) || 0
     const variants = JSON.parse(formData.get("variants") || "[]")
 
-    const featuredImageFile = formData.get("featuredImage")
-    const extraImageFiles = formData.getAll("images")
+    /* ---------- Featured Image ---------- */
+    let featuredImage = null
+    const featuredFile = formData.get("featuredImage")
+    const featuredURL = formData.get("featuredImageURL")
 
-    if (!name || categories.length === 0 || !featuredImageFile || isNaN(price)) {
+    const { db } = await connectToDatabase()
+
+    if (featuredFile instanceof File && featuredFile.size > 0) {
+      const result = await uploadToCloudinary(featuredFile, "products")
+      // Save to media collection
+      await db.collection("media").insertOne({
+        url: result.secure_url,
+        publicId: result.public_id,
+        folder: "products",
+        fileName: featuredFile.name,
+        fileSize: featuredFile.size,
+        format: result.format,
+        width: result.width,
+        height: result.height,
+        createdAt: new Date(),
+      })
+      featuredImage = result.secure_url
+    } else if (typeof featuredFile === 'string' && featuredFile.startsWith('http')) {
+      featuredImage = featuredFile
+    } else if (featuredURL) {
+      featuredImage = featuredURL
+    }
+
+    if (!name || categories.length === 0 || !featuredImage || isNaN(price)) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing required fields (Name, Category, Image, or Price)" },
         { status: 400 }
       )
     }
 
-    /* ---------- Upload images ---------- */
-    const featuredImageResult = await uploadToCloudinary(
-      featuredImageFile,
-      "products"
-    )
-
-    // Save featured image to media collection
-    const { db } = await connectToDatabase()
-    await db.collection("media").insertOne({
-      url: featuredImageResult.secure_url,
-      publicId: featuredImageResult.public_id,
-      folder: "products",
-      fileName: featuredImageFile.name,
-      fileSize: featuredImageFile.size,
-      format: featuredImageResult.format,
-      width: featuredImageResult.width,
-      height: featuredImageResult.height,
-      createdAt: new Date(),
-    })
-
+    /* ---------- Extra Images ---------- */
     const images = []
-    for (const file of extraImageFiles) {
-      if (file && file.size > 0) {
+
+    // Handle files
+    for (const file of formData.getAll("images")) {
+      if (file instanceof File && file.size > 0) {
         const result = await uploadToCloudinary(file, "products")
         if (result) {
-          // Save to media collection
           await db.collection("media").insertOne({
             url: result.secure_url,
             publicId: result.public_id,
@@ -158,10 +166,17 @@ export async function POST(request) {
             height: result.height,
             createdAt: new Date(),
           })
-          // Store only URL in product
           images.push(result.secure_url)
         }
+      } else if (typeof file === 'string' && file.startsWith('http')) {
+        images.push(file)
       }
+    }
+
+    // Handle explicit URL fields if any
+    const imageURLs = formData.getAll("imageURLs")
+    if (imageURLs.length > 0) {
+      images.push(...imageURLs)
     }
 
     /* ---------- DB ---------- */
@@ -176,7 +191,7 @@ export async function POST(request) {
       isFeatured,
       isActive,
       designName,
-      featuredImage: featuredImageResult.secure_url, // Store only URL
+      featuredImage, // Store only URL
       images, // Store only URLs
       variants,
       createdAt: new Date(),

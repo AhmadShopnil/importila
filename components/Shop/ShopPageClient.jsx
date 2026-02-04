@@ -6,8 +6,10 @@ import Link from "next/link"
 import Container from "@/components/Container"
 import { ProductCard } from "@/components/Home/ProductList/ProductList"
 import { BASE_URL } from "@/utils/baseUrl"
+import { expandProductsByColor } from "@/utils/productUtils"
 
 export default function ShopPageClient({ initialProducts, initialPagination, categories: initialCategories }) {
+    // const [products, setProducts] = useState(expandProductsByColor(initialProducts) || [])
     const [products, setProducts] = useState(initialProducts || [])
     const [pagination, setPagination] = useState(initialPagination || { page: 1, totalPages: 1, total: 0 })
     const [loading, setLoading] = useState(false)
@@ -228,7 +230,7 @@ export default function ShopPageClient({ initialProducts, initialPagination, cat
                                     <div key={i} className="aspect-[3/4] bg-muted animate-pulse rounded-xl" />
                                 ))}
                             </div>
-                        ) : products.length > 0 ? (
+                        ) : products?.length > 0 ? (
                             <div className={`grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
                                 {products.map((product) => (
                                     <ProductCard key={product._id} product={product} />

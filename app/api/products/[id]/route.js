@@ -21,7 +21,7 @@ export async function GET(request, context) {
       _id: new ObjectId(id),
     })
 
-    if (!product) {
+    if (!product || product.isTrashed) {
       return NextResponse.json(
         { error: "Product not found" },
         { status: 404 }
@@ -178,19 +178,35 @@ export async function DELETE(request, context) {
     }
 
     const { db } = await connectToDatabase()
+    const { searchParams } = new URL(request.url)
+    const permanent = searchParams.get("permanent") === "true"
 
-    const result = await db.collection("products").deleteOne({
-      _id: new ObjectId(id),
-    })
+    if (permanent) {
+      const result = await db.collection("products").deleteOne({
+        _id: new ObjectId(id),
+      })
 
-    if (!result.deletedCount) {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
+      if (!result.deletedCount) {
+        return NextResponse.json(
+          { error: "Product not found" },
+          { status: 404 }
+        )
+      }
+      return NextResponse.json({ message: "Product permanently deleted" })
+    } else {
+      const result = await db.collection("products").updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { isTrashed: true, updatedAt: new Date() } }
       )
-    }
 
-    return NextResponse.json({ message: "Product deleted successfully" })
+      if (!result.matchedCount) {
+        return NextResponse.json(
+          { error: "Product not found" },
+          { status: 404 }
+        )
+      }
+      return NextResponse.json({ message: "Product moved to trash" })
+    }
   } catch (error) {
     console.error("DELETE product error:", error)
     return NextResponse.json(

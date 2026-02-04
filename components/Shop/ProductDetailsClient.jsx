@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { ShoppingCart, Zap, Heart, Share2, Check, Minus, Plus, Star, ShieldCheck, Truck, RefreshCw } from "lucide-react"
 import Container from "@/components/Container"
 import { useCart } from "@/context/CartContext"
@@ -28,7 +29,16 @@ const ProductDetailsClient = ({ product }) => {
         return [...new Set(sizes)]
     }, [allVariants])
 
-    const [selectedSize, setSelectedSize] = useState(uniqueSizes[0] || null)
+    const searchParams = useSearchParams()
+    const colorFromQuery = searchParams.get("color")
+
+    const [selectedSize, setSelectedSize] = useState(() => {
+        if (colorFromQuery) {
+            const variantWithColor = allVariants.find(v => v.colorName === colorFromQuery)
+            if (variantWithColor) return variantWithColor.size
+        }
+        return uniqueSizes[0] || null
+    })
 
     // 2. Get Available Colors for Selected Size
     const availableColorsForSize = useMemo(() => {
@@ -36,10 +46,10 @@ const ProductDetailsClient = ({ product }) => {
         return allVariants.filter(v => v.size === selectedSize)
     }, [allVariants, selectedSize])
 
-    const [selectedColorName, setSelectedColorName] = useState(availableColorsForSize[0]?.colorName || null)
+    const [selectedColorName, setSelectedColorName] = useState(colorFromQuery || availableColorsForSize[0]?.colorName || null)
 
     // Sync color when size changes
-    useMemo(() => {
+    useEffect(() => {
         if (selectedSize) {
             const colors = allVariants.filter(v => v.size === selectedSize)
             const exists = colors.find(c => c.colorName === selectedColorName)
@@ -53,6 +63,12 @@ const ProductDetailsClient = ({ product }) => {
     const selectedVariant = useMemo(() => {
         return allVariants.find(v => v.size === selectedSize && v.colorName === selectedColorName)
     }, [allVariants, selectedSize, selectedColorName])
+
+    useEffect(() => {
+        if (selectedVariant?.image) {
+            setSelectedImage(selectedVariant.image)
+        }
+    }, [selectedVariant])
 
     const allImages = useMemo(() => {
         return [product.featuredImage, ...(product.images || [])].filter(Boolean)

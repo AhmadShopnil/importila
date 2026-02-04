@@ -56,7 +56,7 @@ export default function TableRow({ product, handleDelete }) {
           <button
             onClick={() => handleDelete(product._id)}
             className="p-2 hover:bg-muted rounded text-destructive"
-            title="Delete Product"
+            title="Move to Trash"
           >
             <Trash2 className="w-4 h-4" />
           </button>

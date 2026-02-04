@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import HeroSection from "@/components/landing/HeroSection";
 import BundleSelection from "@/components/landing/BundleSelection";
 import SizeSelection from "@/components/landing/SizeSelection";
@@ -15,7 +16,13 @@ import { BundleProvider, useBundle } from "@/context/BundleContext";
 import SizeChart from "./SizeChart";
 
 const LandingContent = ({ combo }) => {
-    const { state } = useBundle();
+    const { state, selectBundle } = useBundle();
+
+    useEffect(() => {
+        if (!state.selectedBundle && combo?.bundleOptions?.length > 0) {
+            selectBundle(combo.bundleOptions[0]);
+        }
+    }, [combo, state.selectedBundle, selectBundle]);
 
     return (
         <div className="landing-page-theme min-h-screen bg-background font-nunito overflow-x-hidden  ">

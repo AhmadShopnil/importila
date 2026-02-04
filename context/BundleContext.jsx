@@ -18,20 +18,56 @@ const initialState = {
 
 const BundleContext = createContext(null);
 
+const getUniqueColors = (variants) => {
+    if (!variants || variants.length === 0) return [];
+    const seen = new Set();
+    const uniqueColors = [];
+    for (const v of variants) {
+        if (!seen.has(v.colorName)) {
+            seen.add(v.colorName);
+            uniqueColors.push({ name: v.colorName, hex: v.colorHex });
+        }
+    }
+    return uniqueColors;
+};
+
 function bundleReducer(state, action) {
     switch (action.type) {
-        case "SELECT_BUNDLE":
+        case "SELECT_BUNDLE": {
             const bundle = action.payload;
             const pieces = typeof bundle === 'object' ? bundle.pieces : bundle;
+
+            // Pre-fill slots with products from the bundle data if available
+            const comboProducts = state.selectedBundleData?.products || [];
+
+            const initialSlots = Array(pieces)
+                .fill(null)
+                .map((_, index) => {
+                    const product = comboProducts[index % comboProducts.length] || null;
+                    if (product) {
+                        const variants = product.variants || [];
+                        const colors = getUniqueColors(variants);
+                        return {
+                            product: {
+                                ...product,
+                                displayColors: colors,
+                                id: product._id || product.id,
+                                image: product.featuredImage || product.image
+                            },
+                            selectedColor: colors.length > 0 ? colors[0].name : null,
+                        };
+                    }
+                    return { product: null, selectedColor: null };
+                });
+
             return {
                 ...state,
                 selectedBundle: pieces,
                 selectedBundleData: typeof bundle === 'object' ? bundle : null,
-                slots: Array(pieces)
-                    .fill(null)
-                    .map(() => ({ product: null, selectedColor: null })),
-                activeSlotIndex: 0,
+                slots: initialSlots,
+                activeSlotIndex: initialSlots.findIndex(s => s.product === null) === -1 ? 0 : initialSlots.findIndex(s => s.product === null),
             };
+        }
         case "SELECT_SIZE":
             return {
                 ...state,
@@ -46,22 +82,22 @@ function bundleReducer(state, action) {
             if (state.activeSlotIndex === null) return state;
 
             const newSlots = [...state.slots];
-            const product = action.payload;
+            const { product, color } = action.payload.product ? action.payload : { product: action.payload, color: null };
 
             // Handle both 'colors' (demo data) and 'variants' (API data)
-            const colors = product.variants
-                ? product.variants.map(v => ({ name: v.colorName, hex: v.colorHex }))
+            const variants = product.variants || [];
+            const colors = variants.length > 0
+                ? getUniqueColors(variants)
                 : (product.colors || []);
 
             newSlots[state.activeSlotIndex] = {
                 product: {
                     ...product,
-                    // Standardize color format for the UI
                     displayColors: colors,
                     id: product._id || product.id,
                     image: product.featuredImage || product.image
                 },
-                selectedColor: colors.length > 0 ? colors[0].name : null,
+                selectedColor: color || (colors.length > 0 ? colors[0].name : null),
             };
 
             // Auto-advance to next empty slot
@@ -134,8 +170,8 @@ export const BundleProvider = ({ children }) => {
         dispatch({ type: "SET_ACTIVE_SLOT", payload: index });
     }, []);
 
-    const addProductToSlot = useCallback((product) => {
-        dispatch({ type: "ADD_PRODUCT_TO_SLOT", payload: product });
+    const addProductToSlot = useCallback((product, color = null) => {
+        dispatch({ type: "ADD_PRODUCT_TO_SLOT", payload: { product, color } });
     }, []);
 
     const updateSlotColor = useCallback((slotIndex, color) => {

@@ -15,9 +15,9 @@ const SizeSelection = ({ combo }) => {
                     <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
                         {combo?.sizeSelectionTitle || "Select Size for Your Bundle"}
                     </h2>
-                    <p className="text-muted-foreground">
+                    {/* <p className="text-muted-foreground">
                         One size applies to all items in your bundle
-                    </p>
+                    </p> */}
                 </div>
 
                 <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-2xl mx-auto">
