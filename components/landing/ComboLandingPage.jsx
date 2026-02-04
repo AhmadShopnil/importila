@@ -37,11 +37,12 @@ const LandingContent = ({ combo }) => {
             <ProductGrid combo={combo} />
 
             <ProductDetails combo={combo} />
+
+
+            <ReviewSection />
             <SizeChart />
 
             <SizeSelection combo={combo} />
-
-            <ReviewSection />
 
             <CheckoutForm combo={combo} />
 
