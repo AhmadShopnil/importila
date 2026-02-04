@@ -76,11 +76,26 @@ export async function PUT(request, context) {
     const featuredFile = formData.get("featuredImage")
     const featuredURL = formData.get("featuredImageURL")
 
+    const { db } = await connectToDatabase()
+
     if (featuredFile instanceof File) {
-      featuredImage = await uploadToCloudinary(
+      const result = await uploadToCloudinary(
         featuredFile,
-        "products/featured"
+        "products"
       )
+      // Save to media collection
+      await db.collection("media").insertOne({
+        url: result.secure_url,
+        publicId: result.public_id,
+        folder: "products",
+        fileName: featuredFile.name,
+        fileSize: featuredFile.size,
+        format: result.format,
+        width: result.width,
+        height: result.height,
+        createdAt: new Date(),
+      })
+      featuredImage = result.secure_url
     } else if (featuredURL) {
       featuredImage = featuredURL
     }
@@ -90,14 +105,26 @@ export async function PUT(request, context) {
 
     for (const file of formData.getAll("images")) {
       if (file instanceof File && file.size > 0) {
-        const url = await uploadToCloudinary(file, "products/gallery")
-        if (url) images.push(url)
+        const result = await uploadToCloudinary(file, "products")
+        if (result) {
+          // Save to media collection
+          await db.collection("media").insertOne({
+            url: result.secure_url,
+            publicId: result.public_id,
+            folder: "products",
+            fileName: file.name,
+            fileSize: file.size,
+            format: result.format,
+            width: result.width,
+            height: result.height,
+            createdAt: new Date(),
+          })
+          images.push(result.secure_url)
+        }
       }
     }
 
     images.push(...formData.getAll("imageURLs"))
-
-    const { db } = await connectToDatabase()
 
     const result = await db.collection("products").updateOne(
       { _id: new ObjectId(id) },

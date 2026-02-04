@@ -35,137 +35,99 @@ export async function GET(request) {
             dateQuery = { createdAt: { $gte: start, $lte: end } }
         }
 
-        // 2. Total Products Count (Always all time or based on your preference? Usually all time)
+        // 2. Total Products Count
         const totalProducts = await db.collection("products").countDocuments()
 
-        // 3. Orders Stats
-        const orderStats = await db.collection("orders").aggregate([
-            { $match: dateQuery },
-            {
-                $facet: {
-                    totals: [
-                        { $group: { _id: null, count: { $sum: 1 } } }
-                    ],
-                    pending: [
-                        { $match: { status: { $regex: /pending/i } } },
-                        { $group: { _id: null, count: { $sum: 1 } } }
-                    ],
-                    deliveredItems: [
-                        { $match: { status: { $regex: /delivered|complete/i } } },
-                        {
-                            $project: {
-                                mergedItems: {
-                                    $concatArrays: [
-                                        { $ifNull: ["$items", []] },
-                                        { $ifNull: ["$products", []] }
-                                    ]
-                                },
-                                orderPrice: { $ifNull: ["$totalPrice", "$offerPrice", "$price", 0] }
-                            }
-                        },
-                        {
-                            $addFields: {
-                                // If mergedItems is empty, create a dummy item to allow calculating from order-level price
-                                mergedItems: {
-                                    $cond: [
-                                        { $gt: [{ $size: "$mergedItems" }, 0] },
-                                        "$mergedItems",
-                                        [{ isOrderFallback: true }]
-                                    ]
-                                }
-                            }
-                        },
-                        { $unwind: "$mergedItems" },
-                        {
-                            $addFields: {
-                                "mergedItems.productIdObj": {
-                                    $cond: [
-                                        {
-                                            $and: [
-                                                { $ne: ["$mergedItems.productId", null] },
-                                                { $eq: [{ $type: "$mergedItems.productId" }, "string"] },
-                                                { $ne: ["$mergedItems.productId", ""] }
-                                            ]
-                                        },
-                                        { $toObjectId: "$mergedItems.productId" },
-                                        "$mergedItems.productId"
-                                    ]
-                                }
-                            }
-                        },
-                        {
-                            $lookup: {
-                                from: "products",
-                                localField: "mergedItems.productIdObj",
-                                foreignField: "_id",
-                                as: "productData"
-                            }
-                        },
-                        { $unwind: { path: "$productData", preserveNullAndEmptyArrays: true } },
-                        {
-                            $group: {
-                                _id: null,
-                                totalRevenue: {
-                                    $sum: {
-                                        $multiply: [
-                                            { $ifNull: ["$mergedItems.price", "$orderPrice", 0] },
-                                            { $ifNull: ["$mergedItems.quantity", 1] }
-                                        ]
-                                    }
-                                },
-                                totalPurchasePrice: {
-                                    $sum: {
-                                        $multiply: [
-                                            { $ifNull: ["$productData.purchasePrice", "$mergedItems.purchasePrice", 0] },
-                                            { $ifNull: ["$mergedItems.quantity", 1] }
-                                        ]
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            $project: {
-                                _id: 0,
-                                totalRevenue: 1,
-                                profit: { $subtract: ["$totalRevenue", "$totalPurchasePrice"] }
-                            }
-                        }
-                    ],
-                    deliveredOrders: [
-                        { $match: { status: { $regex: /delivered|complete/i } } },
-                        { $group: { _id: null, count: { $sum: 1 } } }
-                    ],
-                    statusDistribution: [
-                        { $group: { _id: "$status", count: { $sum: 1 } } }
-                    ],
-                    sourceDistribution: [
-                        { $group: { _id: "$orderSource", count: { $sum: 1 } } }
-                    ]
-                }
+        // 3. Get all orders for the period
+        const allOrders = await db.collection("orders").find(dateQuery).toArray()
+
+        // 4. Get all products for purchase price lookup
+        const allProducts = await db.collection("products").find({}).toArray()
+        const productMap = {}
+        allProducts.forEach(p => {
+            productMap[p._id.toString()] = p
+        })
+
+        // 5. Calculate stats
+        let totalOrders = allOrders.length
+        let pendingOrders = 0
+        let deliveredOrdersCount = 0
+        let totalRevenue = 0
+        let totalCost = 0
+
+        // Status and source distribution
+        const statusCounts = {}
+        const sourceCounts = {}
+
+        for (const order of allOrders) {
+            const status = (order.status || "unknown").toLowerCase()
+            const source = order.orderSource || "unknown"
+
+            // Count by status
+            statusCounts[status] = (statusCounts[status] || 0) + 1
+
+            // Check if pending
+            if (status.includes("pending")) {
+                pendingOrders++
             }
-        ]).toArray()
 
-        const facetResults = orderStats[0]
-        const totalOrders = facetResults.totals[0]?.count || 0
-        const pendingOrders = facetResults.pending[0]?.count || 0
-        const deliveredData = facetResults.deliveredItems[0] || { totalRevenue: 0, profit: 0 }
-        const deliveredOrdersCount = facetResults.deliveredOrders[0]?.count || 0
+            // Check if delivered
+            if (status === "delivered" || status === "complete") {
+                deliveredOrdersCount++
 
-        // 4. Low Stock Items (Always global)
+                // Count source for delivered orders only
+                sourceCounts[source] = (sourceCounts[source] || 0) + 1
+
+                // Calculate revenue from items
+                const items = order.items || []
+                let orderRevenue = 0
+                let orderCost = 0
+
+                for (const item of items) {
+                    const qty = Number(item.quantity) || 1
+                    const price = Number(item.price) || 0
+                    orderRevenue += price * qty
+
+                    if (item.productId && productMap[item.productId]) {
+                        const pCost = Number(productMap[item.productId].purchasePrice) || 0
+                        orderCost += pCost * qty
+                    }
+                }
+
+                // Fallback for revenue if items were empty
+                if (orderRevenue === 0) {
+                    const total = Number(order.totalAmount) || Number(order.totalPrice) || 0
+                    const shipping = Number(order.shippingCharge) || 0
+                    orderRevenue = Math.max(0, total - shipping)
+                }
+
+                totalRevenue += orderRevenue
+                totalCost += orderCost
+            }
+        }
+
+        // Calculate profit
+        const profit = totalRevenue - totalCost
+
+        // 6. Low Stock Items
         const lowStockCount = await db.collection("products").countDocuments({
             "variants.stock": { $lt: 10 }
         })
 
+        // Format distributions for charts
+        const statusDistribution = Object.entries(statusCounts).map(([_id, count]) => ({ _id, count }))
+        const sourceDistribution = Object.entries(sourceCounts).map(([_id, count]) => ({ _id, count }))
+
         return NextResponse.json({
             totalProducts,
             totalOrders,
-            totalRevenue: deliveredData.totalRevenue,
-            profit: deliveredData.profit,
+            totalRevenue,
+            profit,
             pendingOrders,
             deliveredOrders: deliveredOrdersCount,
             lowStockItems: lowStockCount,
-            statusDistribution: facetResults.statusDistribution || [],
-            sourceDistribution: facetResults.sourceDistribution || []
+            statusDistribution,
+            sourceDistribution
         })
     } catch (error) {
         console.error("GET /api/admin/stats error:", error)

@@ -55,12 +55,25 @@ export async function POST(request) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    const featuredImage = await uploadToCloudinary(
+    const { db } = await connectToDatabase();
+
+    // Upload and save to media collection
+    const imageResult = await uploadToCloudinary(
       imageFile,
-      "combos/featured"
+      "combos"
     );
 
-    const { db } = await connectToDatabase();
+    await db.collection("media").insertOne({
+      url: imageResult.secure_url,
+      publicId: imageResult.public_id,
+      folder: "combos",
+      fileName: imageFile.name,
+      fileSize: imageFile.size,
+      format: imageResult.format,
+      width: imageResult.width,
+      height: imageResult.height,
+      createdAt: new Date(),
+    });
 
     const result = await db.collection("combos").insertOne({
       title,
@@ -87,7 +100,7 @@ export async function POST(request) {
       sizes,
       products,
       bundleOptions,
-      featuredImage,
+      featuredImage: imageResult.secure_url, // Store only URL
       createdAt: new Date(),
       updatedAt: new Date(),
     });

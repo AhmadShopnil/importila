@@ -67,13 +67,13 @@ export default function AdminDashboard() {
       color: "bg-green-100 text-green-600",
       cardStyle: "border border-green-200 bg-white"
     },
-    {
-      label: "Profit",
-      value: `৳${stats?.profit?.toLocaleString()}`,
-      icon: ChartNoAxesCombined,
-      color: "bg-emerald-100 text-emerald-600",
-      cardStyle: "border border-emerald-200 bg-white"
-    },
+    // {
+    //   label: "Profit",
+    //   value: `৳${stats?.profit?.toLocaleString()}`,
+    //   icon: ChartNoAxesCombined,
+    //   color: "bg-emerald-100 text-emerald-600",
+    //   cardStyle: "border border-emerald-200 bg-white"
+    // },
     {
       label: "Pending Web Orders",
       value: stats.pendingOrders,
@@ -104,7 +104,7 @@ export default function AdminDashboard() {
 
 
       <div className="space-y-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {statCards?.map((card) => {
             const Icon = card.icon
             return (
@@ -141,7 +141,7 @@ export default function AdminDashboard() {
           <WebOrderReportChart
             title={"Order Source"}
             data={stats.sourceDistribution}
-            totalOrders={stats?.totalOrders}
+            totalOrders={stats?.deliveredOrders}
             currentFilter={filter}
             currentMonth={month}
             currentYear={year}

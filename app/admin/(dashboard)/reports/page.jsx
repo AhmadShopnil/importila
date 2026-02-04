@@ -2,12 +2,17 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Calendar, Truck, TrendingUp } from "lucide-react"
-import Loading from "@/components/Loader/Loading"
+import { Calendar, TrendingUp, DollarSign, Package, Truck, ChartNoAxesCombined } from "lucide-react"
 import { BASE_URL } from "@/utils/baseUrl"
 
 export default function ReportsPage() {
   const [sales, setSales] = useState([])
+  const [totals, setTotals] = useState({
+    deliveredOrders: 0,
+    deliveredRevenue: 0,
+    totalProfit: 0,
+    totalItems: 0
+  })
   const [loading, setLoading] = useState(true)
   const [monthYear, setMonthYear] = useState(new Date().toISOString().slice(0, 7))
 
@@ -16,10 +21,17 @@ export default function ReportsPage() {
   }, [monthYear])
 
   const fetchSalesReport = async () => {
+    setLoading(true)
     try {
       const res = await fetch(`${BASE_URL}/api/reports/sales?month=${monthYear}`)
       const data = await res.json()
       setSales(data.sales || [])
+      setTotals(data.totals || {
+        deliveredOrders: 0,
+        deliveredRevenue: 0,
+        totalProfit: 0,
+        totalItems: 0
+      })
     } catch (error) {
       console.error("Failed to fetch sales report:", error)
     } finally {
@@ -27,25 +39,19 @@ export default function ReportsPage() {
     }
   }
 
-
-  // if (loading) return <Loading />
-
-
-  const totalRevenue = sales.reduce((sum, day) => sum + day.totalRevenue, 0)
-  const totalOrders = sales.reduce((sum, day) => sum + day.totalOrders, 0)
-  const deliveredRevenue = sales.reduce((sum, day) => sum + (day.deliveredRevenue || 0), 0)
-  const deliveredOrders = sales.reduce((sum, day) => sum + (day.deliveredOrders || 0), 0)
-  const totalItems = sales.reduce((sum, day) => sum + day.totalItems, 0)
-  const avgOrderValue = deliveredOrders > 0 ? Math.round(deliveredRevenue / deliveredOrders) : 0
+  const avgOrderValue = totals.deliveredOrders > 0 ? Math.round(totals.deliveredRevenue / totals.deliveredOrders) : 0
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-3xl sm:text-4xl font-bold text-[#1E556E]">Sales Reports</h1>
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-[#1E556E]">Sales Report</h1>
+          <p className="text-muted-foreground mt-1">Delivered orders only</p>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link href="/admin/reports/best-selling" className="flex items-center gap-2 bg-[#1E556E] text-white px-4 py-2 rounded-lg shadow-sm hover:bg-[#1E556E]/90 transition">
             <TrendingUp className="w-5 h-5" />
-            <span className="">Best Selling Report</span>
+            <span>Best Selling</span>
           </Link>
           <div className="flex items-center gap-2 bg-white border border-border rounded-lg px-4 py-2 shadow-sm">
             <Calendar className="w-5 h-5 text-muted-foreground" />
@@ -59,70 +65,123 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-blue-100 border border-blue-200 rounded-lg p-4 sm:p-6 shadow-sm">
-          <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold mb-1">Total Orders</p>
-          <p className="text-2xl sm:text-3xl font-bold">{totalOrders}</p>
-        </div>
-
-        <div className="bg-emerald-100 border border-emerald-200 rounded-lg p-4 sm:p-6 shadow-sm">
+      {/* Summary Cards - Only Delivered Orders */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+              <Truck className="w-6 h-6 text-emerald-600" />
+            </div>
+          </div>
           <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold mb-1">Delivered Orders</p>
-          <p className="text-2xl sm:text-3xl font-bold">{deliveredOrders}</p>
+          <p className="text-3xl font-bold text-emerald-700">{totals.deliveredOrders}</p>
         </div>
 
-        <div className="bg-purple-100 border border-purple-200 rounded-lg p-4 sm:p-6 shadow-sm">
-          <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold mb-1">Gross Revenue</p>
-          <p className="text-2xl sm:text-3xl font-bold">৳ {totalRevenue.toLocaleString()}</p>
+        <div className="bg-green-50 border border-green-200 rounded-xl p-5 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+          <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold mb-1">Total Sales</p>
+          <p className="text-3xl font-bold text-green-700">৳ {totals.deliveredRevenue?.toLocaleString()}</p>
         </div>
 
-        <div className="bg-green-100 border border-green-200 rounded-lg p-4 sm:p-6 shadow-sm">
-          <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold mb-1">Delivered Revenue</p>
-          <p className="text-2xl sm:text-3xl font-bold text-green-700">৳ {deliveredRevenue.toLocaleString()}</p>
-        </div>
+        {/* <div className="bg-teal-50 border border-teal-200 rounded-xl p-5 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center">
+              <ChartNoAxesCombined className="w-6 h-6 text-teal-600" />
+            </div>
+          </div>
+          <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold mb-1">Total Profit</p>
+          <p className="text-3xl font-bold text-teal-700">৳ {totals.totalProfit?.toLocaleString()}</p>
+        </div> */}
 
-        <div className="bg-yellow-100 border border-yellow-200 rounded-lg p-4 sm:p-6 shadow-sm">
-          <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold mb-1">Avg Ticket Size</p>
-          <p className="text-2xl sm:text-3xl font-bold">৳ {avgOrderValue.toLocaleString()}</p>
+        <div className="bg-purple-50 border border-purple-200 rounded-xl p-5 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-purple-600" />
+            </div>
+          </div>
+          <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold mb-1">Avg Order Value</p>
+          <p className="text-3xl font-bold text-purple-700">৳ {avgOrderValue.toLocaleString()}</p>
         </div>
       </div>
 
       {/* Daily Sales Table */}
       <div className="overflow-x-auto bg-white rounded-xl border border-border shadow-sm">
-        <div className="p-4 border-b border-border bg-muted/30">
-          <h2 className="font-bold text-lg">Daily Breakdown</h2>
+        <div className="p-4 border-b border-border bg-gradient-to-r from-[#1E556E]/5 to-transparent">
+          <h2 className="font-bold text-lg flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-[#1E556E]" />
+            Daily Sales Breakdown
+          </h2>
+          <p className="text-sm text-muted-foreground">Delivered orders for {monthYear}</p>
         </div>
-        <table className="w-full text-sm">
-          <thead className="bg-muted text-muted-foreground border-b border-border uppercase text-xs">
-            <tr>
-              <th className="px-6 py-4 text-left font-bold">Date</th>
-              <th className="px-6 py-4 text-left font-bold">Total Orders</th>
-              <th className="px-6 py-4 text-left font-bold">Delivered</th>
-              <th className="px-6 py-4 text-left font-bold">Gross Rev.</th>
-              <th className="px-6 py-4 text-left font-bold text-green-700">Delivered Rev.</th>
-              <th className="px-6 py-4 text-left font-bold hidden md:table-cell">Items</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {sales.map((day, idx) => (
-              <tr key={idx} className="hover:bg-muted/50 transition-colors">
-                <td className="px-6 py-4 font-semibold">{new Date(day.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</td>
-                <td className="px-6 py-4">{day.totalOrders}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-bold ${day.deliveredOrders === day.totalOrders ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                    {day.deliveredOrders}
-                  </span>
-                </td>
-                <td className="px-6 py-4">৳ {day.totalRevenue.toLocaleString()}</td>
-                <td className="px-6 py-4 font-bold text-green-700">৳ {day.deliveredRevenue?.toLocaleString()}</td>
-                <td className="px-6 py-4 hidden md:table-cell">{day.totalItems}</td>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-[#1E556E] border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="bg-muted text-muted-foreground border-b border-border uppercase text-xs">
+              <tr>
+                <th className="px-6 py-4 text-left font-bold">Date</th>
+                <th className="px-6 py-4 text-left font-bold">Delivered</th>
+                <th className="px-6 py-4 text-left font-bold text-green-700">Sales</th>
+                {/* <th className="px-6 py-4 text-left font-bold text-teal-700">Profit</th> */}
+                <th className="px-6 py-4 text-left font-bold hidden md:table-cell">Items</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {sales.filter(day => day.deliveredOrders > 0).map((day, idx) => (
+                <tr key={idx} className="hover:bg-muted/50 transition-colors">
+                  <td className="px-6 py-4 font-semibold">
+                    {new Date(day.date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                      {day.deliveredOrders}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 font-bold text-green-700">
+                    ৳ {day.deliveredRevenue?.toLocaleString()}
+                  </td>
+                  {/* <td className="px-6 py-4">
+                    <span className={`font-bold ${day.profit > 0 ? 'text-teal-700' : 'text-red-500'}`}>
+                      ৳ {day.profit?.toLocaleString()}
+                    </span>
+                  </td> */}
+                  <td className="px-6 py-4 hidden md:table-cell">{day.totalItems}</td>
+                </tr>
+              ))}
+            </tbody>
+            {sales.filter(day => day.deliveredOrders > 0).length > 0 && (
+              <tfoot className="bg-muted/50 border-t-2 border-border font-bold">
+                <tr>
+                  <td className="px-6 py-4 text-[#1E556E]">TOTAL</td>
+                  <td className="px-6 py-4">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                      {totals.deliveredOrders}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-green-700">৳ {totals.deliveredRevenue?.toLocaleString()}</td>
+                  {/* <td className="px-6 py-4 text-teal-700">৳ {totals.totalProfit?.toLocaleString()}</td> */}
+                  <td className="px-6 py-4 hidden md:table-cell">{totals.totalItems}</td>
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        )}
       </div>
 
-      {sales.length === 0 && <div className="text-center py-8 text-muted-foreground">No sales data for this month</div>}
+      {!loading && sales.filter(day => day.deliveredOrders > 0).length === 0 && (
+        <div className="text-center py-12 bg-white rounded-xl border border-border">
+          <Truck className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
+          <p className="text-muted-foreground font-semibold">No delivered orders for this month</p>
+          <p className="text-sm text-muted-foreground mt-1">Try selecting a different month</p>
+        </div>
+      )}
     </div>
   )
 }

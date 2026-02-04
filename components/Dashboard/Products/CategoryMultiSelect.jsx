@@ -8,6 +8,11 @@ export default function CategoryMultiSelect({ selectedIds, onChange, categories 
     const [searchTerm, setSearchTerm] = useState("")
     const dropdownRef = useRef(null)
 
+    // Normalize selectedIds to handle both array of IDs and array of objects
+    const normalizedSelectedIds = selectedIds.map(item =>
+        typeof item === 'object' ? item._id : item
+    )
+
     // Filter categories based on search term
     const filteredCategories = categories.filter(cat =>
         cat.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -15,7 +20,7 @@ export default function CategoryMultiSelect({ selectedIds, onChange, categories 
     )
 
     // Selected category objects
-    const selectedCategories = categories.filter(cat => selectedIds.includes(cat._id))
+    const selectedCategories = categories.filter(cat => normalizedSelectedIds.includes(cat._id))
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -28,16 +33,22 @@ export default function CategoryMultiSelect({ selectedIds, onChange, categories 
         return () => document.removeEventListener("mousedown", handleClickOutside)
     }, [])
 
-    const toggleCategory = (id) => {
-        const newSelected = selectedIds.includes(id)
-            ? selectedIds.filter(prevId => prevId !== id)
-            : [...selectedIds, id]
-        onChange(newSelected)
+    const toggleCategory = (cat) => {
+        const isSelected = normalizedSelectedIds.includes(cat._id)
+        let newSelected
+        if (isSelected) {
+            newSelected = selectedCategories.filter(c => c._id !== cat._id)
+        } else {
+            newSelected = [...selectedCategories, cat]
+        }
+        // Pass array of objects with _id and name
+        onChange(newSelected.map(c => ({ _id: c._id, name: c.name })))
     }
 
     const removeCategory = (e, id) => {
         e.stopPropagation()
-        onChange(selectedIds.filter(prevId => prevId !== id))
+        const newSelected = selectedCategories.filter(c => c._id !== id)
+        onChange(newSelected.map(c => ({ _id: c._id, name: c.name })))
     }
 
     return (
@@ -98,10 +109,10 @@ export default function CategoryMultiSelect({ selectedIds, onChange, categories 
                             filteredCategories.map(cat => (
                                 <div
                                     key={cat._id}
-                                    onClick={() => toggleCategory(cat._id)}
-                                    className={`flex items-center justify-between px-4 py-2.5 cursor-pointer transition-colors ${selectedIds.includes(cat._id)
-                                            ? "bg-primary/5 text-primary"
-                                            : "hover:bg-gray-50 text-gray-700"
+                                    onClick={() => toggleCategory(cat)}
+                                    className={`flex items-center justify-between px-4 py-2.5 cursor-pointer transition-colors ${normalizedSelectedIds.includes(cat._id)
+                                        ? "bg-primary/5 text-primary"
+                                        : "hover:bg-gray-50 text-gray-700"
                                         }`}
                                 >
                                     <div className="flex flex-col">
@@ -110,7 +121,7 @@ export default function CategoryMultiSelect({ selectedIds, onChange, categories 
                                             {cat.fullName.includes(" > ") ? cat.fullName : "Root Category"}
                                         </span>
                                     </div>
-                                    {selectedIds.includes(cat._id) && (
+                                    {normalizedSelectedIds.includes(cat._id) && (
                                         <Check className="w-4 h-4" />
                                     )}
                                 </div>

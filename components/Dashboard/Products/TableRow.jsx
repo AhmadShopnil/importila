@@ -14,9 +14,9 @@ export default function TableRow({ product, handleDelete }) {
     <tr className="border-b border-border hover:bg-muted/50">
       <td className="px-4 py-3">
         <div className="flex flex-col">
-          <span className="font-medium text-base">{product.name}</span>
+          <span className="font-medium text-base">{product?.name}</span>
           <div className="flex gap-2 mt-1">
-            {product.isFeatured && (
+            {product?.isFeatured && (
               <span className="flex items-center gap-1 text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
                 <Star className="w-2.5 h-2.5 fill-yellow-700" /> Featured
               </span>

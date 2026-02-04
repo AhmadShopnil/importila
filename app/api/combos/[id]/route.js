@@ -65,11 +65,27 @@ export async function PUT(request, context) {
     const featuredImageFile = formData.get("featuredImage")
     let featuredImage = formData.get("existingFeaturedImage") || null
 
+    const { db } = await connectToDatabase()
+
     if (featuredImageFile && featuredImageFile.size > 0) {
-      featuredImage = await uploadToCloudinary(featuredImageFile, "products/featured")
+      const imageResult = await uploadToCloudinary(featuredImageFile, "combos")
+
+      // Save to media collection
+      await db.collection("media").insertOne({
+        url: imageResult.secure_url,
+        publicId: imageResult.public_id,
+        folder: "combos",
+        fileName: featuredImageFile.name,
+        fileSize: featuredImageFile.size,
+        format: imageResult.format,
+        width: imageResult.width,
+        height: imageResult.height,
+        createdAt: new Date(),
+      })
+
+      featuredImage = imageResult.secure_url
     }
 
-    const { db } = await connectToDatabase()
     const result = await db.collection("combos").updateOne(
       { _id: new ObjectId(id) },
       {

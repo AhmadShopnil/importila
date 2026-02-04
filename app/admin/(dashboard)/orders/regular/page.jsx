@@ -387,6 +387,7 @@ export default function OrdersPage() {
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Order Info</th>
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Customer</th>
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Items</th>
+
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Amount</th>
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Status</th>
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Courier Info</th>

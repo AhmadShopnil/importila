@@ -18,7 +18,7 @@ export async function GET(request) {
 
     // Pagination
     const page = Number(searchParams.get("page")) || 1
-    const limit = Number(searchParams.get("limit")) || 12
+    const limit = Number(searchParams.get("limit")) || 100
     const skip = (page - 1) * limit
 
     // Sorting
@@ -122,22 +122,49 @@ export async function POST(request) {
     }
 
     /* ---------- Upload images ---------- */
-    const featuredImage = await uploadToCloudinary(
+    const featuredImageResult = await uploadToCloudinary(
       featuredImageFile,
-      "products/featured"
+      "products"
     )
+
+    // Save featured image to media collection
+    const { db } = await connectToDatabase()
+    await db.collection("media").insertOne({
+      url: featuredImageResult.secure_url,
+      publicId: featuredImageResult.public_id,
+      folder: "products",
+      fileName: featuredImageFile.name,
+      fileSize: featuredImageFile.size,
+      format: featuredImageResult.format,
+      width: featuredImageResult.width,
+      height: featuredImageResult.height,
+      createdAt: new Date(),
+    })
 
     const images = []
     for (const file of extraImageFiles) {
       if (file && file.size > 0) {
-        const url = await uploadToCloudinary(file, "products/gallery")
-        if (url) images.push(url)
+        const result = await uploadToCloudinary(file, "products")
+        if (result) {
+          // Save to media collection
+          await db.collection("media").insertOne({
+            url: result.secure_url,
+            publicId: result.public_id,
+            folder: "products",
+            fileName: file.name,
+            fileSize: file.size,
+            format: result.format,
+            width: result.width,
+            height: result.height,
+            createdAt: new Date(),
+          })
+          // Store only URL in product
+          images.push(result.secure_url)
+        }
       }
     }
 
     /* ---------- DB ---------- */
-    const { db } = await connectToDatabase()
-
     const result = await db.collection("products").insertOne({
       name,
       description,
@@ -149,8 +176,8 @@ export async function POST(request) {
       isFeatured,
       isActive,
       designName,
-      featuredImage,
-      images,
+      featuredImage: featuredImageResult.secure_url, // Store only URL
+      images, // Store only URLs
       variants,
       createdAt: new Date(),
       updatedAt: new Date(),

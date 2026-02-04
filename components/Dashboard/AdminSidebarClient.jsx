@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation"
 import {
   Menu, X, BarChart3, Package, Tag, ShoppingCart,
   TrendingUp, ChevronsLeft, LayoutList, Settings,
-  ChevronDown, LogOut, GalleryVertical, MessageSquare
+  ChevronDown, LogOut, GalleryVertical, MessageSquare, Image as ImageIcon
 } from "lucide-react"
 import Image from "next/image"
 import toast from "react-hot-toast"
@@ -18,6 +18,7 @@ const adminNavItems = [
   { label: "Products", href: "/admin/products", icon: LayoutList },
   { label: "Combos", href: "/admin/combos", icon: Package },
   { label: "Categories", href: "/admin/categories", icon: Tag },
+  { label: "Media Library", href: "/admin/media", icon: ImageIcon },
   {
     label: "Orders",
     icon: ShoppingCart,

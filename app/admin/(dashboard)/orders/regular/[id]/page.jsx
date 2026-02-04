@@ -151,7 +151,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm text-left">
-                                <thead className="bg-gray-50 text-gray-600 font-bold uppercase text-[10px] tracking-widest">
+                                <thead className="bg-gray-50 text-gray-600 font-bold uppercase text-[14px] tracking-widest">
                                     <tr>
                                         <th className="p-4">Product Details</th>
                                         <th className="p-4 text-center">Qty</th>
@@ -172,7 +172,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-gray-900">{item.name}</p>
-                                                    <p className="text-[10px] text-gray-400 font-mono mt-0.5">SKU: {item.sku}</p>
+                                                    <p className="text-[14px] text-gray-400 font-mono mt-0.5">SKU: {item.sku}</p>
                                                 </div>
                                             </td>
                                             <td className="p-4 text-center font-medium text-gray-700">x{item.quantity}</td>
@@ -221,7 +221,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                             </div>
                             <div className="space-y-1 text-right">
                                 <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Status</p>
-                                <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase ${order.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                <span className={`inline-block px-3 py-1 rounded-full text-[14px] font-black uppercase ${order.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
                                     {order.paymentStatus || 'Unpaid'}
                                 </span>
                             </div>
@@ -257,7 +257,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
 
                         {order.note && (
                             <div className="mt-6 p-4 bg-white/10 rounded-xl border border-white/10 backdrop-blur-sm">
-                                <p className="text-[10px] uppercase font-black text-white/40 mb-1">Customer Note</p>
+                                <p className="text-[14px] uppercase font-black text-white/40 mb-1">Customer Note</p>
                                 <p className="text-xs italic opacity-90">"{order.note}"</p>
                             </div>
                         )}
@@ -343,18 +343,18 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                     {/* Customer Info */}
                     <div className="grid grid-cols-2 gap-12 mb-10">
                         <div className="space-y-3">
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-1 mb-2">BILL TO RECIPIENT</h3>
+                            <h3 className="text-[14px] font-black uppercase tracking-widest text-gray-400 border-b pb-1 mb-2">BILL TO RECIPIENT</h3>
                             <div className="space-y-1">
                                 <p className="font-extrabold text-xl">{order.customerName}</p>
                                 <p className="font-bold flex items-center gap-2">
-                                    <span className="w-5 h-5 flex items-center justify-center bg-[#1E556E] text-white rounded text-[10px]">P</span>
+                                    <span className="w-5 h-5 flex items-center justify-center bg-[#1E556E] text-white rounded text-[14px]">P</span>
                                     {order.phone}
                                 </p>
                                 <p className="text-sm leading-snug whitespace-pre-wrap">{order.address}</p>
                             </div>
                         </div>
                         <div className="space-y-3">
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-1 mb-2">SHIPPING INFO</h3>
+                            <h3 className="text-[14px] font-black uppercase tracking-widest text-gray-400 border-b pb-1 mb-2">SHIPPING INFO</h3>
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm py-1 border-b border-dashed border-gray-100">
                                     <span className="font-bold text-gray-400">Location:</span>
@@ -373,10 +373,10 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-[#1E556E] text-white">
-                                    <th className="py-3 px-4 rounded-tl-xl text-[10px] font-black uppercase tracking-wider">Product details</th>
-                                    <th className="py-3 px-4 text-[10px] font-black uppercase tracking-wider text-center">Qty</th>
-                                    <th className="py-3 px-4 text-[10px] font-black uppercase tracking-wider text-right">Unit Price</th>
-                                    <th className="py-3 px-4 rounded-tr-xl text-[10px] font-black uppercase tracking-wider text-right">Subtotal</th>
+                                    <th className="py-3 px-4 rounded-tl-xl text-[14px] font-black uppercase tracking-wider">Product details</th>
+                                    <th className="py-3 px-4 text-[14px] font-black uppercase tracking-wider text-center">Qty</th>
+                                    <th className="py-3 px-4 text-[14px] font-black uppercase tracking-wider text-right">Unit Price</th>
+                                    <th className="py-3 px-4 rounded-tr-xl text-[14px] font-black uppercase tracking-wider text-right">Subtotal</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -401,7 +401,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                     {/* Totals & Notes */}
                     <div className="grid grid-cols-12 gap-12 mt-auto">
                         <div className="col-span-7 bg-gray-50 p-6 rounded-3xl border-2 border-dashed border-gray-200">
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1E556E] mb-3">Order Note / Instructions</h3>
+                            <h3 className="text-[14px] font-black uppercase tracking-widest text-[#1E556E] mb-3">Order Note / Instructions</h3>
                             <p className="text-sm font-bold text-gray-500 italic leading-relaxed">
                                 {order.note || "No special instructions provided."}
                             </p>
@@ -416,7 +416,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                                 <span className="font-black">৳ {order.shippingCharge?.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between items-center bg-[#1E556E] text-white p-4 rounded-2xl shadow-xl">
-                                <span className="text-[10px] font-black uppercase tracking-widest">Total Payable</span>
+                                <span className="text-[14px] font-black uppercase tracking-widest">Total Payable</span>
                                 <span className="text-3xl font-black">৳ {order.totalAmount?.toLocaleString()}</span>
                             </div>
                         </div>
@@ -425,7 +425,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                     {/* Footer Warning for Courier */}
                     <div className="mt-20 pt-10 border-t-4 border-[#1E556E]/20 flex justify-between items-center grayscale opacity-80">
                         <div className="space-y-1">
-                            <p className="text-[10px] font-black text-gray-400">Authorized Signature</p>
+                            <p className="text-[14px] font-black text-gray-400">Authorized Signature</p>
                             <div className="w-40 h-10 border-b border-gray-200"></div>
                         </div>
                         <div className="text-right space-y-1">

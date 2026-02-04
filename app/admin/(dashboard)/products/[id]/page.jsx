@@ -8,6 +8,7 @@ import { ArrowLeft, Plus, Trash2, X, UploadCloud, Copy } from "lucide-react"
 import { BASE_URL } from "@/utils/baseUrl"
 import CategoryMultiSelect from "@/components/Dashboard/Products/CategoryMultiSelect"
 import RichTextEditor from "@/components/RichTextEditor"
+import MediaPicker from "@/components/Dashboard/MediaManager/MediaPicker"
 
 /* ---------- SKU Generator ---------- */
 const generateSKU = (color, size) => {
@@ -38,6 +39,9 @@ export default function EditProductPage() {
     designName: "",
     richDescription: "",
   })
+
+  const [showFeaturedMediaPicker, setShowFeaturedMediaPicker] = useState(false)
+  const [showGalleryMediaPicker, setShowGalleryMediaPicker] = useState(false)
 
   /* ---------- Fetch Categories ---------- */
   useEffect(() => {
@@ -382,7 +386,7 @@ export default function EditProductPage() {
                 </label>
                 <div className="relative group">
                   {formData?.featuredImage ? (
-                    <div className="relative border border-border rounded-2xl overflow-hidden group w-52 h-52 bg-gray-50 flex items-center justify-center shadow-sm">
+                    <div className="relative border border-border rounded-2xl overflow-hidden group h-64 bg-gray-50 flex items-center justify-center shadow-sm">
                       <img
                         src={
                           formData.featuredImage instanceof File
@@ -393,13 +397,20 @@ export default function EditProductPage() {
                         className="max-h-full max-w-full object-contain"
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center gap-3 backdrop-blur-[2px]">
+                        <button
+                          type="button"
+                          onClick={() => setShowFeaturedMediaPicker(true)}
+                          className="bg-white text-gray-900 px-5 py-2.5 rounded-xl text-sm font-bold shadow-xl hover:scale-105 transition-transform"
+                        >
+                          Choose from Library
+                        </button>
                         <div className="relative">
                           <button
                             type="button"
                             className="flex items-center gap-2 bg-white text-gray-900 px-5 py-2.5 rounded-xl text-sm font-bold shadow-xl hover:scale-105 transition-transform"
                           >
                             <UploadCloud size={18} />
-                            Change Featured Image
+                            Upload New
                           </button>
                           <input
                             type="file"
@@ -408,24 +419,44 @@ export default function EditProductPage() {
                             className="absolute inset-0 opacity-0 cursor-pointer"
                           />
                         </div>
-                        <p className="text-white text-[11px] font-medium">Click button or drop new image to replace</p>
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, featuredImage: null }))}
+                          className="text-white text-xs font-semibold hover:text-red-400 transition-colors"
+                        >
+                          Remove
+                        </button>
                       </div>
                     </div>
                   ) : (
-                    <div className="border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 rounded-2xl p-12 transition-all flex flex-col items-center justify-center gap-4 group relative cursor-pointer bg-muted/20">
-                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shadow-inner">
-                        <UploadCloud size={32} />
+                    <div className="border-2 border-dashed border-border hover:border-primary rounded-2xl p-8 transition-all bg-muted/20">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                          <UploadCloud size={32} />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-bold text-foreground mb-3">Upload Featured Image</p>
+                          <div className="flex gap-3 justify-center">
+                            <label className="cursor-pointer bg-[#1E556E] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
+                              Upload New
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFeaturedImage}
+                                className="hidden"
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setShowFeaturedMediaPicker(true)}
+                              className="bg-white border-2 border-[#1E556E] text-[#1E556E] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#1E556E] hover:text-white transition-all"
+                            >
+                              Choose from Library
+                            </button>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-2">PNG, JPG or WebP (max. 5MB)</p>
+                        </div>
                       </div>
-                      <div className="text-center">
-                        <p className="text-sm font-bold text-foreground">Upload Featured Image</p>
-                        <p className="text-xs text-muted-foreground mt-1">PNG, JPG or WebP (max. 5MB)</p>
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFeaturedImage}
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                      />
                     </div>
                   )}
                 </div>
@@ -433,20 +464,34 @@ export default function EditProductPage() {
 
               {/* Extra Images */}
               <div className="space-y-4">
-                <label className="text-sm font-semibold text-foreground">Extra Images</label>
+                <label className="text-sm font-semibold text-foreground">Extra Images (Gallery)</label>
                 <div className="grid grid-cols-1 gap-4">
-                  <div className="border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 rounded-2xl p-6 transition-all flex flex-col items-center justify-center gap-3 group relative cursor-pointer bg-muted/20 min-h-[120px]">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shadow-inner">
-                      <Plus size={24} />
+                  <div className="border-2 border-dashed border-border hover:border-primary rounded-2xl p-6 transition-all bg-muted/20">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <Plus size={24} />
+                      </div>
+                      <p className="text-xs font-bold text-foreground">Add Gallery Images</p>
+                      <div className="flex gap-2">
+                        <label className="cursor-pointer bg-[#1E556E] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity">
+                          Upload New
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleExtraImages}
+                            className="hidden"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowGalleryMediaPicker(true)}
+                          className="bg-white border-2 border-[#1E556E] text-[#1E556E] px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#1E556E] hover:text-white transition-all"
+                        >
+                          Choose from Library
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-xs font-bold text-foreground">Add Gallery Images</p>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleExtraImages}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                    />
                   </div>
 
                   {formData.images.length > 0 && (
@@ -579,6 +624,32 @@ export default function EditProductPage() {
             {loading ? "Updating..." : "Update Product"}
           </button>
         </form>
+
+        {/* Media Pickers */}
+        <MediaPicker
+          isOpen={showFeaturedMediaPicker}
+          onClose={() => setShowFeaturedMediaPicker(false)}
+          onSelect={(url) => {
+            setFormData(prev => ({ ...prev, featuredImage: url }))
+            setShowFeaturedMediaPicker(false)
+          }}
+          folder="products"
+          multiple={false}
+        />
+
+        <MediaPicker
+          isOpen={showGalleryMediaPicker}
+          onClose={() => setShowGalleryMediaPicker(false)}
+          onSelect={(urls) => {
+            setFormData(prev => ({
+              ...prev,
+              images: [...prev.images, ...urls]
+            }))
+            setShowGalleryMediaPicker(false)
+          }}
+          folder="products"
+          multiple={true}
+        />
       </div>
     </div>
   )
