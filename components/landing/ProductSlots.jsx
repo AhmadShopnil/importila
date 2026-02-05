@@ -8,6 +8,14 @@ const ProductSlots = () => {
     const { state, setActiveSlot, removeFromSlot, updateSlotColor } = useBundle();
     const { slots, activeSlotIndex } = state;
 
+    const handleSlotClick = (index) => {
+        setActiveSlot(index);
+        const gridElement = document.getElementById("product-grid");
+        if (gridElement) {
+            gridElement.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    };
+
     if (slots.length === 0) return null;
 
     return (
@@ -30,12 +38,12 @@ const ProductSlots = () => {
                         return (
                             <div
                                 key={index}
-                                onClick={() => setActiveSlot(index)}
+                                onClick={() => handleSlotClick(index)}
                                 role="button"
                                 aria-label={`${isFilled ? 'Filled' : 'Empty'} slot ${index + 1}. ${isFilled ? slot.product.name : 'Click to select a product'}`}
                                 aria-current={isActive}
                                 className={`relative aspect-square rounded-2xl border-2 cursor-pointer transition-all duration-300 overflow-hidden  ${isActive
-                                    ? "border-accent border-dashed  bg-accent/5 shadow-elevated scale-[1.02]"
+                                    ? "border-accent border-dashed bg-accent/5 shadow-elevated scale-[1.05] ring-4 ring-accent/20 z-20 animate-pulse-subtle"
                                     : isFilled
                                         ? "border-primary/50 bg-card"
                                         : "border-border bg-muted/30 hover:border-primary/30"

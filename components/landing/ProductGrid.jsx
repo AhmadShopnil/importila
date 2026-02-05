@@ -33,6 +33,17 @@ const ProductGrid = ({ combo }) => {
             setSelectedProductForColor(product);
         } else {
             addProductToSlot(product);
+
+            // Check if this was the last empty slot
+            const emptySlots = state.slots.filter(s => s.product === null).length;
+            if (emptySlots <= 1) {
+                setTimeout(() => {
+                    const sizeSection = document.getElementById("size-selection");
+                    if (sizeSection) {
+                        sizeSection.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                }, 500);
+            }
         }
     };
 
@@ -40,22 +51,43 @@ const ProductGrid = ({ combo }) => {
         if (selectedProductForColor) {
             addProductToSlot(selectedProductForColor, colorName);
             setSelectedProductForColor(null);
+
+            // Check if this was the last empty slot
+            const rect = document.getElementById("product-grid")?.getBoundingClientRect();
+            const emptySlots = state.slots.filter(s => s.product === null).length;
+
+            if (emptySlots <= 1) { // 1 because the state hasn't updated yet in this closure
+                setTimeout(() => {
+                    const sizeSection = document.getElementById("size-selection");
+                    if (sizeSection) {
+                        sizeSection.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                }, 500);
+            }
         }
     };
 
     return (
-        <section className="py-6 md:py-16 bg-secondary/30">
+        <section id="product-grid" className="py-6 md:py-16 bg-secondary/30">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-10">
+                    {!disabled && activeSlotIndex !== null && (
+                        <div className="inline-flex items-center gap-2 bg-accent text-accent-foreground px-4 py-1.5 rounded-full mb-4 animate-bounce-subtle shadow-md">
+                            <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                            <span className="text-sm font-bold uppercase tracking-wider">
+                                Choosing for Slot {activeSlotIndex + 1}
+                            </span>
+                        </div>
+                    )}
                     <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
                         {combo?.productGridTitle || "Choose Your Favorite Styles"}
                     </h2>
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground max-w-xl mx-auto">
                         {disabled
                             ? "Select a bundle size first to start picking items"
                             : activeSlotIndex !== null
-                                ? `Selecting for Slot ${activeSlotIndex + 1} - Click any item to add`
-                                : "All slots are filled! Click on a slot above to replace an item"}
+                                ? `Select an item below to fill Slot ${activeSlotIndex + 1}. You can always change it later.`
+                                : "All slots are filled! Click on a slot above if you want to replace an item."}
                     </p>
                 </div>
 
@@ -121,8 +153,8 @@ const ProductGrid = ({ combo }) => {
                                 </button>
                             </div>
                             <h4 className="font-bold  mb-3">{selectedProductForColor.name}</h4>
-                            {/* <h4 className="font-bold  mb-3">Available Colours</h4>
-                            <div className="flex flex-wrap gap-4 items-center">
+                            <h4 className="font-bold  mb-3">Available Colours</h4>
+                            {/* <div className="flex flex-wrap gap-4 items-center">
                                 {
                                     selectedProductForColor?.images?.map((image, index) => (
 
@@ -149,16 +181,17 @@ const ProductGrid = ({ combo }) => {
                             </div> */}
 
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                 {getUniqueColors(selectedProductForColor?.variants).map((variant, i) => (
                                     <button
                                         key={i}
                                         onClick={() => confirmColorAndAdd(variant.colorName)}
                                         aria-label={`Select ${variant.colorName} color`}
-                                        className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
+                                        className="w-32 h-40 flex flex-col items-center gap-2  rounded-sm border-2 border-border
+                                         hover:border-primary hover:bg-primary/5 transition-all text-left"
                                     >
-                                        {/* {variant?.image && (
-                                            <div className="relative w-full aspect-[4/5] rounded-md overflow-hidden mb-4 border border-border shadow-soft">
+                                        {variant?.image && (
+                                            <div className="relative w-full h-full  aspect-[4/5]  overflow-hidden  shadow-soft">
                                                 <Image
                                                     src={variant?.image}
                                                     alt={variant.colorName}
@@ -167,13 +200,15 @@ const ProductGrid = ({ combo }) => {
                                                     sizes="(max-width: 640px) 40vw, 150px"
                                                 />
                                             </div>
-                                        )} */}
-                                        <div className="flex items-center gap-2">
+                                        )}
+                                        <div className="flex items-center justify-center gap-2 ">
                                             <div
-                                                className="w-6 h-6 rounded-full border shadow-sm"
+                                                className="w-4 h-4 md:w-5 md:h-5 rounded-full border shadow-sm"
                                                 style={{ backgroundColor: variant.colorHex }}
                                             />
-                                            <span className="text-sm font-semibold truncate">{variant.colorName}</span></div>
+                                            <span className="text-sm font-semibold truncate">{variant.colorName}</span>
+
+                                        </div>
 
                                     </button>
                                 ))}
