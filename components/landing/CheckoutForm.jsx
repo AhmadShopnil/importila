@@ -1,6 +1,7 @@
 "use client";
 
 import { Package, MapPin, Phone, User, FileText, CheckCircle } from "lucide-react";
+import Image from "next/image";
 import { useBundle } from "@/context/BundleContext";
 import { bundleOptions } from "@/data/products";
 import { trackBeginCheckout, trackPurchase } from "@/utils/gtm";
@@ -102,7 +103,7 @@ const CheckoutForm = ({ combo }) => {
     // if (!selectedBundle) return null;
 
     return (
-        <section className="py-16 bg-background" id="checkout-section">
+        <section className="py-8 md:py-16  bg-background" id="checkout-section">
             <div className="container mx-auto px-4">
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-10">
@@ -153,11 +154,15 @@ const CheckoutForm = ({ combo }) => {
                                                 key={index}
                                                 className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg"
                                             >
-                                                <img
-                                                    src={slot.product?.featuredImage || slot.product?.image}
-                                                    alt={slot.product?.name}
-                                                    className="w-10 h-10 rounded-lg object-cover"
-                                                />
+                                                <div className="relative w-10 h-10 flex-shrink-0">
+                                                    <Image
+                                                        src={slot.product?.featuredImage || slot.product?.image}
+                                                        alt={slot.product?.name || "Product"}
+                                                        fill
+                                                        className="rounded-lg object-cover"
+                                                        sizes="40px"
+                                                    />
+                                                </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-medium truncate">
                                                         {slot.product?.name}

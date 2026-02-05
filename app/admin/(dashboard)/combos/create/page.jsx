@@ -406,7 +406,7 @@ export default function CreateComboPage() {
             {/* PRODUCT LIST */}
             <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4 flex flex-col h-[600px]">
               <div className="flex items-center justify-between border-b border-border pb-4">
-                <h2 className="text-xl font-bold font-nunito flex items-center gap-2">
+                <h2 className="text-xl font-bold font-sans flex items-center gap-2">
                   Select Products
                 </h2>
                 <span className="text-xs font-semibold bg-muted px-2 py-1 rounded-full">{filteredProducts.length} Available</span>

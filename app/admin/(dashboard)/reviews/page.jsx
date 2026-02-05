@@ -170,7 +170,7 @@ export default function AdminReviewsPage() {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="bg-card border border-border w-full max-w-md rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-300">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold font-nunito">Add Customer Review</h2>
+                            <h2 className="text-xl font-bold font-sans">Add Customer Review</h2>
                             <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground">
                                 <X size={24} />
                             </button>

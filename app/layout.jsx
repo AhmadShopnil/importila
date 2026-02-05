@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google"
+import { Geist, Geist_Mono, Nunito } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { Toaster } from "react-hot-toast"
@@ -6,9 +6,25 @@ import { ProductSelectionProvider } from "@/context/ProductSelectionContext"
 import { Providers } from "@/lib/redux/Providers"
 import { BASE_URL } from "@/utils/baseUrl"
 
+import { Anek_Bangla } from "next/font/google";
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const anekBangla = Anek_Bangla({
+  weight: ["300", "400", "500", "600", "700", "800"],
+  subsets: ["bengali", "latin"],
+  variable: "--font-anek-bangla",
+  display: "swap",
+});
+
+
+
+const geist = Geist({ subsets: ["latin"], variable: "--font-geist" })
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" })
+const nunito = Nunito({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-nunito",
+  display: "swap",
+})
 
 async function getSettings() {
 
@@ -64,12 +80,14 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <body className={`font-sans antialiased`}>
+      <body className={`${geist.variable} ${geistMono.variable} ${nunito.variable} ${anekBangla.variable} font-sans`}>
         <Providers>
           <ProductSelectionProvider>
             <Toaster position="top-right" />
 
-            {children}
+            <main id="main-content">
+              {children}
+            </main>
             <Analytics />
 
 

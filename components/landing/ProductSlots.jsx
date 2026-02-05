@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, X, Check } from "lucide-react";
+import Image from "next/image";
 import { useBundle } from "@/context/BundleContext";
 
 const ProductSlots = () => {
@@ -30,8 +31,11 @@ const ProductSlots = () => {
                             <div
                                 key={index}
                                 onClick={() => setActiveSlot(index)}
-                                className={`relative aspect-square rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300 overflow-hidden ${isActive
-                                    ? "border-accent bg-accent/5 shadow-elevated scale-[1.02]"
+                                role="button"
+                                aria-label={`${isFilled ? 'Filled' : 'Empty'} slot ${index + 1}. ${isFilled ? slot.product.name : 'Click to select a product'}`}
+                                aria-current={isActive}
+                                className={`relative aspect-square rounded-2xl border-2 cursor-pointer transition-all duration-300 overflow-hidden  ${isActive
+                                    ? "border-accent border-dashed  bg-accent/5 shadow-elevated scale-[1.02]"
                                     : isFilled
                                         ? "border-primary/50 bg-card"
                                         : "border-border bg-muted/30 hover:border-primary/30"
@@ -50,21 +54,23 @@ const ProductSlots = () => {
                                 {isFilled && slot?.product ? (
                                     <>
                                         {/* Product Image */}
-                                        <img
+                                        <Image
                                             src={slot.product.featuredImage || slot.product.image}
-                                            alt={slot.product.name}
-                                            className="w-full h-full object-cover"
+                                            alt={slot.product.name || "Product"}
+                                            fill
+                                            className="object-cover"
+                                            sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 20vw, 150px"
                                         />
 
                                         {/* Overlay with info */}
-                                        <div className="absolute inset-0 bg-white flex flex-col justify-end p-3">
-                                            <p className="text-black text-sm md:text-base font-semibold truncate mb-2">
+                                        <div className="absolute inset-0  flex flex-col justify-end p-3">
+                                            {/* <p className="text-white text-sm md:text-base font-semibold truncate mb-2">
                                                 {slot?.product.name}
                                             </p>
-                                            <p className="text-black text-sm md:text-base font-bold truncate mb-2">
+                                            <p className="text-white text-sm md:text-base font-bold truncate mb-2">
                                                 Selected Colour:
-                                            </p>
-                                            <p className="text-black text-sm md:text-base font-semibold truncate mb-2">
+                                            </p> */}
+                                            <p className="text-white text-sm md:text-base font-semibold truncate mb-2">
                                                 {slot?.selectedColor}
                                             </p>
 
@@ -99,6 +105,7 @@ const ProductSlots = () => {
                                                 e.stopPropagation();
                                                 removeFromSlot(index);
                                             }}
+                                            aria-label={`Remove ${slot.product.name} from slot ${index + 1}`}
                                             className="absolute top-2 right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:scale-110 transition-transform"
                                         >
                                             <X size={14} />

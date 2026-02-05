@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import { Swiper, SwiperSlide } from "swiper/react"
 import { Autoplay, Pagination, Navigation } from "swiper/modules"
 import "swiper/css"
@@ -25,7 +26,7 @@ export default function ReviewSection() {
     if (loading || reviews.length === 0) return null
 
     return (
-        <section className="py-20 bg-gradient-to-b from-transparent to-primary/5 relative overflow-hidden">
+        <section className="py-8 md:py-20 bg-gradient-to-b from-transparent to-primary/5 relative overflow-hidden">
             {/* Background Decorative Elements */}
             <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
             <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/5 rounded-full blur-3xl translate-x-1/3 translate-y-1/3" />
@@ -37,7 +38,7 @@ export default function ReviewSection() {
                         Customer Feedback
                         <Star size={16} fill="currentColor" />
                     </div>
-                    <h2 className="text-4xl md:text-5xl font-extrabold text-foreground ">
+                    <h2 className="text-2xl md:text-5xl font-extrabold text-foreground ">
                         আমাদের কাস্টমাররা কী বলছেন <br />
                         <span className="text-primary ">এক নজরে দেখে নিন!</span>
                     </h2>
@@ -75,10 +76,12 @@ export default function ReviewSection() {
                                     </div>
 
                                     <div className="relative aspect-[4/5] rounded-4xl overflow-hidden border border-border shadow-inner mb-6">
-                                        <img
+                                        <Image
                                             src={review.imageUrl}
-                                            alt={review.customerName}
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                            alt={review.customerName || "Customer Review"}
+                                            fill
+                                            className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                                         />
                                     </div>
 
@@ -88,7 +91,7 @@ export default function ReviewSection() {
                                                 <Star key={i} size={16} className="text-yellow-400" fill="currentColor" />
                                             ))}
                                         </div>
-                                        <h3 className="text-lg font-extrabold text-foreground">{review.customerName || "Happy Customer"}</h3>
+                                        {/* <h3 className="text-lg font-extrabold text-foreground">{review.customerName || "Happy Customer"}</h3> */}
                                         <div className="flex items-center gap-2 text-xs font-bold text-primary bg-primary/5 px-3 py-1.5 rounded-full w-fit">
                                             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                                             VERIFIED PURCHASE

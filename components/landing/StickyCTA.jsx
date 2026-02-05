@@ -20,6 +20,7 @@ const StickyCTA = ({ combo }) => {
             <div className="flex gap-3">
                 <button
                     onClick={handleWhatsApp}
+                    aria-label="Order via WhatsApp"
                     className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md
                      font-bold text-base transition-all duration-300 bg-[#25D366] text-white shadow-lg 
                      hover:bg-[#20BD5A] active:scale-95"
@@ -29,6 +30,7 @@ const StickyCTA = ({ combo }) => {
                 </button>
                 <button
                     onClick={handleMessenger}
+                    aria-label="Order via Messenger"
                     className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md font-bold text-base 
                     transition-all duration-300 bg-[#0099FF] text-white shadow-lg hover:bg-[#0088E0] active:scale-95"
                 >

@@ -22,13 +22,13 @@ const BottomAppBar = () => {
       name: "Shop",
       href: "/shop",
       icon: ShoppingBag,
-    
+
     },
-     {
+    {
       name: "Terms",
       href: "/terms-and-conditions",
       icon: Info,
-    
+
     },
     //   {
     //   name: "Cart",
@@ -42,7 +42,7 @@ const BottomAppBar = () => {
     //   icon: User,
     // },
   ];
- 
+
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 lg:hidden shadow-2xl pt-1 ">
@@ -55,11 +55,11 @@ const BottomAppBar = () => {
             <Link
               key={item.name}
               href={item.href}
+              aria-label={item.name}
               className={`flex flex-col items-center justify-center py-2 gap-1
-                transition-all ${
-                  isActive
-                    ? "text-[#16485e] font-bold"
-                    : "text-[#5F9498] "
+                transition-all ${isActive
+                  ? "text-[#16485e] font-bold"
+                  : "text-[#34667B] "
                 }`}
             >
               <div className="relative">

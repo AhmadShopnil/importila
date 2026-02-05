@@ -25,8 +25,10 @@ const LandingContent = ({ combo }) => {
     }, [combo, state.selectedBundle, selectBundle]);
 
     return (
-        <div className="landing-page-theme min-h-screen bg-background font-nunito overflow-x-hidden  ">
+        <div className="landing-page-theme min-h-screen bg-background font-sans overflow-x-hidden  ">
             <HeroSection combo={combo} />
+            <ProductDetails combo={combo} />
+            <ReviewSection />
 
             <BundleSelection combo={combo} />
 
@@ -36,10 +38,7 @@ const LandingContent = ({ combo }) => {
 
             <ProductGrid combo={combo} />
 
-            <ProductDetails combo={combo} />
 
-
-            <ReviewSection />
             <SizeChart />
 
             <SizeSelection combo={combo} />

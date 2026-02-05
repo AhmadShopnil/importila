@@ -9,7 +9,7 @@ export default function ProductDetails({ combo }) {
     if (!combo?.landingPageDetails) return null
 
     return (
-        <section className="py-20 bg-muted/30 relative overflow-hidden">
+        <section className="py-8 md:py-20  bg-muted/30 relative overflow-hidden">
             {/* Background Accent */}
             <div className="absolute top-0 right-0 w-1/3 h-full bg-primary/5 -skew-x-12 translate-x-1/2" />
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Check, X } from "lucide-react";
+import Image from "next/image";
 import { useBundle } from "@/context/BundleContext";
 
 const ProductGrid = ({ combo }) => {
@@ -43,7 +44,7 @@ const ProductGrid = ({ combo }) => {
     };
 
     return (
-        <section className="py-16 bg-secondary/30">
+        <section className="py-6 md:py-16 bg-secondary/30">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-10">
                     <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
@@ -59,7 +60,7 @@ const ProductGrid = ({ combo }) => {
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    {combo?.products?.map((product) => (
+                    {combo?.products?.map((product, idx) => (
                         <div
                             key={product._id || product.id}
                             onClick={() => handleProductClick(product)}
@@ -68,10 +69,13 @@ const ProductGrid = ({ combo }) => {
                                 : "hover:shadow-elevated hover:scale-[1.02] cursor-pointer"
                                 }`}
                         >
-                            <img
+                            <Image
                                 src={product?.featuredImage || product?.image}
-                                alt={product?.name}
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                alt={product?.name || "Product"}
+                                fill
+                                className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 25vw, 20vw"
+                                priority={idx < 6}
                             />
 
                             {/* Overlay */}
@@ -110,6 +114,7 @@ const ProductGrid = ({ combo }) => {
                                 <h3 className="text-xl font-bold">Select Color</h3>
                                 <button
                                     onClick={() => setSelectedProductForColor(null)}
+                                    aria-label="Close color selection"
                                     className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
                                 >
                                     <X size={20} />
@@ -149,18 +154,20 @@ const ProductGrid = ({ combo }) => {
                                     <button
                                         key={i}
                                         onClick={() => confirmColorAndAdd(variant.colorName)}
+                                        aria-label={`Select ${variant.colorName} color`}
                                         className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
                                     >
-                                        {variant?.image && (
-                                            <div className="w-full h-full rounded-md overflow-hidden mb-4 border border-border shadow-soft">
-                                                <img
-                                                    key={i}
+                                        {/* {variant?.image && (
+                                            <div className="relative w-full aspect-[4/5] rounded-md overflow-hidden mb-4 border border-border shadow-soft">
+                                                <Image
                                                     src={variant?.image}
                                                     alt={variant.colorName}
-                                                    className="w-full h-full object-cover"
+                                                    fill
+                                                    className="object-cover"
+                                                    sizes="(max-width: 640px) 40vw, 150px"
                                                 />
                                             </div>
-                                        )}
+                                        )} */}
                                         <div className="flex items-center gap-2">
                                             <div
                                                 className="w-6 h-6 rounded-full border shadow-sm"

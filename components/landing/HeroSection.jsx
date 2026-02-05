@@ -25,7 +25,7 @@ const HeroSection = ({ combo }) => {
                 </div>
 
                 {/* Main Headline */}
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-center text-foreground leading-tight mb-6
+                <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center text-foreground leading-12 md:leading-20  mb-6
                  animate-slide-up text-balance max-w-4xl">
                     {combo?.landingPageTitle || "Adorable Kids Dress Sets"} <br />
                     {/* <span className="text-primary">Mix, Match & Save Big!</span> */}
@@ -40,7 +40,7 @@ const HeroSection = ({ combo }) => {
                 <button
                     onClick={scrollToBundles}
                     className="gradient-cta text-accent-foreground font-bold text-lg md:text-lg px-10 py-2.5 md:py-4 rounded-full shadow-cta hover:scale-105 transition-all
-                     duration-300 animate-slide-up mb-12 "
+                     duration-300 animate-slide-up  "
                     style={{ animationDelay: "0.2s" }}
                 >
                     {combo?.heroCTA || "পছন্দের বান্ডেলটি বেছে নিন"}

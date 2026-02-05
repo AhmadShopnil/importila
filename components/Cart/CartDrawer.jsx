@@ -55,6 +55,7 @@ const CartDrawer = () => {
                         </div>
                         <button
                             onClick={() => setIsCartOpen(false)}
+                            aria-label="Close cart"
                             className="p-2 hover:bg-muted rounded-full transition-colors"
                         >
                             <X className="w-6 h-6 text-muted-foreground" />
@@ -101,6 +102,7 @@ const CartDrawer = () => {
                                                 </h3>
                                                 <button
                                                     onClick={() => removeFromCart(index)}
+                                                    aria-label={`Remove  from cart`}
                                                     className="p-1 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
@@ -119,6 +121,7 @@ const CartDrawer = () => {
                                                 <div className="flex items-center border border-border rounded-lg p-1 bg-muted/50">
                                                     <button
                                                         onClick={() => updateQuantity(index, -1)}
+                                                        aria-label="Decrease quantity"
                                                         className="p-1 hover:text-primary transition-colors"
                                                     >
                                                         <Minus className="w-3 h-3" />
@@ -126,6 +129,7 @@ const CartDrawer = () => {
                                                     <span className="w-8 text-center text-xs font-bold">{item.quantity}</span>
                                                     <button
                                                         onClick={() => updateQuantity(index, 1)}
+                                                        aria-label="Increase quantity"
                                                         className="p-1 hover:text-primary transition-colors"
                                                     >
                                                         <Plus className="w-3 h-3" />

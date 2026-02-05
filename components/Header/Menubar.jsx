@@ -12,6 +12,7 @@ const CartTrigger = () => {
   return (
     <button
       onClick={() => setIsCartOpen(true)}
+      aria-label="Shopping Cart"
       className="relative p-2 rounded-full hover:bg-gray-100 transition"
     >
       <ShoppingCart className="w-6 h-6 text-gray-700" />
@@ -43,18 +44,37 @@ const Menubar = () => {
 
         {/* Desktop Menu */}
         <nav className="hidden lg:flex items-center gap-10">
-          {["Home", "Combos"].map((item) => (
-            <Link
-              key={item}
-              href={item === "Home" ? "/" : "/combo"}
-              className="relative text-[#34667B] font-medium transition-all
+          <Link
+
+            href="/"
+            className="relative text-[#34667B] font-medium transition-all
                          after:absolute after:left-0 after:-bottom-1 after:h-[2px]
                          after:w-0 after:bg-primary after:transition-all
                          hover:after:w-full hover:text-primary"
-            >
-              {item}
-            </Link>
-          ))}
+          >
+            Home
+          </Link>
+          <Link
+
+            href="/shop"
+            className="relative text-[#34667B] font-medium transition-all
+                         after:absolute after:left-0 after:-bottom-1 after:h-[2px]
+                         after:w-0 after:bg-primary after:transition-all
+                         hover:after:w-full hover:text-primary"
+          >
+            Shop
+          </Link>
+          <Link
+
+            href="/combo"
+            className="relative text-[#34667B] font-medium transition-all
+                         after:absolute after:left-0 after:-bottom-1 after:h-[2px]
+                         after:w-0 after:bg-primary after:transition-all
+                         hover:after:w-full hover:text-primary"
+          >
+            Combo
+          </Link>
+
         </nav>
 
         {/* Cart */}

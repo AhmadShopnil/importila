@@ -53,30 +53,28 @@ export default async function RootLayout({ children }) {
   const settings = await getSettings()
   const gtmId = settings?.googleTagManagerId || settings?.gtmId
   return (
-    <html lang="en">
-      <body className={`font-sans antialiased`}>
-        <CartProvider>
-          <ProductSelectionProvider>
+    <>
+      <CartProvider>
+        <ProductSelectionProvider>
 
-            {settings?.enableGTM && gtmId && (
-              <GoogleTagManager gtmId={gtmId} />
-            )}
-            <Suspense fallback={null}>
-              <PageViewTracker />
-            </Suspense>
-            <Menubar />
-            {children}
-            {/* <BottomAppBar /> */}
-            <Analytics />
-            <CartDrawer />
-          </ProductSelectionProvider>
-        </CartProvider>
+          {settings?.enableGTM && gtmId && (
+            <GoogleTagManager gtmId={gtmId} />
+          )}
+          <Suspense fallback={null}>
+            <PageViewTracker />
+          </Suspense>
+          <Menubar />
+          {children}
+          {/* <BottomAppBar /> */}
+          <Analytics />
+          <CartDrawer />
+        </ProductSelectionProvider>
+      </CartProvider>
 
-        <div className="">
-          <BottomAppBar />
-        </div>
-        <Footer />
-      </body>
-    </html>
+      <div className="">
+        <BottomAppBar />
+      </div>
+      <Footer />
+    </>
   )
 }
