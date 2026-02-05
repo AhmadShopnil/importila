@@ -19,7 +19,7 @@ const ProductSlots = () => {
     if (slots.length === 0) return null;
 
     return (
-        <section className="py-12 bg-background">
+        <section id="selected-slots" className="py-6 md:py-12  bg-background">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-8">
                     <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
@@ -30,7 +30,7 @@ const ProductSlots = () => {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
+                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
                     {slots?.map((slot, index) => {
                         const isActive = activeSlotIndex === index;
                         const isFilled = slot.product !== null;
@@ -50,21 +50,21 @@ const ProductSlots = () => {
                                     }`}
                             >
                                 {/* Slot Label */}
-                                <div
+                                {/* <div
                                     className={`absolute top-2 left-2 z-10 text-xs font-bold px-2 py-1 rounded-full ${isFilled
                                         ? "bg-primary text-primary-foreground"
                                         : "bg-muted text-muted-foreground"
                                         }`}
                                 >
                                     Slot {index + 1}
-                                </div>
+                                </div> */}
 
                                 {isFilled && slot?.product ? (
                                     <>
                                         {/* Product Image */}
                                         <Image
-                                            src={slot.product.featuredImage || slot.product.image}
-                                            alt={slot.product.name || "Product"}
+                                            src={slot?.product.image || slot?.product?.featuredImage}
+                                            alt={slot?.product?.name || "Product"}
                                             fill
                                             className="object-cover"
                                             sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 20vw, 150px"
@@ -78,9 +78,9 @@ const ProductSlots = () => {
                                             <p className="text-white text-sm md:text-base font-bold truncate mb-2">
                                                 Selected Colour:
                                             </p> */}
-                                            <p className="text-white text-sm md:text-base font-semibold truncate mb-2">
+                                            {/* <p className="text-white text-sm md:text-base font-semibold truncate mb-2">
                                                 {slot?.selectedColor}
-                                            </p>
+                                            </p> */}
 
 
                                             {/* Color Selection */}

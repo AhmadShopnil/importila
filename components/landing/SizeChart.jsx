@@ -5,9 +5,9 @@ import Image from "next/image";
 const SizeChart = () => {
     return (
         <section className="flex justify-center px-2 py-4 md:py-6 ">
-            <div className="relative w-full max-w-5xl aspect-[2/1]">
+            <div className="relative w-full max-w-6xl aspect-[2/1]">
                 <Image
-                    src="/images/Sizechart.jpeg"
+                    src="/images/Size_chart.jpeg"
                     alt="Size chart"
                     fill
                     className="object-fit rounded-md"

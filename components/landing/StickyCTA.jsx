@@ -4,7 +4,7 @@ import { MessageCircle, Phone } from "lucide-react";
 
 const StickyCTA = ({ combo }) => {
     const whatsappNumber = combo?.whatsappNumber || "+8801631314880 "; // Replace with actual number
-    const messengerUsername = combo?.messengerUsername || "Importila"; // Replace with actual username
+    const messengerUsername = combo?.messengerUsername || "importilabd"; // Replace with actual username
 
     const handleWhatsApp = () => {
         const message = encodeURIComponent("Hi! I'm interested in the kids dress bundle. Can you help me?");

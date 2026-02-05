@@ -47,9 +47,9 @@ const ProductGrid = ({ combo }) => {
         }
     };
 
-    const confirmColorAndAdd = (colorName) => {
+    const confirmColorAndAdd = (colorName, variantImage = null) => {
         if (selectedProductForColor) {
-            addProductToSlot(selectedProductForColor, colorName);
+            addProductToSlot(selectedProductForColor, colorName, variantImage);
             setSelectedProductForColor(null);
 
             // Check if this was the last empty slot
@@ -185,7 +185,7 @@ const ProductGrid = ({ combo }) => {
                                 {getUniqueColors(selectedProductForColor?.variants).map((variant, i) => (
                                     <button
                                         key={i}
-                                        onClick={() => confirmColorAndAdd(variant.colorName)}
+                                        onClick={() => confirmColorAndAdd(variant.colorName, variant.image)}
                                         aria-label={`Select ${variant.colorName} color`}
                                         className="w-32 h-40 flex flex-col items-center gap-2  rounded-sm border-2 border-border
                                          hover:border-primary hover:bg-primary/5 transition-all text-left"

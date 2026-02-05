@@ -62,11 +62,22 @@ const BundleSelection = ({ combo }) => {
     const { state, selectBundle } = useBundle();
     const options = combo?.bundleOptions?.length > 0 ? combo.bundleOptions : bundleOptions;
 
+    const handleBundleSelect = (bundle) => {
+        selectBundle(bundle);
+        // Add a small timeout to ensure the slots are rendered before scrolling
+        setTimeout(() => {
+            const slotsSection = document.getElementById("selected-slots");
+            if (slotsSection) {
+                slotsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        }, 100);
+    };
+
     return (
-        <section id="bundle-section" className="py-16 bg-background">
+        <section id="bundle-section" className="py-8 md:py-16 bg-white">
             <div className="container mx-auto px-4">
-                <div className="text-center mb-12">
-                    <h2 className="text-2xl md:text-4xl font-extrabold text-foreground mb-4">
+                <div className="text-center mb-6 md:mb-12">
+                    <h2 className="text-2xl md:text-4xl font-extrabold text-foreground mb-2 mb:mb-4">
                         {combo?.bundleTitle || "পছন্দের বান্ডেলটি বেছে নিন"}
                     </h2>
                     <p className="text-muted-foreground text-lg max-w-xl mx-auto">
@@ -82,7 +93,7 @@ const BundleSelection = ({ combo }) => {
                                 key={bundle?.pieces}
                                 bundle={{ ...bundle, savings }}
                                 isSelected={state?.selectedBundle === bundle?.pieces}
-                                onSelect={() => selectBundle(bundle)}
+                                onSelect={() => handleBundleSelect(bundle)}
                             />
                         )
                     })}

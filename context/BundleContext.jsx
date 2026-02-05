@@ -82,7 +82,7 @@ function bundleReducer(state, action) {
             if (state.activeSlotIndex === null) return state;
 
             const newSlots = [...state.slots];
-            const { product, color } = action.payload.product ? action.payload : { product: action.payload, color: null };
+            const { product, color, customImage } = action.payload.product ? action.payload : { product: action.payload, color: null, customImage: null };
 
             // Handle both 'colors' (demo data) and 'variants' (API data)
             const variants = product.variants || [];
@@ -90,12 +90,21 @@ function bundleReducer(state, action) {
                 ? getUniqueColors(variants)
                 : (product.colors || []);
 
+            // If no custom image provided but we have a color, try to find the variant image
+            let displayImage = customImage;
+            if (!displayImage && color && variants.length > 0) {
+                const variant = variants.find(v => v.colorName === color);
+                if (variant?.image) {
+                    displayImage = variant.image;
+                }
+            }
+
             newSlots[state.activeSlotIndex] = {
                 product: {
                     ...product,
                     displayColors: colors,
                     id: product._id || product.id,
-                    image: product.featuredImage || product.image
+                    image: displayImage || product.featuredImage || product.image
                 },
                 selectedColor: color || (colors.length > 0 ? colors[0].name : null),
             };
@@ -119,9 +128,26 @@ function bundleReducer(state, action) {
             const { slotIndex, color } = action.payload;
             const newSlots = [...state.slots];
             if (newSlots[slotIndex]) {
+                const product = newSlots[slotIndex].product;
+                const variants = product?.variants || [];
+
+                let newImage = product?.image;
+                if (variants.length > 0) {
+                    const variant = variants.find(v => v.colorName === color);
+                    if (variant?.image) {
+                        newImage = variant.image;
+                    } else if (product.featuredImage || product.image) {
+                        newImage = product.featuredImage || product.image;
+                    }
+                }
+
                 newSlots[slotIndex] = {
                     ...newSlots[slotIndex],
                     selectedColor: color,
+                    product: {
+                        ...product,
+                        image: newImage
+                    }
                 };
             }
             return {
@@ -170,8 +196,8 @@ export const BundleProvider = ({ children }) => {
         dispatch({ type: "SET_ACTIVE_SLOT", payload: index });
     }, []);
 
-    const addProductToSlot = useCallback((product, color = null) => {
-        dispatch({ type: "ADD_PRODUCT_TO_SLOT", payload: { product, color } });
+    const addProductToSlot = useCallback((product, color = null, customImage = null) => {
+        dispatch({ type: "ADD_PRODUCT_TO_SLOT", payload: { product, color, customImage } });
     }, []);
 
     const updateSlotColor = useCallback((slotIndex, color) => {
