@@ -7,6 +7,7 @@ import Container from "@/components/Container"
 import { useCart } from "@/context/CartContext"
 import CheckoutModal from "@/components/Cart/CheckoutModal"
 import { trackViewItem } from "@/utils/gtm"
+import SizeChartProductPage from "./SizeChartProductPage"
 
 const ProductDetailsClient = ({ product }) => {
     const { addToCart } = useCart()
@@ -283,13 +284,13 @@ const ProductDetailsClient = ({ product }) => {
                     </div>
                 </div>
             </Container>
-
+            <SizeChartProductPage />
             {/* Rich Content / Product Details Section */}
             {product.richDescription && (
-                <div className="border-t border-border mt-16 py-16 bg-muted/5">
+                <div className="border-t border-border py-6 md:py-10 bg-muted/5">
                     <Container>
                         <div className="max-w-4xl mx-auto">
-                            <h2 className="text-2xl font-black uppercase tracking-widest mb-10 text-center">Product Detail</h2>
+                            <h2 className="text-2xl font-black uppercase tracking-widest mb-3 md:mb-6 text-center">Product Detail</h2>
                             <div
                                 className="rich-content-area break-words overflow-x-hidden
                                 [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-xl [&_img]:my-4

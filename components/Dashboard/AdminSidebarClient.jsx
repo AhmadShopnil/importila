@@ -14,11 +14,8 @@ import toast from "react-hot-toast"
 
 const adminNavItems = [
   { label: "Dashboard", href: "/admin", icon: BarChart3 },
-  { label: "Sliders", href: "/admin/sliders", icon: GalleryVertical },
   { label: "Products", href: "/admin/products", icon: LayoutList },
   { label: "Combos", href: "/admin/combos", icon: Package },
-  { label: "Categories", href: "/admin/categories", icon: Tag },
-  { label: "Media Library", href: "/admin/media", icon: ImageIcon },
   {
     label: "Orders",
     icon: ShoppingCart,
@@ -28,6 +25,12 @@ const adminNavItems = [
       { label: "Manual Entry", href: "/admin/orders/new" },
     ],
   },
+  { label: "Media Library", href: "/admin/media", icon: ImageIcon },
+  { label: "Categories", href: "/admin/categories", icon: Tag },
+
+
+  { label: "Sliders", href: "/admin/sliders", icon: GalleryVertical },
+
   { label: "Stock", href: "/admin/stock", icon: TrendingUp },
   {
     label: "Reports",

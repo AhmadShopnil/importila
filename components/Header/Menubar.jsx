@@ -47,7 +47,7 @@ const Menubar = () => {
           <Link
 
             href="/"
-            className="relative text-[#34667B] font-medium transition-all
+            className="relative text-[#34667B] font-medium transition-all text-base md:text-lg
                          after:absolute after:left-0 after:-bottom-1 after:h-[2px]
                          after:w-0 after:bg-primary after:transition-all
                          hover:after:w-full hover:text-primary"
@@ -57,7 +57,7 @@ const Menubar = () => {
           <Link
 
             href="/shop"
-            className="relative text-[#34667B] font-medium transition-all
+            className="relative text-[#34667B] font-medium transition-all text-base md:text-lg
                          after:absolute after:left-0 after:-bottom-1 after:h-[2px]
                          after:w-0 after:bg-primary after:transition-all
                          hover:after:w-full hover:text-primary"
@@ -67,7 +67,7 @@ const Menubar = () => {
           <Link
 
             href="/combo"
-            className="relative text-[#34667B] font-medium transition-all
+            className="relative text-[#34667B] font-medium transition-all text-base md:text-lg
                          after:absolute after:left-0 after:-bottom-1 after:h-[2px]
                          after:w-0 after:bg-primary after:transition-all
                          hover:after:w-full hover:text-primary"

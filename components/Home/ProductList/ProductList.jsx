@@ -7,7 +7,8 @@ import Container from '@/components/Container';
 
 export const ProductCard = ({ product }) => {
     const productId = product.originalId || product._id || product.id;
-    const productName = `${product.designName} - ${product.name}`;
+    // const productName = `${product.designName} - ${product.name}`;
+    const productName = ` ${product.name}`;
     const colorParam = product.displayColor
         ? `?color=${encodeURIComponent(product.displayColor)}`
         : "";

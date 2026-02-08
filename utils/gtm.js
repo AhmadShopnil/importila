@@ -16,7 +16,7 @@ export const trackEvent = (event, value = {}) => {
     }
 }
 
-// Standard Ecommerce Events
+//  Events
 export const trackViewItem = (product) => {
     trackEvent('view_item', {
         ecommerce: {
@@ -25,9 +25,9 @@ export const trackViewItem = (product) => {
             items: [{
                 item_id: product._id,
                 item_name: product.name,
-                price: product.offerPrice || product.price,
+                price: product?.offerPrice || product.price,
                 quantity: 1,
-                item_category: product.category?.name
+                item_category: product?.category?.name
             }]
         }
     })
@@ -37,15 +37,64 @@ export const trackAddToCart = (product, variant, quantity) => {
     trackEvent('add_to_cart', {
         ecommerce: {
             currency: 'BDT',
-            value: (product.offerPrice || product.price) * quantity,
+            value: (product?.offerPrice || product?.price) * quantity,
             items: [{
                 item_id: product._id,
                 item_name: product.name,
-                variant: variant.sku,
-                price: product.offerPrice || product.price,
+                item_variant: variant.sku,
+                price: product?.offerPrice || product?.price,
                 quantity: quantity,
-                item_category: product.category?.name
+                item_category: product?.category?.name
             }]
+        }
+    })
+}
+
+export const trackRemoveFromCart = (product, variant, quantity) => {
+    trackEvent('remove_from_cart', {
+        ecommerce: {
+            currency: 'BDT',
+            value: (product?.offerPrice || product?.price) * quantity,
+            items: [{
+                item_id: product._id,
+                item_name: product.name,
+                item_variant: variant?.sku,
+                price: product?.offerPrice || product?.price,
+                quantity: quantity,
+                item_category: product?.category?.name
+            }]
+        }
+    })
+}
+
+export const trackAddToWishlist = (product) => {
+    trackEvent('add_to_wishlist', {
+        ecommerce: {
+            currency: 'BDT',
+            value: product?.offerPrice || product?.price,
+            items: [{
+                item_id: product._id,
+                item_name: product.name,
+                price: product?.offerPrice || product?.price,
+                quantity: 1,
+                item_category: product?.category?.name
+            }]
+        }
+    })
+}
+
+export const trackAddShippingInfo = (cartItems, total, shippingTier) => {
+    trackEvent('add_shipping_info', {
+        ecommerce: {
+            currency: 'BDT',
+            value: total,
+            shipping_tier: shippingTier,
+            items: cartItems.map(item => ({
+                item_id: item._id,
+                item_name: item.name,
+                price: item.offerPrice || item.price,
+                quantity: item.quantity
+            }))
         }
     })
 }
@@ -71,11 +120,12 @@ export const trackPurchase = (orderId, total, cartItems) => {
             transaction_id: orderId,
             value: total,
             currency: 'BDT',
+            payment_type: 'Cash on Delivery',
             items: cartItems.map(item => ({
-                item_id: item._id,
-                item_name: item.name,
-                price: item.offerPrice || item.price,
-                quantity: item.quantity
+                item_id: item?._id,
+                item_name: item?.name,
+                price: item?.offerPrice || item?.price,
+                quantity: item?.quantity
             }))
         }
     })

@@ -96,9 +96,10 @@ const ProductGrid = ({ combo }) => {
                         <div
                             key={product._id || product.id}
                             onClick={() => handleProductClick(product)}
-                            className={`group relative aspect-square rounded-xl overflow-hidden bg-card shadow-soft transition-all duration-300 ${disabled
-                                ? "opacity-50 cursor-not-allowed"
-                                : "hover:shadow-elevated hover:scale-[1.02] cursor-pointer"
+                            className={`group relative aspect-square rounded-[8px] overflow-hidden  bg-card shadow-sm transition-all
+                                 duration-300 ${disabled
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : "hover:shadow-elevated hover:scale-[1.02] cursor-pointer"
                                 }`}
                         >
                             <Image
@@ -110,25 +111,43 @@ const ProductGrid = ({ combo }) => {
                                 priority={idx < 6}
                             />
 
-                            {/* Overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
-                                <p className="text-white text-xs font-semibold truncate mb-1">
-                                    {product?.name}
-                                </p>
-                                <div className="flex gap-1">
-                                    {getUniqueColors(product?.variants).map((variant, i) => (
-                                        <div
-                                            key={i}
-                                            className="w-3 h-3 rounded-full border border-white/50"
-                                            style={{ backgroundColor: variant?.colorHex }}
-                                        />
-                                    ))}
+                            {/* Desktop Overlay (Visible on hover) */}
+                            <div className="hidden md:flex absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-end p-3 pointer-events-none">
+                                <div className="space-y-2 pointer-events-auto">
+                                    <p className="text-white text-sm font-semibold truncate">
+                                        {product?.name}
+                                    </p>
+                                    <div className="bg-primary text-white text-xs font-bold py-2 px-4 rounded-full text-center shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                        সিলেক্ট করুন
+                                    </div>
+                                    <div className="flex gap-1">
+                                        {getUniqueColors(product?.variants).map((variant, i) => (
+                                            <div
+                                                key={i}
+                                                className="w-3 h-3 rounded-full border border-white/50"
+                                                style={{ backgroundColor: variant?.colorHex }}
+                                            />
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Add Button */}
+                            {/* Mobile Selection Bar (Always visible) */}
+                            <div className="md:hidden absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm p-1  rounded-b-[5px] flex flex-col gap-1 shadow-[0_-4px_8px_rgba(0,0,0,0.05)]">
+                                {/* <span className="text-[10px] font-bold text-foreground truncate w-full text-center px-1">
+                                    {product?.name}
+                                </span> */}
+                                <div className="w-full bg-primary text-white text-[10px] font-bold py-1 rounded-[5px] flex items-center justify-center gap-1 active:scale-95 transition-transform">
+                                    <Plus size={10} strokeWidth={3} />
+                                    সিলেক্ট করুন
+                                </div>
+                            </div>
+
+
+
+                            {/* Desktop Plus Button */}
                             {!disabled && (
-                                <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg">
+                                <div className="hidden md:flex absolute top-2 right-2 w-8 h-8 rounded-full bg-primary text-white items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg">
                                     <Plus size={18} />
                                 </div>
                             )}

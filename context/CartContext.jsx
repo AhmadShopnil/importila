@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { trackAddToCart } from '@/utils/gtm'
+import { trackAddToCart, trackRemoveFromCart } from '@/utils/gtm'
 
 const CartContext = createContext()
 
@@ -55,7 +55,13 @@ export const CartProvider = ({ children }) => {
     }
 
     const removeFromCart = (index) => {
-        setCartItems(prev => prev.filter((_, i) => i !== index))
+        setCartItems(prev => {
+            const itemToRemove = prev[index];
+            if (itemToRemove) {
+                trackRemoveFromCart(itemToRemove, { sku: itemToRemove.sku }, itemToRemove.quantity);
+            }
+            return prev.filter((_, i) => i !== index);
+        })
     }
 
     const updateQuantity = (index, delta) => {

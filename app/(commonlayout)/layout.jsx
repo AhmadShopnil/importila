@@ -1,7 +1,6 @@
 
 import { Analytics } from "@vercel/analytics/next"
 import { ProductSelectionProvider } from "@/context/ProductSelectionContext"
-import Navbar from "@/components/Header/Navbar"
 import Menubar from "@/components/Header/Menubar"
 import BottomAppBar from "@/components/Footer/BottomAppBar"
 import Footer from "@/components/Footer/Footer"
@@ -52,6 +51,9 @@ async function getSettings() {
 export default async function RootLayout({ children }) {
   const settings = await getSettings()
   const gtmId = settings?.googleTagManagerId || settings?.gtmId
+
+
+  // console.log("settings", settings)
   return (
     <>
       <CartProvider>

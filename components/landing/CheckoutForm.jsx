@@ -4,7 +4,7 @@ import { Package, MapPin, Phone, User, FileText, CheckCircle } from "lucide-reac
 import Image from "next/image";
 import { useBundle } from "@/context/BundleContext";
 import { bundleOptions } from "@/data/products";
-import { trackBeginCheckout, trackPurchase } from "@/utils/gtm";
+import { trackBeginCheckout, trackPurchase, trackAddShippingInfo } from "@/utils/gtm";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -48,6 +48,14 @@ const CheckoutForm = ({ combo }) => {
         if (!isComplete) return;
 
         try {
+            const items = slots.filter(s => s.product).map(s => ({
+                ...s.product,
+                quantity: 1,
+                selectedColor: s.selectedColor
+            }));
+
+            trackAddShippingInfo(items, totalAmount, shippingCharge === 0 ? "Free Shipping" : "Standard Shipping");
+
             const orderData = {
                 customerName: customerInfo.name,
                 phone: customerInfo.phone,

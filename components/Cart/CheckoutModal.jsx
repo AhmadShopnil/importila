@@ -4,7 +4,7 @@ import { useCart } from "@/context/CartContext"
 import { X, CheckCircle, User, Phone, MapPin, FileText, ShoppingBag } from "lucide-react"
 import { useState, useEffect } from "react"
 import { BASE_URL } from "@/utils/baseUrl"
-import { trackBeginCheckout, trackPurchase } from "@/utils/gtm"
+import { trackBeginCheckout, trackPurchase, trackAddShippingInfo } from "@/utils/gtm"
 
 const CheckoutModal = ({ isOpen, onClose, items, total }) => {
     const { clearCart } = useCart()
@@ -62,6 +62,8 @@ const CheckoutModal = ({ isOpen, onClose, items, total }) => {
         setLoading(true)
 
         try {
+            trackAddShippingInfo(items, finalTotal, deliveryLocation === "inside" ? "Inside Dhaka" : "Outside Dhaka")
+
             const orderData = {
                 customerName: customerInfo.name,
                 phone: customerInfo.phone,
