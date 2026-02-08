@@ -143,7 +143,7 @@ const CheckoutForm = ({ combo }) => {
     // if (!selectedBundle) return null;
 
     return (
-        <section className="pb-20 pt-8 md:pt-0 md:pb-0 md:py-16  bg-background" id="checkout-section">
+        <section className="pb-20 pt-8 md:pt-14 md:pb-10  bg-background" id="checkout-section">
             <div className="container mx-auto px-4">
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-10">

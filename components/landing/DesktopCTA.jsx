@@ -16,7 +16,7 @@ const DesktopCTA = ({ combo }) => {
     };
 
     return (
-        <section className="py-16 gradient-hero hidden md:block">
+        <section className="py-10 gradient-hero hidden md:block">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-8">
                     <h2 className="text-2xl md:text-3xl font-bold text-[#1E556E] mb-2">
