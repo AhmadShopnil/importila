@@ -100,7 +100,7 @@ export default function EditComboPage() {
 
   /* ---------- Bundle Options Handlers ---------- */
   const addBundleOption = () => {
-    setBundleOptions([...bundleOptions, { pieces: 0, price: 0, originalPrice: 0, shippingCharge: 0, popular: false }])
+    setBundleOptions([...bundleOptions, { pieces: 0, price: 0, originalPrice: 0, isShippingChargeable: false, popular: false }])
   }
 
   const removeBundleOption = (index) => {
@@ -108,9 +108,19 @@ export default function EditComboPage() {
   }
 
   const updateBundleOption = (index, field, value) => {
-    const updated = [...bundleOptions]
-    updated[index][field] = field === "popular" ? value : Number(value)
-    setBundleOptions(updated)
+    setBundleOptions(prev => {
+      const updated = [...prev]
+      // Create a shallow copy of the item being updated
+      updated[index] = { ...updated[index] }
+
+      if (field === "popular" || field === "isShippingChargeable") {
+        updated[index][field] = value
+      } else {
+        // Allow string values for better typing experience
+        updated[index][field] = value
+      }
+      return updated
+    })
   }
 
   /* ---------- Submit ---------- */
@@ -118,9 +128,20 @@ export default function EditComboPage() {
     e.preventDefault()
 
     const formData = new FormData(e.target)
+
+    // Ensure numeric fields are actually numbers before sending
+    const sanitizedBundleOptions = bundleOptions.map(opt => ({
+      ...opt,
+      pieces: Number(opt.pieces) || 0,
+      price: Number(opt.price) || 0,
+      originalPrice: Number(opt.originalPrice) || 0,
+      isShippingChargeable: Boolean(opt.isShippingChargeable),
+      popular: Boolean(opt.popular)
+    }))
+
     formData.append("products", JSON.stringify(selectedProducts))
     formData.append("sizes", JSON.stringify(sizes))
-    formData.append("bundleOptions", JSON.stringify(bundleOptions))
+    formData.append("bundleOptions", JSON.stringify(sanitizedBundleOptions))
     formData.append("slug", slug)
     formData.append("landingPageDetails", landingPageDetails)
     formData.append("existingFeaturedImage", comboData?.featuredImage || "")
@@ -370,7 +391,7 @@ export default function EditComboPage() {
                       <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Pieces</label>
                       <input
                         type="number"
-                        value={opt.pieces}
+                        value={opt.pieces ?? ""} // Handle undefined/null
                         onChange={(e) => updateBundleOption(idx, "pieces", e.target.value)}
                         className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
                       />
@@ -379,7 +400,7 @@ export default function EditComboPage() {
                       <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Price</label>
                       <input
                         type="number"
-                        value={opt.price}
+                        value={opt.price ?? ""} // Handle undefined/null
                         onChange={(e) => updateBundleOption(idx, "price", e.target.value)}
                         className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
                       />
@@ -388,19 +409,25 @@ export default function EditComboPage() {
                       <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Original</label>
                       <input
                         type="number"
-                        value={opt.originalPrice}
+                        value={opt.originalPrice ?? ""} // Handle undefined/null
                         onChange={(e) => updateBundleOption(idx, "originalPrice", e.target.value)}
                         className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Shipping</label>
-                      <input
-                        type="number"
-                        value={opt.shippingCharge}
-                        onChange={(e) => updateBundleOption(idx, "shippingCharge", e.target.value)}
-                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
-                      />
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Shipping Charge?</label>
+                      <div className="flex items-center gap-2 h-[38px] px-1">
+                        <input
+                          type="checkbox"
+                          checked={opt.isShippingChargeable || false}
+                          onChange={(e) => updateBundleOption(idx, "isShippingChargeable", e.target.checked)}
+                          id={`shipping-${idx}`}
+                          className="w-5 h-5 rounded border-border text-primary focus:ring-primary transition-all cursor-pointer"
+                        />
+                        <label htmlFor={`shipping-${idx}`} className="text-sm font-medium cursor-pointer select-none">
+                          {opt.isShippingChargeable ? "Charged Applied" : "Apply Shipping Charge "}
+                        </label>
+                      </div>
                     </div>
                   </div>
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { ShoppingCart, User, Phone, MapPin, Notebook, Plus, Trash2, Search, CheckCircle, X, Printer, List, Package } from "lucide-react"
 
 import { BASE_URL } from "@/utils/baseUrl"
+import InvoicePrint from "@/components/Dashboard/Order/InvoicePrint"
 
 const orderSources = [
     { label: "Website", value: "website" },
@@ -26,6 +27,7 @@ export default function ManualOrderEntry() {
     const [createdOrder, setCreatedOrder] = useState(null)
     const [selectedProductForVariant, setSelectedProductForVariant] = useState(null)
     const [activeSlotIndex, setActiveSlotIndex] = useState(null)
+    const [activeColorTab, setActiveColorTab] = useState("All")
 
     const [formData, setFormData] = useState({
         customerName: "",
@@ -37,7 +39,8 @@ export default function ManualOrderEntry() {
         shippingCharge: 60,
         items: [],
         totalPrice: 0, // This will be subtotal
-        totalAmount: 0, // This will be subtotal + shipping
+        discount: 0,
+        totalAmount: 0, // This will be subtotal + shipping - discount
     })
 
     const [shippingRates, setShippingRates] = useState({ inside: 60, outside: 120 })
@@ -74,10 +77,10 @@ export default function ManualOrderEntry() {
             return {
                 ...prev,
                 shippingCharge: actualCharge,
-                totalAmount: prev.totalPrice + actualCharge
+                totalAmount: Math.max(0, prev.totalPrice + actualCharge - (prev.discount || 0))
             }
         })
-    }, [formData.items, formData.deliveryLocation, shippingRates, orderType])
+    }, [formData.items, formData.deliveryLocation, shippingRates, orderType, formData.discount])
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -136,6 +139,13 @@ export default function ManualOrderEntry() {
         if (orderType === "regular") {
             if (item.variants && item.variants.length > 0) {
                 setSelectedProductForVariant(item)
+                // Extract unique colors and set the first one as active
+                const colors = [...new Set(item.variants.map(v => v.colorName || v.color || "No Color").filter(Boolean))]
+                if (colors.length > 0) {
+                    setActiveColorTab(colors[0])
+                } else {
+                    setActiveColorTab("All")
+                }
             } else {
                 addRegularItem(item)
             }
@@ -293,6 +303,8 @@ export default function ManualOrderEntry() {
                     orderSource: formData.orderSource,
                     deliveryLocation: formData.deliveryLocation,
                     shippingCharge: formData.shippingCharge,
+                    discount: formData.discount || 0,
+                    totalPrice: formData.totalPrice,
                     totalAmount: formData.totalAmount,
                     items: formData.items.map(item => ({
                         productId: item.productId,
@@ -319,6 +331,7 @@ export default function ManualOrderEntry() {
                     items: comboItem.items, // the products inside the combo
                     totalAmount: formData.totalAmount,
                     price: comboItem.price,
+                    discount: formData.discount || 0,
                     shippingCharge: formData.shippingCharge,
                     bundleSize: comboItem.bundleSize,
                     productSize: comboItem.size,
@@ -349,9 +362,6 @@ export default function ManualOrderEntry() {
         }
     }
 
-    // const filteredItems = (orderType === "regular" ? products : combos).filter(item =>
-    //     (item.name || item.title).toLowerCase().includes(searchTerm.toLowerCase())
-    // )
 
     return (
         <div className=" space-y-8 pb-20 relative">
@@ -525,6 +535,19 @@ export default function ManualOrderEntry() {
                                         <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Shipping</span>
                                         <span className="text-xl font-bold text-foreground">৳ {formData.shippingCharge.toLocaleString()}</span>
                                     </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Discount</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xl font-bold text-destructive">- ৳</span>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={formData.discount || 0}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, discount: Number(e.target.value) }))}
+                                                className="w-24 px-2 py-1 text-right text-xl font-bold border border-border rounded-lg outline-none focus:border-[#1E556E] focus:ring-1 focus:ring-[#1E556E]"
+                                            />
+                                        </div>
+                                    </div>
                                     <div className="pt-4 border-t border-border/50 flex justify-between items-center">
                                         <span className="text-lg font-black text-muted-foreground uppercase tracking-widest">Total Amount</span>
                                         <span className="text-3xl font-black text-[#1E556E]">৳ {formData.totalAmount.toLocaleString()}</span>
@@ -540,20 +563,20 @@ export default function ManualOrderEntry() {
                     <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl border border-border p-8 space-y-6 sticky top-8">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold">Customer Details</h2>
-                            <div className="flex bg-muted p-1 rounded-lg text-[10px] font-bold">
+                            <div className="flex bg-muted p-1 rounded-lg text-sm font-bold">
                                 <button
                                     type="button"
                                     onClick={() => setFormData(prev => ({ ...prev, deliveryLocation: "inside" }))}
-                                    className={`px-2 py-1 rounded ${formData.deliveryLocation === "inside" ? "bg-white shadow-sm text-primary" : "text-muted-foreground"}`}
+                                    className={`cursor-pointer px-2 py-1 rounded ${formData.deliveryLocation === "inside" ? "bg-[#1E556E] text-white  shadow-sm " : "text-muted-foreground"}`}
                                 >
-                                    Inside
+                                    Inside Dhaka
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setFormData(prev => ({ ...prev, deliveryLocation: "outside" }))}
-                                    className={`px-2 py-1 rounded ${formData.deliveryLocation === "outside" ? "bg-white shadow-sm text-primary" : "text-muted-foreground"}`}
+                                    className={`cursor-pointer px-2 py-1 rounded ${formData.deliveryLocation === "outside" ? "bg-[#1E556E] text-white  shadow-sm " : "text-muted-foreground"}`}
                                 >
-                                    Outside
+                                    Outside Dhaka
                                 </button>
                             </div>
                         </div>
@@ -677,24 +700,45 @@ export default function ManualOrderEntry() {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 gap-3">
-                                        {selectedProductForVariant.variants.map((variant, idx) => (
+                                    {/* Color Tabs */}
+                                    <div className="flex gap-2 flex-wrap">
+                                        {[...new Set(selectedProductForVariant.variants.map(v => v.colorName || v.color || "No Color").filter(Boolean))].map((color, idx) => (
                                             <button
                                                 key={idx}
-                                                onClick={() => addRegularItem(selectedProductForVariant, variant)}
-                                                className="flex items-center justify-between p-5 border-2 border-border/40 rounded-2xl hover:border-[#1E556E] hover:bg-[#1E556E]/5 hover:shadow-lg transition-all text-left"
+                                                onClick={() => setActiveColorTab(color)}
+                                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all border ${activeColorTab === color
+                                                    ? "bg-[#1E556E] text-white border-[#1E556E] shadow-md"
+                                                    : "bg-white text-muted-foreground border-border hover:border-[#1E556E] hover:text-[#1E556E]"
+                                                    }`}
                                             >
-                                                <div>
-                                                    <p className="font-bold text-lg">{variant.design} {variant.color}</p>
-                                                    <p className="font-bold text-muted-foreground bg-muted inline-block px-2 py-0.5 rounded text-xs mt-1">
-                                                        Size: {variant.size} | SKU: {variant.sku}
-                                                    </p>
-                                                </div>
-                                                <div className="bg-[#1E556E] text-white p-2 rounded-xl">
-                                                    <Plus className="w-5 h-5" />
-                                                </div>
+                                                {color}
                                             </button>
                                         ))}
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {selectedProductForVariant.variants
+                                            .filter(v => activeColorTab === "All" || (v.colorName || v.color || "No Color") === activeColorTab)
+                                            .map((variant, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => addRegularItem(selectedProductForVariant, variant)}
+                                                    className="flex items-center justify-between p-5 border-2 border-border/40 rounded-2xl hover:border-[#1E556E] hover:bg-[#1E556E]/5 hover:shadow-lg transition-all text-left"
+                                                >
+                                                    <div>
+                                                        <p className="font-bold text-lg">{variant.design} {variant.color}</p>
+                                                        <p className="font-bold text-muted-foreground bg-muted inline-block px-2 py-0.5 rounded text-xs mt-1">
+                                                            Size: {variant.size} | SKU: {variant.sku}
+                                                        </p>
+                                                    </div>
+                                                    <div className="bg-[#1E556E] text-white p-2 rounded-xl">
+                                                        <Plus className="w-5 h-5" />
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        {selectedProductForVariant.variants.filter(v => activeColorTab === "All" || (v.colorName || v.color || "No Color") === activeColorTab).length === 0 && (
+                                            <p className="text-center text-muted-foreground py-8">No variants found for this color.</p>
+                                        )}
                                     </div>
                                 </div>
                             ) : (
@@ -894,12 +938,12 @@ export default function ManualOrderEntry() {
                         </div>
 
                         <div className="p-8 space-y-4">
-                            <button
+                            {/* <button
                                 onClick={() => window.print()}
                                 className="w-full py-4 bg-[#1E556E] text-white rounded-2xl font-black flex items-center justify-center gap-3 shadow-lg shadow-[#1E556E]/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                             >
                                 <Printer className="w-5 h-5" /> PRINT PDF INVOICE
-                            </button>
+                            </button> */}
 
                             <div className="grid grid-cols-2 gap-4">
                                 <button
@@ -912,6 +956,7 @@ export default function ManualOrderEntry() {
                                             note: "",
                                             items: [],
                                             totalPrice: 0,
+                                            discount: 0,
                                             shippingCharge: 60,
                                             totalAmount: 0,
                                             orderSource: "website",
@@ -937,132 +982,7 @@ export default function ManualOrderEntry() {
             {/* Hidden Printable Invoice Section */}
             {createdOrder && (
                 <div id="printable-invoice" className="hidden print:block fixed inset-0 bg-white z-[200] p-8 text-black font-sans leading-relaxed">
-                    {/* Invoice Header */}
-                    <div className="flex justify-between items-start border-b-2 border-[#1E556E] pb-8 mb-8">
-                        <div>
-                            <h1 className="text-4xl font-black text-[#1E556E] mb-1">IMPORTILA</h1>
-                            <p className="text-xs font-bold uppercase tracking-widest text-[#1E556E]/60">Your Premium Import Partner</p>
-                        </div>
-                        <div className="text-right">
-                            <h2 className="text-2xl font-black uppercase text-[#1E556E]">INVOICE</h2>
-                            <p className="text-sm font-bold">#{createdOrder.orderNumber}</p>
-                            <p className="text-xs text-gray-500">{new Date(createdOrder.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-                        </div>
-                    </div>
-
-                    {/* Customer Info */}
-                    <div className="grid grid-cols-2 gap-12 mb-10">
-                        <div className="space-y-3">
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-1 mb-2">BILL TO RECIPIENT</h3>
-                            <div className="space-y-1">
-                                <p className="font-extrabold text-xl">{createdOrder.customerName}</p>
-                                <p className="font-bold flex items-center gap-2">
-                                    <span className="w-5 h-5 flex items-center justify-center bg-[#1E556E] text-white rounded text-[10px]">P</span>
-                                    {createdOrder.phone}
-                                </p>
-                                <p className="text-sm leading-snug whitespace-pre-wrap">{createdOrder.address}</p>
-                            </div>
-                        </div>
-                        <div className="space-y-3">
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-1 mb-2">SHIPPING INFO</h3>
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-sm py-1 border-b border-dashed border-gray-100">
-                                    <span className="font-bold text-gray-400">Location:</span>
-                                    <span className="font-black uppercase">{createdOrder.deliveryLocation} Dhaka</span>
-                                </div>
-                                <div className="flex justify-between text-sm py-1 border-b border-dashed border-gray-100">
-                                    <span className="font-bold text-gray-400">Source:</span>
-                                    <span className="font-black uppercase">{createdOrder.orderSource}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Item Table */}
-                    <div className="mb-10">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-[#1E556E] text-white">
-                                    <th className="py-3 px-4 rounded-tl-xl text-[10px] font-black uppercase tracking-wider">Product details</th>
-                                    <th className="py-3 px-4 text-[10px] font-black uppercase tracking-wider text-center">Qty</th>
-                                    <th className="py-3 px-4 text-[10px] font-black uppercase tracking-wider text-right">Unit Price</th>
-                                    <th className="py-3 px-4 rounded-tr-xl text-[10px] font-black uppercase tracking-wider text-right">Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {orderType === "regular" ? (
-                                    createdOrder.items?.map((item, idx) => (
-                                        <tr key={idx}>
-                                            <td className="py-4 px-4">
-                                                <p className="font-black text-lg text-[#1E556E]">{item.name}</p>
-                                                <p className="text-xs font-bold text-gray-400 mt-1">
-                                                    {item.variantName || `${item.design || ''} ${item.color || ''}`.trim()}
-                                                    {item.size && ` | Size: ${item.size}`}
-                                                </p>
-                                            </td>
-                                            <td className="py-4 px-4 text-center font-black">{item.quantity}</td>
-                                            <td className="py-4 px-4 text-right font-bold">৳ {item.price?.toLocaleString()}</td>
-                                            <td className="py-4 px-4 text-right font-black">৳ {(item.price * item.quantity)?.toLocaleString()}</td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td className="py-4 px-4 align-top">
-                                            <p className="font-black text-lg text-[#1E556E]">{createdOrder.name || "Combo Deal"}</p>
-                                            <p className="text-xs font-bold text-gray-400 mt-1">Bundle Size: {createdOrder.bundleSize} Pieces | Size: {createdOrder.productSize}</p>
-                                            <div className="mt-4 grid grid-cols-1 gap-2 border-l-4 border-gray-100 pl-4">
-                                                {createdOrder.items?.map((sub, sIdx) => (
-                                                    <div key={sIdx} className="flex items-center justify-between text-[11px] font-bold">
-                                                        <span>• {sub.name}</span>
-                                                        <span className="text-gray-400 uppercase">{sub.color}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-4 text-center font-black">1</td>
-                                        <td className="py-4 px-4 text-right font-bold">৳ {createdOrder.price?.toLocaleString()}</td>
-                                        <td className="py-4 px-4 text-right font-black">৳ {createdOrder.price?.toLocaleString()}</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Totals & Notes */}
-                    <div className="grid grid-cols-12 gap-12 mt-auto">
-                        <div className="col-span-7 bg-gray-50 p-6 rounded-3xl border-2 border-dashed border-gray-200">
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1E556E] mb-3">Order Note / Instructions</h3>
-                            <p className="text-sm font-bold text-gray-500 italic leading-relaxed">
-                                {createdOrder.note || "No special instructions provided."}
-                            </p>
-                        </div>
-                        <div className="col-span-5 space-y-3 pt-4">
-                            <div className="flex justify-between text-sm">
-                                <span className="font-bold text-gray-400">Subtotal:</span>
-                                <span className="font-black">৳ {(createdOrder.totalAmount - createdOrder.shippingCharge)?.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="font-bold text-gray-400">Shipping:</span>
-                                <span className="font-black">৳ {createdOrder.shippingCharge?.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between items-center bg-[#1E556E] text-white p-4 rounded-2xl shadow-xl">
-                                <span className="text-[10px] font-black uppercase tracking-widest">Total Payable</span>
-                                <span className="text-3xl font-black">৳ {createdOrder.totalAmount?.toLocaleString()}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Footer Warning for Courier */}
-                    <div className="mt-20 pt-10 border-t-4 border-[#1E556E]/20 flex justify-between items-center grayscale opacity-80">
-                        <div className="space-y-1">
-                            <p className="text-[10px] font-black text-gray-400">Authorized Signature</p>
-                            <div className="w-40 h-10 border-b border-gray-200"></div>
-                        </div>
-                        <div className="text-right space-y-1">
-                            <p className="text-[12px] font-black text-[#1E556E]">IMPORTILA OFFICIAL</p>
-                            <p className="text-[8px] font-bold text-gray-400">Dhaka, Bangladesh | +880 1XXX-XXXXXX</p>
-                        </div>
-                    </div>
+                    <InvoicePrint order={createdOrder} />
                 </div>
             )}
 

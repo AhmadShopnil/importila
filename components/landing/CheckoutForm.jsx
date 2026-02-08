@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useBundle } from "@/context/BundleContext";
 import { bundleOptions } from "@/data/products";
 import { trackBeginCheckout, trackPurchase, trackAddShippingInfo } from "@/utils/gtm";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const CheckoutForm = ({ combo }) => {
@@ -18,8 +18,38 @@ const CheckoutForm = ({ combo }) => {
         (b) => b.pieces === selectedBundle
     );
 
+    const [shippingRates, setShippingRates] = useState({ inside: 60, outside: 120 });
+    const [deliveryLocation, setDeliveryLocation] = useState("inside"); // Default to inside
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await fetch("/api/settings");
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data?.shipping) {
+                        setShippingRates({
+                            inside: Number(data.shipping.insideDhaka) || 60,
+                            outside: Number(data.shipping.outsideDhaka) || 120
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch shipping settings:", error);
+            }
+        };
+        fetchSettings();
+    }, []);
+
     const bundlePrice = selectedBundleOption?.price || 0;
-    const shippingCharge = selectedBundleOption?.shippingCharge || 0;
+
+    // Determine shipping charge based on isShippingChargeable flag
+    // If flag is true, use selected location rate. If false, free (0).
+    const isShippingChargeable = selectedBundleOption?.isShippingChargeable === true;
+    const shippingCharge = isShippingChargeable
+        ? (deliveryLocation === "inside" ? shippingRates.inside : shippingRates.outside)
+        : 0;
+
     const totalAmount = bundlePrice + shippingCharge;
 
     useEffect(() => {
@@ -60,13 +90,15 @@ const CheckoutForm = ({ combo }) => {
                 customerName: customerInfo.name,
                 phone: customerInfo.phone,
                 address: customerInfo.address,
+                deliveryLocation: deliveryLocation,
                 note: customerInfo.note,
+
                 items: slots.map(slot => ({
                     productId: slot.product._id || slot.product.id,
                     name: slot.product.name,
                     color: slot.selectedColor,
                     image: slot.product.featuredImage || slot.product.image,
-                    price: bundlePrice / selectedBundle // Rough estimate per item
+                    price: bundlePrice / selectedBundle
                 })),
                 totalAmount: totalAmount,
                 price: bundlePrice,
@@ -111,7 +143,7 @@ const CheckoutForm = ({ combo }) => {
     // if (!selectedBundle) return null;
 
     return (
-        <section className="py-8 md:py-16  bg-background" id="checkout-section">
+        <section className="pb-20 pt-8 md:pt-0 md:pb-0 md:py-16  bg-background" id="checkout-section">
             <div className="container mx-auto px-4">
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-10">
@@ -147,6 +179,33 @@ const CheckoutForm = ({ combo }) => {
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Shipping Charge</span>
                                     <span className="font-semibold">{shippingCharge === 0 ? "Free" : `৳${shippingCharge}`}</span>
+                                </div>
+                                <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-border/50">
+                                    <span className="text-base font-semibold text-muted-foreground uppercase tracking-wider">Select Location</span>
+                                    <div className="flex gap-4">
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="deliveryLocation"
+                                                value="inside"
+                                                checked={deliveryLocation === "inside"}
+                                                onChange={() => setDeliveryLocation("inside")}
+                                                className="text-primary focus:ring-primary"
+                                            />
+                                            <span className="text-base">Inside Dhaka</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="deliveryLocation"
+                                                value="outside"
+                                                checked={deliveryLocation === "outside"}
+                                                onChange={() => setDeliveryLocation("outside")}
+                                                className="text-primary focus:ring-primary"
+                                            />
+                                            <span className="text-base">Outside Dhaka</span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
 

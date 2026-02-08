@@ -51,7 +51,7 @@ const BundleCard = ({
                     Save {bundle.savings}
                 </div>
                 <div className={`text-[11px] font-semibold ${bundle?.shippingCharge === 0 ? "text-green-600" : "text-muted-foreground"}`}>
-                    {bundle.shippingCharge === 0 ? "✓ Free Shipping" : `+ ৳${bundle?.shippingCharge} Shipping`}
+                    {bundle?.isShippingChargeable === false && "✓ Free Shipping"}
                 </div>
             </div>
         </button>
