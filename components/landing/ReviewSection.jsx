@@ -38,7 +38,7 @@ export default function ReviewSection() {
                         Customer Feedback
                         <Star size={16} fill="currentColor" />
                     </div>
-                    <h2 className="text-2xl md:text-5xl font-extrabold text-foreground ">
+                    <h2 className="text-2xl md:text-5xl font-extrabold text-[#1E556E] ">
                         আমাদের কাস্টমাররা কী বলছেন <br />
                         <span className="text-primary ">এক নজরে দেখে নিন!</span>
                     </h2>

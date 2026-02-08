@@ -79,7 +79,7 @@ const ProductGrid = ({ combo }) => {
                             </span>
                         </div>
                     )}
-                    <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                    <h2 className="text-2xl md:text-3xl font-bold text-[#1E556E] mb-2">
                         {combo?.productGridTitle || "Choose Your Favorite Styles"}
                     </h2>
                     <p className="text-muted-foreground max-w-xl mx-auto">

@@ -12,7 +12,7 @@ const SizeSelection = ({ combo }) => {
         <section className="pt-4 md:pt-12 ">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-4 md:mb-8">
-                    <h2 className="text-2xl md:text-3xl font-bold text-foreground ">
+                    <h2 className="text-2xl md:text-3xl font-bold text-[#1E556E] ">
                         {combo?.sizeSelectionTitle || "Select Size "}
                     </h2>
                     {/* <p className="text-muted-foreground">

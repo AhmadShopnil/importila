@@ -77,7 +77,7 @@ const BundleSelection = ({ combo }) => {
         <section id="bundle-section" className="py-8 md:py-16 bg-white">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-6 md:mb-12">
-                    <h2 className="text-2xl md:text-4xl font-extrabold text-foreground mb-2 mb:mb-4">
+                    <h2 className="text-2xl md:text-4xl font-extrabold text-[#1E556E] mb-2 mb:mb-4">
                         {combo?.bundleTitle || "পছন্দের বান্ডেলটি বেছে নিন"}
                     </h2>
                     <p className="text-muted-foreground text-lg max-w-xl mx-auto">

@@ -22,8 +22,8 @@ const ProductSlots = () => {
         <section id="selected-slots" className="py-6 md:py-12  bg-background">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-8">
-                    <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-                        Your Bundle Selection
+                    <h2 className="text-2xl md:text-3xl font-bold text-[#1E556E] mb-2">
+                        Your Selected Items 
                     </h2>
                     <p className="text-muted-foreground">
                         Click on a slot to select a product from the collection below

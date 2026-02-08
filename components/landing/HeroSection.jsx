@@ -25,7 +25,7 @@ const HeroSection = ({ combo }) => {
                 </div>
 
                 {/* Main Headline */}
-                <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center text-foreground leading-12 md:leading-20  mb-6
+                <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center text-[#1E556E] leading-12 md:leading-20  mb-6
                  animate-slide-up text-balance max-w-4xl">
                     {combo?.landingPageTitle || "Adorable Kids Dress Sets"} <br />
                     {/* <span className="text-primary">Mix, Match & Save Big!</span> */}
