@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Loading from "@/components/Loader/Loading"
 import Link from "next/link"
 
-import { Truck, CheckSquare, Square, RefreshCw, Shield, ShieldAlert, ShieldCheck, List, LayoutGrid, Eye, MoreHorizontal, ExternalLink, Search, Filter, Printer } from "lucide-react"
+import { Truck, CheckSquare, Square, RefreshCw, Shield, ShieldAlert, ShieldCheck, List, LayoutGrid, Eye, MoreHorizontal, ExternalLink, Search, Filter, Printer, Trash2 } from "lucide-react"
 import toast from "react-hot-toast"
 
 import {
@@ -12,7 +12,9 @@ import {
   useUpdateOrderMutation,
   useLazyCheckFraudRiskQuery,
   useSendToCourierMutation,
-  useLazyCheckCourierStatusQuery
+  useLazyCheckCourierStatusQuery,
+  useDeleteOrderMutation,
+  useDeleteMultipleOrdersMutation
 } from "@/lib/redux/api/orderApi"
 import InvoicePrint from "@/components/Dashboard/Order/InvoicePrint"
 
@@ -44,6 +46,8 @@ export default function OrdersPage() {
   const [checkFraudRisk] = useLazyCheckFraudRiskQuery()
   const [sendToCourier, { isLoading: sendingToCourier }] = useSendToCourierMutation()
   const [checkCourierStatus] = useLazyCheckCourierStatusQuery()
+  const [deleteOrder] = useDeleteOrderMutation()
+  const [deleteMultipleOrders, { isLoading: deletingMultiple }] = useDeleteMultipleOrdersMutation()
 
   // Debounce search query
   useEffect(() => {
@@ -191,6 +195,27 @@ export default function OrdersPage() {
     }
   }
 
+  const handleDeleteOrder = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this order?")) return
+    try {
+      await deleteOrder(id).unwrap()
+      toast.success("Order deleted successfully")
+    } catch (error) {
+      toast.error("Failed to delete order")
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete ${selectedOrders.length} orders?`)) return
+    try {
+      await deleteMultipleOrders(selectedOrders).unwrap()
+      toast.success(`${selectedOrders.length} orders deleted successfully`)
+      setSelectedOrders([])
+    } catch (error) {
+      toast.error("Failed to delete orders")
+    }
+  }
+
   // if (loading) return <Loading />
 
 
@@ -304,6 +329,15 @@ export default function OrdersPage() {
                   <option value="" disabled>Change Status</option>
                   {statuses.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                 </select>
+
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={deletingMultiple}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-all text-sm font-medium disabled:opacity-70 shadow-sm"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {deletingMultiple ? "Deleting..." : `Delete Selected`}
+                </button>
               </div>
             )}
           </div>
@@ -464,6 +498,13 @@ export default function OrdersPage() {
                           >
                             <Printer className="w-4 h-4" />
                           </button>
+                          <button
+                            onClick={() => handleDeleteOrder(order._id)}
+                            className="p-2 hover:bg-red-50 rounded text-red-600 transition-all bg-red-50/50"
+                            title="Delete Order"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -597,6 +638,12 @@ export default function OrdersPage() {
                   >
                     <Eye className="w-4 h-4" />
                   </Link>
+                  <button
+                    onClick={() => handleDeleteOrder(order._id)}
+                    className="p-2 bg-white rounded-full shadow-lg text-red-600 hover:bg-red-600 hover:text-white transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             )

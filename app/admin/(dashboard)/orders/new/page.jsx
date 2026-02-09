@@ -69,9 +69,9 @@ export default function ManualOrderEntry() {
             // Rule from frontend: 3+ items is free shipping (for regular)
             const totalItems = prev.items.reduce((acc, item) => acc + (item.quantity || 1), 0)
 
-            // For regular: 3+ items free. For combo: always use selected charge.
+            // For regular: 6+ items free. For combo: always use selected charge.
             const actualCharge = (orderType === "regular")
-                ? (totalItems >= 3 ? 0 : charge)
+                ? (totalItems >= 6 ? 0 : charge)
                 : charge
 
             return {
@@ -374,12 +374,12 @@ export default function ManualOrderEntry() {
                     >
                         Regular Product
                     </button>
-                    <button
+                    {/* <button
                         onClick={() => { setOrderType("combo"); setFormData(prev => ({ ...prev, items: [], totalPrice: 0 })) }}
                         className={`px-6 py-2 rounded-md font-medium transition-all ${orderType === "combo" ? "bg-[#1E556E] text-white shadow-md" : "text-muted-foreground hover:text-foreground"}`}
                     >
                         Combo System
-                    </button>
+                    </button> */}
                 </div>
             </div>
 

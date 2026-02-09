@@ -146,3 +146,28 @@ export async function POST(request) {
     return NextResponse.json({ error: "Failed to create order" }, { status: 500 })
   }
 }
+
+export async function DELETE(request) {
+  const admin = await getAdminAuth()
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  try {
+    const { ids } = await request.json()
+    if (!ids || !Array.isArray(ids)) {
+      return NextResponse.json({ error: "Invalid or missing order IDs" }, { status: 400 })
+    }
+
+    const { db } = await connectToDatabase()
+    const result = await db.collection("orders").deleteMany({
+      _id: { $in: ids.map(id => new ObjectId(id)) }
+    })
+
+    return NextResponse.json({
+      message: `${result.deletedCount} orders deleted successfully`,
+      deletedCount: result.deletedCount
+    })
+  } catch (error) {
+    console.error("DELETE /api/orders error:", error)
+    return NextResponse.json({ error: "Failed to delete orders" }, { status: 500 })
+  }
+}

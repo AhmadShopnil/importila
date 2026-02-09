@@ -294,7 +294,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                     </div>
 
                     {/* Risk Card */}
-                    <div className="bg-red-50 rounded-2xl border border-red-100 p-6 space-y-4">
+                    {/* <div className="bg-red-50 rounded-2xl border border-red-100 p-6 space-y-4">
                         <h3 className="font-bold text-red-900 flex items-center gap-2 border-b border-red-200/50 pb-4">
                             <Shield className="w-5 h-5" />
                             Security Check
@@ -306,7 +306,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                                 <span className="text-sm font-bold uppercase tracking-tighter">Phone Verified</span>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
 
