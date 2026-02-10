@@ -32,6 +32,7 @@ export default function BestSellingReportPage() {
         }
     }
 
+    // console.log("report", report)
     const totalSold = report.reduce((sum, item) => sum + item.totalSold, 0)
     const totalRevenue = report.reduce((sum, item) => sum + item.totalRevenue, 0)
     const totalProfit = report.reduce((sum, item) => sum + (item.totalProfit || 0), 0)
@@ -125,7 +126,7 @@ export default function BestSellingReportPage() {
                                 <th className="px-6 py-4 text-center font-bold w-16">Rank</th>
                                 <th className="px-6 py-4 text-left font-bold">Product Information</th>
                                 <th className="px-6 py-4 text-center font-bold">Quantity Sold</th>
-                                <th className="px-6 py-4 text-right font-bold">Revenue</th>
+                                {/* <th className="px-6 py-4 text-right font-bold">Revenue</th> */}
                                 {/* <th className="px-6 py-4 text-right font-bold pr-12">Profit</th> */}
                             </tr>
                         </thead>
@@ -177,10 +178,10 @@ export default function BestSellingReportPage() {
                                                 {item.totalSold}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        {/* <td className="px-6 py-4 text-right">
                                             <p className="font-bold text-lg text-emerald-700">৳ {item.totalRevenue.toLocaleString()}</p>
                                             <p className="text-[10px] text-muted-foreground uppercase font-bold">Sales</p>
-                                        </td>
+                                        </td> */}
                                         {/* <td className="px-6 py-4 text-right pr-12">
                                             <p className="font-bold text-lg text-orange-600">৳ {(item.totalProfit || 0).toLocaleString()}</p>
                                             <p className="text-[10px] text-muted-foreground uppercase font-bold">Net Profit</p>

@@ -9,6 +9,7 @@ import WebOrderReportChart from "@/components/Dashboard/Report/WebOrderReportCha
 
 
 import { useGetDashboardStatsQuery } from "@/lib/redux/api/dashboardApi"
+import DashboardSkeleton from "@/components/Dashboard/DashboardSkeleton"
 
 export default function AdminDashboard() {
   const [filter, setFilter] = useState("all")
@@ -26,28 +27,53 @@ export default function AdminDashboard() {
     sourceDistribution: []
   }, isLoading: loading } = useGetDashboardStatsQuery({ filter, month, year })
 
+
+  if (loading) {
+    return <DashboardSkeleton />
+  }
+
+
+
   const statCards = [
     {
-      label: "Total Orders",
-      value: stats.totalOrders,
+      label: "Delivered Orders",
+      value: stats.deliveredOrders,
       icon: ShoppingCart,
       color: "bg-indigo-100 text-indigo-600",
       cardStyle: "border border-indigo-200 bg-white"
     },
     {
       label: "Total Sales",
-      value: `৳${stats?.totalRevenue?.toLocaleString()}`,
+      value: `৳${stats?.totalSales
+        ?.toLocaleString()}`,
       icon: TrendingUp,
       color: "bg-green-100 text-green-600",
       cardStyle: "border border-green-200 bg-white"
     },
+    {
+      label: "Total Shipping Spent",
+      value: `৳${stats?.totalShippingSpent
+        ?.toLocaleString()}`,
+      icon: ChartNoAxesCombined,
+      color: "bg-emerald-100 text-emerald-600",
+      cardStyle: "border border-emerald-200 bg-white"
+    },
+    {
+      label: "Net Sales",
+      value: `৳${stats?.netSales?.toLocaleString()}`,
+      icon: ChartNoAxesCombined,
+      color: "bg-emerald-100 text-emerald-600",
+      cardStyle: "border border-emerald-200 bg-white"
+    },
     // {
-    //   label: "Profit",
-    //   value: `৳${stats?.profit?.toLocaleString()}`,
+    //   label: "Total Discount given",
+    //   value: `৳${stats?.totalDiscount
+    //     ?.toLocaleString()}`,
     //   icon: ChartNoAxesCombined,
     //   color: "bg-emerald-100 text-emerald-600",
     //   cardStyle: "border border-emerald-200 bg-white"
     // },
+
     {
       label: "Pending Web Orders",
       value: stats.pendingOrders,
@@ -65,6 +91,7 @@ export default function AdminDashboard() {
   ]
 
 
+  // console.log("stats", stats)
 
   return (
     <div className="bg-gray-50/50 min-h-screen p-4 md:p-8">

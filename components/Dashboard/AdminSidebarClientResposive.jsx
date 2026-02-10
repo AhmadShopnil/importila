@@ -52,7 +52,7 @@ const adminNavItems = [
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ]
 
-export default function AdminSidebarClient() {
+export default function AdminSidebarClientResposive() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [openMenus, setOpenMenus] = useState({})

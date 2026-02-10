@@ -21,7 +21,7 @@ export default function DailyOrdersChart() {
       .then(setData)
       .catch(() => setData([]))
   }, [])
-  console.log("data", data)
+  // console.log("data", data)
 
   return (
     <div className="bg-white p-5 rounded-xl shadow">

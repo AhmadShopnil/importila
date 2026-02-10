@@ -391,11 +391,11 @@ export default function OrdersPage() {
                         </div>
                       </td>
                       <td className="p-4">
-                        <div className="font-semibold text-gray-800">{order.customerName}</div>
+                        <div className="font-semibold text-gray-800">{order?.customerName}</div>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-gray-500 text-xs">{order.phone}</span>
+                          <span className="text-gray-500 text-xs">{order?.phone}</span>
                           <button
-                            onClick={() => handleCheckRisk(order.phone)}
+                            onClick={() => handleCheckRisk(order?.phone)}
                             className="p-0.5 hover:bg-gray-200 rounded transition-colors"
                             title="Check Fraud Risk"
                           >
@@ -425,8 +425,8 @@ export default function OrdersPage() {
                         </div>
                       </td>
                       <td className="p-4">
-                        <div className="font-bold text-gray-900">৳ {(order.totalAmount || order.offerPrice || order.price || 0).toLocaleString()}</div>
-                        <div className="text-[10px] text-gray-400 uppercase font-medium">{order.paymentStatus || 'Unpaid'}</div>
+                        <div className="font-bold text-gray-900">৳ {(order?.totalAmount || order?.offerPrice || order?.price || 0).toLocaleString()}</div>
+                        {/* <div className="text-[10px] text-gray-400 uppercase font-medium">{order?.paymentStatus || 'Unpaid'}</div> */}
                       </td>
                       <td className="p-4">
                         <select

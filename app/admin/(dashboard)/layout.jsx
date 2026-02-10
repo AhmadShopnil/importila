@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation"
 import { getAdminAuth } from "@/lib/auth"
 import AdminSidebarClient from "@/components/Dashboard/AdminSidebarClient"
+import AdminSidebarClientResposive from "@/components/Dashboard/AdminSidebarClientResposive"
 
 
 export default async function AdminLayout({ children }) {
@@ -13,7 +14,7 @@ export default async function AdminLayout({ children }) {
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-white">
       {/* Sidebar is client component */}
-      <AdminSidebarClient />
+      <AdminSidebarClientResposive />
 
       {/* Main content */}
       <main className="flex-1 overflow-auto">

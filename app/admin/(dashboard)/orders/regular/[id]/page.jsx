@@ -205,10 +205,10 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                                 <p className="font-bold text-gray-800 uppercase">{order.paymentMethod || 'Cash on Delivery'}</p>
                             </div>
                             <div className="space-y-1 text-right">
-                                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Status</p>
+                                {/* <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Status</p>
                                 <span className={`inline-block px-3 py-1 rounded-full text-[14px] font-black uppercase ${order.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
                                     {order.paymentStatus || 'Unpaid'}
-                                </span>
+                                </span> */}
                             </div>
                         </div>
                     </div>

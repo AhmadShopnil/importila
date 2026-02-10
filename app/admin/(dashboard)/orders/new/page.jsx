@@ -289,6 +289,12 @@ export default function ManualOrderEntry() {
             return
         }
 
+        const phoneRegex = /^01\d{9}$/;
+        if (!phoneRegex.test(formData.phone)) {
+            alert("Phone number must be exactly 11 digits and start with 01");
+            return;
+        }
+
         setSubmitting(true)
         try {
             const endpoint = orderType === "regular" ? `${BASE_URL}/api/orders` : `${BASE_URL}/api/orders/combo`
@@ -600,14 +606,24 @@ export default function ManualOrderEntry() {
                                 <label className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
                                     <Phone className="w-4 h-4" /> PHONE NUMBER
                                 </label>
-                                <input
-                                    required
-                                    type="tel"
-                                    value={formData.phone}
-                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    placeholder="01XXXXXXXXX"
-                                    className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-[#1E556E] outline-none transition-all"
-                                />
+                                <div className="relative">
+                                    <input
+                                        required
+                                        type="tel"
+                                        value={formData.phone}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/\D/g, "");
+                                            if (val.length <= 11) {
+                                                setFormData({ ...formData, phone: val });
+                                            }
+                                        }}
+                                        placeholder="01XXXXXXXXX"
+                                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 outline-none transition-all ${formData.phone && !/^01\d{9}$/.test(formData.phone) ? "border-destructive focus:ring-destructive" : "border-border focus:ring-[#1E556E]"}`}
+                                    />
+                                    {formData.phone && !/^01\d{9}$/.test(formData.phone) && (
+                                        <p className="text-[10px] text-destructive mt-1 font-bold uppercase tracking-tight">Must be 11 digits & start with 01</p>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="space-y-1.5">
