@@ -29,43 +29,57 @@ export async function GET(request) {
         }
 
         // 2. Aggregate sales data from orders
-        const salesAggregation = await db.collection("orders").aggregate([
-            { $match: orderMatch },
-            {
-                $project: {
-                    allSoldItems: {
-                        $concatArrays: [
-                            { $ifNull: ["$items", []] },
-                            { $ifNull: ["$products", []] }
-                        ]
-                    }
-                }
-            },
-            { $unwind: "$allSoldItems" },
-            {
-                $group: {
-                    _id: "$allSoldItems.productId",
-                    totalSold: { $sum: { $ifNull: ["$allSoldItems.quantity", 1] } },
-                    totalRevenue: {
-                        $sum: {
-                            $multiply: [
-                                { $ifNull: ["$allSoldItems.quantity", 1] },
-                                { $convert: { input: { $ifNull: ["$allSoldItems.price", 0] }, to: "double", onError: 0, onNull: 0 } }
-                            ]
-                        }
-                    },
-                    // We sum the purchase price at the time of order if available
-                    totalCost: {
-                        $sum: {
-                            $multiply: [
-                                { $ifNull: ["$allSoldItems.quantity", 1] },
-                                { $convert: { input: { $ifNull: ["$allSoldItems.purchasePrice", 0] }, to: "double", onError: 0, onNull: 0 } }
+        const [salesAggregation, overallStats] = await Promise.all([
+            db.collection("orders").aggregate([
+                { $match: orderMatch },
+                {
+                    $project: {
+                        allSoldItems: {
+                            $concatArrays: [
+                                { $ifNull: ["$items", []] },
+                                { $ifNull: ["$products", []] }
                             ]
                         }
                     }
+                },
+                { $unwind: "$allSoldItems" },
+                {
+                    $group: {
+                        _id: "$allSoldItems.productId",
+                        totalSold: { $sum: { $ifNull: ["$allSoldItems.quantity", 1] } },
+                        totalRevenue: {
+                            $sum: {
+                                $multiply: [
+                                    { $ifNull: ["$allSoldItems.quantity", 1] },
+                                    { $convert: { input: { $ifNull: ["$allSoldItems.price", 0] }, to: "double", onError: 0, onNull: 0 } }
+                                ]
+                            }
+                        },
+                        // We sum the purchase price at the time of order if available
+                        totalCost: {
+                            $sum: {
+                                $multiply: [
+                                    { $ifNull: ["$allSoldItems.quantity", 1] },
+                                    { $convert: { input: { $ifNull: ["$allSoldItems.purchasePrice", 0] }, to: "double", onError: 0, onNull: 0 } }
+                                ]
+                            }
+                        }
+                    }
                 }
-            }
-        ]).toArray()
+            ]).toArray(),
+            db.collection("orders").aggregate([
+                { $match: orderMatch },
+                {
+                    $group: {
+                        _id: null,
+                        totalGross: { $sum: "$totalAmount" },
+                        totalShipping: { $sum: "$shippingCharge" }
+                    }
+                }
+            ]).toArray()
+        ])
+
+        const statsForPeriod = overallStats[0] || { totalGross: 0, totalShipping: 0 }
 
         // Create a fast-lookup map for sales data
         const salesMap = {}
@@ -111,7 +125,14 @@ export async function GET(request) {
         // Trim to requested limit (default 100)
         const finalReport = report.slice(0, limit)
 
-        return NextResponse.json({ report: finalReport })
+        return NextResponse.json({
+            report: finalReport,
+            stats: {
+                totalGross: statsForPeriod.totalGross,
+                totalShipping: statsForPeriod.totalShipping,
+                totalNet: statsForPeriod.totalGross - statsForPeriod.totalShipping
+            }
+        })
     } catch (error) {
         console.error("GET /api/reports/best-selling error:", error)
         return NextResponse.json({ error: "Failed to fetch best selling report" }, { status: 500 })

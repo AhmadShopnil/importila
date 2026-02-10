@@ -9,6 +9,7 @@ import Image from "next/image"
 
 export default function BestSellingReportPage() {
     const [report, setReport] = useState([])
+    const [stats, setStats] = useState({ totalGross: 0, totalNet: 0, totalShipping: 0 })
     const [loading, setLoading] = useState(true)
     const [dateRange, setDateRange] = useState({
         startDate: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().slice(0, 10),
@@ -25,6 +26,7 @@ export default function BestSellingReportPage() {
             const res = await fetch(`${BASE_URL}/api/reports/best-selling?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`)
             const data = await res.json()
             setReport(data.report || [])
+            setStats(data.stats || { totalGross: 0, totalNet: 0, totalShipping: 0 })
         } catch (error) {
             console.error("Failed to fetch report:", error)
         } finally {
@@ -34,7 +36,8 @@ export default function BestSellingReportPage() {
 
     // console.log("report", report)
     const totalSold = report.reduce((sum, item) => sum + item.totalSold, 0)
-    const totalRevenue = report.reduce((sum, item) => sum + item.totalRevenue, 0)
+    const totalGross = stats.totalGross
+    const totalNet = stats.totalNet
     const totalProfit = report.reduce((sum, item) => sum + (item.totalProfit || 0), 0)
 
     return (
@@ -66,7 +69,7 @@ export default function BestSellingReportPage() {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-5 shadow-sm">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-blue-500 rounded-lg">
@@ -77,25 +80,25 @@ export default function BestSellingReportPage() {
                     <p className="text-3xl font-bold text-blue-900">{totalSold}</p>
                 </div>
 
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-5 shadow-sm">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-blue-500 rounded-lg">
+                            <DollarSign className="w-5 h-5 text-white" />
+                        </div>
+                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold">Total Sales</p>
+                    </div>
+                    <p className="text-3xl font-bold text-blue-900">৳ {totalGross.toLocaleString()}</p>
+                </div>
+
                 <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 rounded-xl p-5 shadow-sm">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-emerald-500 rounded-lg">
                             <DollarSign className="w-5 h-5 text-white" />
                         </div>
-                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold">Total Sales</p>
+                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold">Net Sales</p>
                     </div>
-                    <p className="text-3xl font-bold text-emerald-900">৳ {totalRevenue.toLocaleString()}</p>
+                    <p className="text-3xl font-bold text-emerald-900">৳ {totalNet.toLocaleString()}</p>
                 </div>
-
-                {/* <div className="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-xl p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-orange-500 rounded-lg">
-                            <TrendingUp className="w-5 h-5 text-white" />
-                        </div>
-                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold">Total Profit</p>
-                    </div>
-                    <p className="text-3xl font-bold text-orange-900">৳ {totalProfit.toLocaleString()}</p>
-                </div> */}
 
                 <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-5 shadow-sm">
                     <div className="flex items-center gap-3 mb-2">

@@ -105,7 +105,7 @@ export default function AdminSidebarClientResposive() {
         `}
       >
         {/* LOGO */}
-        <div className="flex items-center justify-between border-b border-border p-4 h-16">
+        <div className="flex items-center justify-between border-b border-border p-4 h-32">
           {(sidebarOpen || mobileMenuOpen) ? (
             <Image src="/logo.svg" width={140} height={35} alt="Logo" className="object-contain" />
           ) : (

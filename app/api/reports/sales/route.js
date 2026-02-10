@@ -43,23 +43,24 @@ export async function GET(request) {
 
     // Group by date and calculate daily stats
     const dailyStats = {}
-    let grandTotalRevenue = 0
-    let grandTotalCost = 0
+    let grandTotalGross = 0
+    let grandTotalShipping = 0
     let grandTotalItems = 0
+    let grandTotalCost = 0
 
     for (const order of deliveredOrders) {
       const date = new Date(order.createdAt).toISOString().split('T')[0]
 
-      // Calculate revenue from items (excluding shipping)
+      const grossSales = Number(order.totalAmount) || Number(order.totalPrice) || 0
+      const shippingCharge = Number(order.shippingCharge) || 0
+      const netSales = grossSales - shippingCharge
+
       const items = order.items || []
-      let orderRevenue = 0
-      let orderCost = 0
       let orderItemsCount = 0
+      let orderCost = 0
 
       for (const item of items) {
         const qty = Number(item.quantity) || 1
-        const price = Number(item.price) || 0
-        orderRevenue += price * qty
         orderItemsCount += qty
 
         // Look up product purchase price
@@ -72,46 +73,50 @@ export async function GET(request) {
         }
       }
 
-      // If items were empty, fallback to totalAmount - shippingCharge
-      if (orderRevenue === 0) {
-        const total = Number(order.totalAmount) || Number(order.totalPrice) || 0
-        const shipping = Number(order.shippingCharge) || 0
-        orderRevenue = Math.max(0, total - shipping)
-      }
-
       if (!dailyStats[date]) {
         dailyStats[date] = {
           date,
           deliveredOrders: 0,
-          deliveredRevenue: 0,
+          grossSales: 0,
+          shippingCharge: 0,
+          netSales: 0,
           totalItems: 0,
           totalCost: 0
         }
       }
 
       dailyStats[date].deliveredOrders++
-      dailyStats[date].deliveredRevenue += orderRevenue
+      dailyStats[date].grossSales += grossSales
+      dailyStats[date].shippingCharge += shippingCharge
+      dailyStats[date].netSales += netSales
       dailyStats[date].totalItems += orderItemsCount
       dailyStats[date].totalCost += orderCost
 
-      grandTotalRevenue += orderRevenue
-      grandTotalCost += orderCost
+      grandTotalGross += grossSales
+      grandTotalShipping += shippingCharge
       grandTotalItems += orderItemsCount
+      grandTotalCost += orderCost
     }
 
     // Convert to array and add profit
     const sales = Object.values(dailyStats)
       .map(day => ({
         ...day,
-        profit: day.deliveredRevenue - day.totalCost
+        deliveredRevenue: day.grossSales, // Maintain backward compatibility for existing UI
+        netRevenue: day.netSales,
+        profit: day.netSales - day.totalCost
       }))
       .sort((a, b) => a.date.localeCompare(b.date))
 
     // Calculate totals
     const totals = {
       deliveredOrders: deliveredOrders.length,
-      deliveredRevenue: grandTotalRevenue,
-      totalProfit: grandTotalRevenue - grandTotalCost,
+      totalGross: grandTotalGross,
+      totalShipping: grandTotalShipping,
+      totalNet: grandTotalGross - grandTotalShipping,
+      deliveredRevenue: grandTotalGross, // For backward compatibility
+      netRevenue: grandTotalGross - grandTotalShipping,
+      totalProfit: (grandTotalGross - grandTotalShipping) - grandTotalCost,
       totalItems: grandTotalItems
     }
 

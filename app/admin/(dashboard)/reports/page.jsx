@@ -66,7 +66,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Summary Cards - Only Delivered Orders */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
@@ -77,25 +77,25 @@ export default function ReportsPage() {
           <p className="text-3xl font-bold text-emerald-700">{totals.deliveredOrders}</p>
         </div>
 
-        <div className="bg-green-50 border border-green-200 rounded-xl p-5 shadow-sm">
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-blue-600" />
             </div>
           </div>
           <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold mb-1">Total Sales</p>
-          <p className="text-3xl font-bold text-green-700">৳ {totals.deliveredRevenue?.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-blue-700">৳ {totals.totalGross?.toLocaleString()}</p>
         </div>
 
-        {/* <div className="bg-teal-50 border border-teal-200 rounded-xl p-5 shadow-sm">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-5 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center">
-              <ChartNoAxesCombined className="w-6 h-6 text-teal-600" />
+            <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+              <ChartNoAxesCombined className="w-6 h-6 text-green-600" />
             </div>
           </div>
-          <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold mb-1">Total Profit</p>
-          <p className="text-3xl font-bold text-teal-700">৳ {totals.totalProfit?.toLocaleString()}</p>
-        </div> */}
+          <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold mb-1">Net Sales</p>
+          <p className="text-3xl font-bold text-green-700">৳ {totals.totalNet?.toLocaleString()}</p>
+        </div>
 
         <div className="bg-purple-50 border border-purple-200 rounded-xl p-5 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
@@ -127,9 +127,9 @@ export default function ReportsPage() {
             <thead className="bg-muted text-muted-foreground border-b border-border uppercase text-xs">
               <tr>
                 <th className="px-6 py-4 text-left font-bold">Date</th>
-                <th className="px-6 py-4 text-left font-bold">Delivered</th>
-                <th className="px-6 py-4 text-left font-bold text-green-700">Sales</th>
-                {/* <th className="px-6 py-4 text-left font-bold text-teal-700">Profit</th> */}
+                <th className="px-6 py-4 text-left font-bold">Orders</th>
+                <th className="px-6 py-4 text-left font-bold text-blue-700">Gross Sales</th>
+                <th className="px-6 py-4 text-left font-bold text-green-700">Net Sales</th>
                 <th className="px-6 py-4 text-left font-bold hidden md:table-cell">Items</th>
               </tr>
             </thead>
@@ -144,14 +144,12 @@ export default function ReportsPage() {
                       {day.deliveredOrders}
                     </span>
                   </td>
-                  <td className="px-6 py-4 font-bold text-green-700">
-                    ৳ {day.deliveredRevenue?.toLocaleString()}
+                  <td className="px-6 py-4 font-bold text-blue-700">
+                    ৳ {day.grossSales?.toLocaleString()}
                   </td>
-                  {/* <td className="px-6 py-4">
-                    <span className={`font-bold ${day.profit > 0 ? 'text-teal-700' : 'text-red-500'}`}>
-                      ৳ {day.profit?.toLocaleString()}
-                    </span>
-                  </td> */}
+                  <td className="px-6 py-4 font-bold text-green-700">
+                    ৳ {day.netSales?.toLocaleString()}
+                  </td>
                   <td className="px-6 py-4 hidden md:table-cell">{day.totalItems}</td>
                 </tr>
               ))}
@@ -165,8 +163,8 @@ export default function ReportsPage() {
                       {totals.deliveredOrders}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-green-700">৳ {totals.deliveredRevenue?.toLocaleString()}</td>
-                  {/* <td className="px-6 py-4 text-teal-700">৳ {totals.totalProfit?.toLocaleString()}</td> */}
+                  <td className="px-6 py-4 text-blue-700">৳ {totals.totalGross?.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-green-700">৳ {totals.totalNet?.toLocaleString()}</td>
                   <td className="px-6 py-4 hidden md:table-cell">{totals.totalItems}</td>
                 </tr>
               </tfoot>
