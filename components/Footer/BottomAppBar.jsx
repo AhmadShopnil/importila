@@ -58,8 +58,8 @@ const BottomAppBar = () => {
               aria-label={item.name}
               className={`flex flex-col items-center justify-center py-2 gap-1
                 transition-all ${isActive
-                  ? "text-[#16485e] font-bold"
-                  : "text-[#34667B] "
+                  ? "text-[#0f3443] font-extrabold "
+                  : "text-gray-500 "
                 }`}
             >
               <div className="relative">

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Plus, Check, X } from "lucide-react";
 import Image from "next/image";
 import { useBundle } from "@/context/BundleContext";
+import toast from "react-hot-toast";
+
 
 const ProductGrid = ({ combo }) => {
     const { state, addProductToSlot } = useBundle();
@@ -50,6 +52,9 @@ const ProductGrid = ({ combo }) => {
     const confirmColorAndAdd = (colorName, variantImage = null) => {
         if (selectedProductForColor) {
             addProductToSlot(selectedProductForColor, colorName, variantImage);
+
+             toast.success(`${selectedProductForColor.name} (${colorName}) added in your list`);
+
             setSelectedProductForColor(null);
 
             // Check if this was the last empty slot

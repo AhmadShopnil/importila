@@ -15,9 +15,9 @@ const HeroSection = ({ combo }) => {
             <div className="hidden md:flex absolute top-40 right-20 w-16 h-16 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "1s" }} />
             <div className="hidden md:flex absolute bottom-60 right-100 w-10 h-10 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "1s" }} />
 
-            <div className="absolute bottom-20 right-1/3 w-24 h-24 rounded-full bg-mint/30 animate-float" style={{ animationDelay: "1.5s" }} />
+            <div className="absolute bottom-20 right-1/3 md:w-24 md:h-24 rounded-full bg-mint/30 animate-float" style={{ animationDelay: "1.5s" }} />
 
-            <div className="container mx-auto px-4 pt-16 pb-10 flex flex-col items-center justify-center min-h-[75vh]">
+            <div className="container mx-auto px-4 md:pt-16 md:pb-10 flex flex-col items-center justify-center min-h-[60vh] md:min-h-[75vh]">
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6 animate-slide-up">
                     <Gift size={18} />
@@ -25,21 +25,21 @@ const HeroSection = ({ combo }) => {
                 </div>
 
                 {/* Main Headline */}
-                <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center text-[#1E556E] leading-12 md:leading-20  mb-6
+                <h1 className="text-[26px] md:text-5xl lg:text-6xl font-bold text-center text-[#1E556E] leading-10 md:leading-20  mb-6
                  animate-slide-up text-balance max-w-4xl">
                     {combo?.landingPageTitle || "Adorable Kids Dress Sets"} <br />
                     {/* <span className="text-primary">Mix, Match & Save Big!</span> */}
                 </h1>
 
                 {/* Subheadline */}
-                <p className="text-lg md:text-xl text-muted-foreground text-center max-w-2xl mb-8 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+                <p className="text-[14px] md:text-xl text-muted-foreground text-center max-w-2xl mb-8 animate-slide-up" style={{ animationDelay: "0.1s" }}>
                     {combo?.landingPageSubtitle || "Create the perfect wardrobe bundle for your little ones. Choose 3 to 10 pieces and enjoy massive savings on premium quality kids' clothing."}
                 </p>
 
                 {/* CTA Button */}
                 <button
                     onClick={scrollToBundles}
-                    className="gradient-cta text-accent-foreground font-bold text-lg md:text-lg px-10 py-2.5 md:py-4 rounded-full shadow-cta hover:scale-105 transition-all
+                    className="gradient-cta text-accent-foreground font-bold text-[15px] md:text-lg px-10 py-2.5 md:py-4 rounded-full shadow-cta hover:scale-105 transition-all
                      duration-300 animate-slide-up  "
                     style={{ animationDelay: "0.2s" }}
                 >

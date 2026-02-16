@@ -569,22 +569,7 @@ export default function ManualOrderEntry() {
                     <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl border border-border p-8 space-y-6 sticky top-8">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold">Customer Details</h2>
-                            <div className="flex bg-muted p-1 rounded-lg text-sm font-bold">
-                                <button
-                                    type="button"
-                                    onClick={() => setFormData(prev => ({ ...prev, deliveryLocation: "inside" }))}
-                                    className={`cursor-pointer px-2 py-1 rounded ${formData.deliveryLocation === "inside" ? "bg-[#1E556E] text-white  shadow-sm " : "text-muted-foreground"}`}
-                                >
-                                    Inside Dhaka
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setFormData(prev => ({ ...prev, deliveryLocation: "outside" }))}
-                                    className={`cursor-pointer px-2 py-1 rounded ${formData.deliveryLocation === "outside" ? "bg-[#1E556E] text-white  shadow-sm " : "text-muted-foreground"}`}
-                                >
-                                    Outside Dhaka
-                                </button>
-                            </div>
+
                         </div>
 
                         <div className="space-y-5">
@@ -639,7 +624,22 @@ export default function ManualOrderEntry() {
                                     className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-[#1E556E] outline-none transition-all resize-none"
                                 />
                             </div>
-
+                            <div className="w-auto bg-muted p-1 rounded-lg text-sm font-bold">
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, deliveryLocation: "inside" }))}
+                                    className={`cursor-pointer px-2 py-1 rounded ${formData.deliveryLocation === "inside" ? "bg-[#1E556E] text-white  shadow-sm " : "text-muted-foreground"}`}
+                                >
+                                    Inside Dhaka
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, deliveryLocation: "outside" }))}
+                                    className={`cursor-pointer px-2 py-1 rounded ${formData.deliveryLocation === "outside" ? "bg-[#1E556E] text-white  shadow-sm " : "text-muted-foreground"}`}
+                                >
+                                    Outside Dhaka
+                                </button>
+                            </div>
                             <div className="space-y-1.5">
                                 <label className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
                                     <Notebook className="w-4 h-4" /> ORDER NOTE

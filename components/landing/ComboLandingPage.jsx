@@ -13,6 +13,8 @@ import ReviewSection from "@/components/landing/ReviewSection";
 import ProductDetails from "@/components/landing/ProductDetails";
 import { BundleProvider, useBundle } from "@/context/BundleContext";
 import SizeChart from "./SizeChart";
+import TopOfferCountdown from "./TopOfferCountdown";
+import Container from "../Container";
 
 const LandingContent = ({ combo }) => {
     const { state, selectBundle } = useBundle();
@@ -25,6 +27,8 @@ const LandingContent = ({ combo }) => {
 
     return (
         <div className="landing-page-theme min-h-screen bg-background font-sans overflow-x-hidden  ">
+          
+            <TopOfferCountdown  />
             <HeroSection combo={combo} />
             <ProductDetails combo={combo} />
             <ReviewSection />

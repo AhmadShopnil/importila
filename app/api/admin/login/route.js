@@ -1,16 +1,41 @@
 import { NextResponse } from "next/server";
 import { signToken } from "@/lib/auth";
 import { cookies } from "next/headers";
+import { connectToDatabase } from "@/lib/mongodb";
+import bcrypt from "bcryptjs";
 
 export async function POST(request) {
     try {
         const { username, password } = await request.json();
+        const { db } = await connectToDatabase();
 
-        const ADMIN_USER = process.env.ADMIN_USER || "admin";
-        const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
+        // Seed initial super admin if no users exist
+        const userCount = await db.collection("users").countDocuments();
+        if (userCount === 0) {
+            const ADMIN_USER = process.env.ADMIN_USER || "admin";
+            const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
 
-        if (username === ADMIN_USER && password === ADMIN_PASS) {
-            const token = signToken({ username });
+            const hashedPassword = await bcrypt.hash(ADMIN_PASS, 10);
+            await db.collection("users").insertOne({
+                name: "Super Admin",
+                username: ADMIN_USER,
+                password: hashedPassword,
+                role: "super_admin",
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
+            console.log("Initial super admin seeded");
+        }
+
+        const user = await db.collection("users").findOne({ username });
+
+        if (user && (await bcrypt.compare(password, user.password))) {
+            const token = signToken({
+                id: user._id.toString(),
+                username: user.username,
+                role: user.role,
+                name: user.name
+            });
 
             const cookieStore = await cookies();
             cookieStore.set("admin_token", token, {
@@ -21,7 +46,16 @@ export async function POST(request) {
                 path: "/",
             });
 
-            return NextResponse.json({ success: true, message: "Login successful" });
+            return NextResponse.json({
+                success: true,
+                message: "Login successful",
+                user: {
+                    id: user._id.toString(),
+                    username: user.username,
+                    role: user.role,
+                    name: user.name
+                }
+            });
         }
 
         return NextResponse.json(

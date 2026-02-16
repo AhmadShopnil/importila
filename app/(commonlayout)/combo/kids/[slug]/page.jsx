@@ -5,12 +5,7 @@ import { BASE_URL } from "@/utils/baseUrl"
 
 async function getCombo(slug) {
   try {
-
-
     const url = `${BASE_URL}/api/combos/${slug}`
-
-
-
     const res = await fetch(url
       ,
       {

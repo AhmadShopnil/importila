@@ -94,7 +94,7 @@ export default function AdminDashboard() {
   // console.log("stats", stats)
 
   return (
-    <div className="bg-gray-50/50 min-h-screen p-4 md:p-8">
+    <div className="bg-gray-50/50 min-h-screen  ">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Main Dashboard</h1>
         <div className="bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm text-sm font-medium text-gray-600 flex items-center gap-2">

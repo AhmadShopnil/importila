@@ -103,8 +103,8 @@ export default function ShopPageClient({ initialProducts, initialPagination, cat
                 {/* Header Area */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
                     <div>
-                        <h1 className="text-3xl md:text-5xl font-extrabold text-foreground mb-2">Our Collection</h1>
-                        <p className="text-muted-foreground">Discover the latest styles for your little ones.</p>
+                        <h1 className="text-3xl md:text-5xl font-extrabold text-[#34667B] mb-2">Our Collection</h1>
+                        <p className="text-[#34667B]">Discover the latest styles for your little ones.</p>
                     </div>
 
                     <div className="flex items-center gap-4 w-full md:w-auto">

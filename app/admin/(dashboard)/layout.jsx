@@ -14,7 +14,7 @@ export default async function AdminLayout({ children }) {
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-white">
       {/* Sidebar is client component */}
-      <AdminSidebarClientResposive />
+      <AdminSidebarClientResposive role={admin.role} />
 
       {/* Main content */}
       <main className="flex-1 overflow-auto">

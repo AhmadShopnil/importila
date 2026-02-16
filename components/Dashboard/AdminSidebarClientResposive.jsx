@@ -19,6 +19,7 @@ import {
   GalleryVertical,
   MessageSquare,
   Image as ImageIcon,
+  Users,
 } from "lucide-react"
 import Image from "next/image"
 import toast from "react-hot-toast"
@@ -50,9 +51,10 @@ const adminNavItems = [
   },
   { label: "Reviews", href: "/admin/reviews", icon: MessageSquare },
   { label: "Settings", href: "/admin/settings", icon: Settings },
+  { label: "Users", href: "/admin/users", icon: Users, role: "super_admin" },
 ]
 
-export default function AdminSidebarClientResposive() {
+export default function AdminSidebarClientResposive({ role }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [openMenus, setOpenMenus] = useState({})
@@ -134,7 +136,7 @@ export default function AdminSidebarClientResposive() {
 
         {/* NAVIGATION */}
         <nav className="flex-1 p-3 space-y-2 overflow-y-auto">
-          {adminNavItems.map((item) => {
+          {adminNavItems.filter(item => !item.role || item.role === role).map((item) => {
             const Icon = item.icon
             const isParentActive = item.children?.some(
               (c) => pathname === c.href

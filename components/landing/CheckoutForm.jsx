@@ -43,7 +43,7 @@ const CheckoutForm = ({ combo }) => {
 
     const bundlePrice = selectedBundleOption?.price || 0;
 
-    // Determine shipping charge based on isShippingChargeable flag
+    //  shipping charge based on isShippingChargeable flag
     // If flag is true, use selected location rate. If false, free (0).
     const isShippingChargeable = selectedBundleOption?.isShippingChargeable === true;
     const shippingCharge = isShippingChargeable
@@ -301,6 +301,33 @@ const CheckoutForm = ({ combo }) => {
                                     className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-0 outline-none transition-colors text-foreground placeholder:text-muted-foreground resize-none"
                                     required
                                 />
+                            </div>
+                            <div className="flex flex-col gap-2 px-1">
+                                <span className="text-base font-semibold text-muted-foreground uppercase tracking-wider">Select Location</span>
+                                <div className="flex gap-4">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="deliveryLocation"
+                                            value="inside"
+                                            checked={deliveryLocation === "inside"}
+                                            onChange={() => setDeliveryLocation("inside")}
+                                            className="text-primary focus:ring-primary"
+                                        />
+                                        <span className="text-base">Inside Dhaka </span>
+                                    </label>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="deliveryLocation"
+                                            value="outside"
+                                            checked={deliveryLocation === "outside"}
+                                            onChange={() => setDeliveryLocation("outside")}
+                                            className="text-primary focus:ring-primary"
+                                        />
+                                        <span className="text-base">Outside Dhaka</span>
+                                    </label>
+                                </div>
                             </div>
 
                             <div className="relative">
