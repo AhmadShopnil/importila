@@ -33,7 +33,7 @@ const SizeSelection = ({ combo }) => {
                                     : "bg-card text-foreground border-2 border-border hover:border-primary hover:shadow-soft"
                                 }`}
                         >
-                            {size}
+                            {size} Years
                         </button>
                     ))}
                 </div>

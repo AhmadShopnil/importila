@@ -609,7 +609,7 @@ export default function EditComboPage() {
           <section className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
             <h2 className="text-lg font-bold">Available Sizes</h2>
             <div className="grid grid-cols-2 gap-2">
-              {["1-2 Years", "2-3 Years", "3-4 Years", "4-5 Years", "5-6 Years", "6-7 Years", "7-8 Years", "8-9 Years", "9-10 Years", "10-11 Years", "11-12 Years", "12-13 Years"].map(size => (
+              {["1-2", "2-3", "3-4", "4-5", "5-6", "6-7", "7-8", "8-9", "9-10", "10-11", "11-12", "12-13"].map(size => (
                 <button
                   key={size}
                   type="button"

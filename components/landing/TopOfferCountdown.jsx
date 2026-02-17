@@ -44,7 +44,7 @@ export default function TopOfferCountdown() {
   const { hours, minutes, seconds } = formatTime(timeLeft)
 
   return (
-    <section className="w-full bg-primary text-primary-foreground">
+    <section className="w-full gradient-cta text-primary-foreground">
       <Container>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 py-2 sm:py-3">
 

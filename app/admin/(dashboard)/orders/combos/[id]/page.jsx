@@ -124,11 +124,12 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
                 <div className="lg:col-span-2 space-y-6">
                     {/* Items Table */}
                     <div className="bg-white rounded-md border border-indigo-100 shadow-sm overflow-hidden">
-                        <div className="p-6 border-b border-indigo-50 flex items-center justify-between bg-indigo-50/30">
-                            <h3 className="font-bold text-indigo-900 flex items-center gap-2">
-                                <Gem className="w-5 h-5" />
-                                Bundle Selections ({orderItems.length || 1})
+                        <div className="p-6 border-b border-indigo-50 flex flex-wrap items-center justify-between bg-indigo-50/30">
+                            <h3 className="font-bold text-indigo-900 flex items-center gap-2 text-lg">
+
+                                Bundle Size :  {orderItems?.length || 1} Pieces
                             </h3>
+                            <h1 className="font-bold text-indigo-900 flex items-center gap-2 text-lg">Product Size: {order?.productSize} Years</h1>
                             <span className="text-[10px] font-black uppercase bg-indigo-600 text-white px-2 py-0.5 rounded shadow">Combo Offer</span>
                         </div>
                         <div className="overflow-x-auto">

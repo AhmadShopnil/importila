@@ -1,14 +1,15 @@
 "use client";
 
 import { Gift, Truck, Shield, Star } from "lucide-react";
+import ComboSlider from "./ComboSlider";
 
-const HeroSection = ({ combo }) => {
+const HeroSection = ({ combo, comboSliders }) => {
     const scrollToBundles = () => {
         document.getElementById("bundle-section")?.scrollIntoView({ behavior: "smooth" });
     };
 
     return (
-        <section className="relative  gradient-hero overflow-hidden">
+        <section className="relative  gradient-hero overflow-hidden py-6 md:py-10">
             {/* Decorative elements */}
 
             <div className="hidden md:flex absolute top-20 left-20 w-16 h-16 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "1s" }} />
@@ -17,7 +18,7 @@ const HeroSection = ({ combo }) => {
 
             <div className="absolute bottom-20 right-1/3 md:w-24 md:h-24 rounded-full bg-mint/30 animate-float" style={{ animationDelay: "1.5s" }} />
 
-            <div className="container mx-auto px-4 md:pt-16 md:pb-10 flex flex-col items-center justify-center min-h-[60vh] md:min-h-[75vh]">
+            <div className="container mx-auto px-4 md:pt-16 md:pb-10 flex flex-col items-center justify-center  ">
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6 animate-slide-up">
                     <Gift size={18} />
@@ -31,6 +32,8 @@ const HeroSection = ({ combo }) => {
                     {/* <span className="text-primary">Mix, Match & Save Big!</span> */}
                 </h1>
 
+
+                <ComboSlider comboSliders={comboSliders} />
                 {/* Subheadline */}
                 <p className="text-[14px] md:text-xl text-muted-foreground text-center max-w-2xl mb-8 animate-slide-up" style={{ animationDelay: "0.1s" }}>
                     {combo?.landingPageSubtitle || "Create the perfect wardrobe bundle for your little ones. Choose 3 to 10 pieces and enjoy massive savings on premium quality kids' clothing."}
@@ -39,7 +42,7 @@ const HeroSection = ({ combo }) => {
                 {/* CTA Button */}
                 <button
                     onClick={scrollToBundles}
-                    className="gradient-cta text-accent-foreground font-bold text-[15px] md:text-lg px-10 py-2.5 md:py-4 rounded-full shadow-cta hover:scale-105 transition-all
+                    className="bg-[#25D366] text-accent-foreground font-bold text-[15px] md:text-lg px-10 py-2.5 md:py-4 rounded-full shadow-cta hover:scale-105 transition-all
                      duration-300 animate-slide-up  "
                     style={{ animationDelay: "0.2s" }}
                 >

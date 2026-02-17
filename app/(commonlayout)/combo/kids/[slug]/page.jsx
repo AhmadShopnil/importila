@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import ComboLandingPage from "@/components/landing/ComboLandingPage"
 import { BASE_URL } from "@/utils/baseUrl"
+import { getSliders } from "@/utils/apiActions"
 
 
 async function getCombo(slug) {
@@ -53,6 +54,8 @@ export default async function Page({ params }) {
 
   const { slug } = await params;
   const combo = await getCombo(slug)
+    const comboSliders = await getSliders("combo_hero_slider") || [];
+    
 
   if (!combo) {
     notFound()
@@ -60,5 +63,6 @@ export default async function Page({ params }) {
 
   return <ComboLandingPage
     combo={combo}
+    comboSliders={comboSliders}
   />
 }

@@ -12,6 +12,8 @@ const CheckoutForm = ({ combo }) => {
     const router = useRouter();
     const { state, updateCustomerInfo, isComplete } = useBundle();
     const { slots, selectedBundle, selectedSize, customerInfo, selectedBundleData } = state;
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
 
     // Use selectedBundleData from state if available, otherwise find from bundleOptions as fallback
     const selectedBundleOption = selectedBundleData || bundleOptions.find(
@@ -75,7 +77,10 @@ const CheckoutForm = ({ combo }) => {
             return;
         }
 
-        if (!isComplete) return;
+
+        if (!isComplete || isSubmitting) return;
+
+        setIsSubmitting(true);
 
         try {
             const items = slots.filter(s => s.product).map(s => ({
@@ -135,6 +140,8 @@ const CheckoutForm = ({ combo }) => {
         } catch (error) {
             console.error("Order submission error:", error);
             alert("Something went wrong. Please try again.");
+        } finally {
+            setIsSubmitting(false); //  STOP LOADING
         }
     };
 
@@ -346,15 +353,25 @@ const CheckoutForm = ({ combo }) => {
 
                             <button
                                 type="submit"
-                                disabled={!isComplete}
-                                className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 ${isComplete
+                                disabled={!isComplete || isSubmitting}
+                                className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 ${isComplete && !isSubmitting
                                     ? "gradient-cta text-accent-foreground shadow-cta hover:scale-[1.02]"
                                     : "bg-muted text-muted-foreground cursor-not-allowed"
                                     }`}
                             >
-                                <CheckCircle size={20} />
-                                {combo?.checkoutCTA || "Place Order"}
+                                {isSubmitting ? (
+                                    <>
+                                        <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                        Placing Order...
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckCircle size={20} />
+                                        {combo?.checkoutCTA || "Place Order"}
+                                    </>
+                                )}
                             </button>
+
 
                             {!isComplete && (
                                 <p className="text-center text-sm text-muted-foreground">

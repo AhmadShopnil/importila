@@ -15,8 +15,9 @@ import { BundleProvider, useBundle } from "@/context/BundleContext";
 import SizeChart from "./SizeChart";
 import TopOfferCountdown from "./TopOfferCountdown";
 import Container from "../Container";
+import ComboSlider from "./ComboSlider";
 
-const LandingContent = ({ combo }) => {
+const LandingContent = ({ combo,comboSliders }) => {
     const { state, selectBundle } = useBundle();
 
     useEffect(() => {
@@ -29,7 +30,8 @@ const LandingContent = ({ combo }) => {
         <div className="landing-page-theme min-h-screen bg-background font-sans overflow-x-hidden  ">
 
             <TopOfferCountdown />
-            <HeroSection combo={combo} />
+            <HeroSection combo={combo} comboSliders={comboSliders} />
+            {/* <ComboSlider comboSliders={comboSliders}/> */}
             <ProductDetails combo={combo} />
             <ReviewSection />
             <SizeChart />
@@ -51,10 +53,10 @@ const LandingContent = ({ combo }) => {
     );
 };
 
-const ComboLandingPage = ({ combo }) => {
+const ComboLandingPage = ({ combo,comboSliders }) => {
     return (
         <BundleProvider>
-            <LandingContent combo={combo} />
+            <LandingContent combo={combo} comboSliders={comboSliders} />
         </BundleProvider>
     );
 };

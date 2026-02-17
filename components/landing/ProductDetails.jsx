@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import { ChevronDown } from "lucide-react"
+import Container from "../Container"
 
 export default function ProductDetails({ combo }) {
     const [open, setOpen] = useState(false)
@@ -32,11 +33,11 @@ export default function ProductDetails({ combo }) {
     if (!combo?.landingPageDetails) return null
 
     return (
-        <section className="py-8 md:py-20 bg-muted/30 relative overflow-hidden">
+        <section className="py-4 md:py-20 bg-muted/30 relative overflow-hidden">
             {/* Background Accent */}
             <div className="absolute top-0 right-0 w-1/3 h-full bg-primary/5 -skew-x-12 translate-x-1/2" />
 
-            <div className="container mx-auto px-4 relative z-10">
+            <Container className="relative z-10">
                 <div className="max-w-7xl mx-auto">
                     <div className="bg-card border border-border rounded-md shadow-2xl shadow-primary/5">
 
@@ -66,7 +67,7 @@ export default function ProductDetails({ combo }) {
                             }}
                             className="overflow-hidden transition-all duration-500 ease-in-out "
                         >
-                            <div className="px-4 sm:px-6 md:px-8 pb-6 md:pb-10">
+                            <div className="px-4 sm:px-6 md:px- pb-6 md:pb-10">
                                 <div
                                     ref={contentRef}
                                     className="rich-content-area break-words overflow-x-hidden
@@ -86,7 +87,7 @@ export default function ProductDetails({ combo }) {
 
                     </div>
                 </div>
-            </div>
+            </Container>
         </section>
     )
 }
