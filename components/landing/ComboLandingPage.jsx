@@ -27,25 +27,19 @@ const LandingContent = ({ combo }) => {
 
     return (
         <div className="landing-page-theme min-h-screen bg-background font-sans overflow-x-hidden  ">
-          
-            <TopOfferCountdown  />
+
+            <TopOfferCountdown />
             <HeroSection combo={combo} />
             <ProductDetails combo={combo} />
             <ReviewSection />
-              <SizeChart />
+            <SizeChart />
 
             <BundleSelection combo={combo} />
-               <ProductGrid combo={combo} />
+            <ProductGrid combo={combo} />
 
             {state.selectedBundle && (
                 <ProductSlots />
             )}
-
-         
-
-
-          
-
             <SizeSelection combo={combo} />
 
             <CheckoutForm combo={combo} />
