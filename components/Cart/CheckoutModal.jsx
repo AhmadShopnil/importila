@@ -81,6 +81,7 @@ const CheckoutModal = ({ isOpen, onClose, items, total }) => {
                     price: item.offerPrice || item.price,
                     quantity: item.quantity
                 })),
+                totalPrice:total,
                 totalAmount: finalTotal,
                 productType: "regular",
                 status: "pending"
@@ -159,7 +160,7 @@ const CheckoutModal = ({ isOpen, onClose, items, total }) => {
                         <div className="flex justify-between items-center mb-6">
                             <div>
                                 <h2 className="text-2xl font-black text-foreground">Checkout</h2>
-                                <p className="text-xs text-muted-foreground">Please fill in your delivery details</p>
+                                {/* <p className="text-xs text-muted-foreground">Please fill in your delivery details</p> */}
                             </div>
                             <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors">
                                 <X className="w-6 h-6" />

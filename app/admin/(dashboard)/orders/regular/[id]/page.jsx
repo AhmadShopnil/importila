@@ -89,7 +89,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                         </h1>
                         <p className="text-sm text-gray-500 flex items-center gap-1">
                             <Calendar className="w-3.5 h-3.5" />
-                            Placed on {new Date(order.createdAt).toLocaleString()}
+                            Placed on {new Date(order?.createdAt).toLocaleString()}
                         </p>
                     </div>
                 </div>
@@ -153,8 +153,8 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                                                 </div>
                                             </td>
                                             <td className="p-4 text-center font-medium text-gray-700">x{item.quantity}</td>
-                                            <td className="p-4 text-right font-medium text-gray-700">৳ {item.price.toLocaleString()}</td>
-                                            <td className="p-4 text-right font-bold text-gray-900">৳ {(item.price * item.quantity).toLocaleString()}</td>
+                                            <td className="p-4 text-right font-medium text-gray-700">৳ {item?.price?.toLocaleString()}</td>
+                                            <td className="p-4 text-right font-bold text-gray-900">৳ {(item?.price * item?.quantity)?.toLocaleString()}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -167,26 +167,26 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                                 <div className="w-full max-w-[240px] space-y-3">
                                     <div className="flex justify-between text-sm text-gray-500">
                                         <span>Subtotal</span>
-                                        <span className="font-medium text-gray-900">৳ {(order?.totalPrice).toLocaleString()}</span>
+                                        <span className="font-medium text-gray-900">৳ {(order?.totalPrice)?.toLocaleString()}</span>
 
                                         {/* <span className="font-medium text-gray-900">৳ {(order?.totalAmount - (order.shippingCharge || 0)).toLocaleString()}</span> */}
                                     </div>
                                     <div className="flex justify-between text-sm text-gray-500">
                                         <span>Discount</span>
-                                        <span className="font-medium text-gray-900">- ৳ {(order?.discount).toLocaleString()}</span>
+                                        <span className="font-medium text-gray-900">- ৳ {(order?.discount)?.toLocaleString()}</span>
 
 
                                     </div>
                                     <div className="flex justify-between text-sm text-gray-500">
                                         <span>Shipping Fee ({order.deliveryLocation === 'inside' ? 'Inside Dhaka' : 'Outside Dhaka'})</span>
                                         <span className={`font-medium ${order.shippingCharge > 0 ? 'text-gray-900' : 'text-green-600'}`}>
-                                            {order.shippingCharge > 0 ? `+ ৳ ${order.shippingCharge.toLocaleString()}` : 'Free'}
+                                            {order.shippingCharge > 0 ? `+ ৳ ${order?.shippingCharge?.toLocaleString()}` : 'Free'}
                                         </span>
                                     </div>
                                     <div className="h-px bg-gray-200 my-2" />
                                     <div className="flex justify-between text-lg">
                                         <span className="font-bold text-gray-900">Total</span>
-                                        <span className="font-black text-[#1E556E]">৳ {order.totalAmount?.toLocaleString()}</span>
+                                        <span className="font-black text-[#1E556E]">৳ {order?.totalAmount?.toLocaleString()}</span>
                                     </div>
                                 </div>
                             </div>

@@ -360,6 +360,7 @@ export default function OrdersPage() {
                 <tr className="bg-gray-50 border-b border-gray-100">
                   <th className="p-4 w-10"></th>
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Order Info</th>
+                  <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Order Source</th>
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Customer</th>
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Items</th>
 
@@ -389,6 +390,10 @@ export default function OrdersPage() {
                         <div className="text-[10px] text-gray-400 mt-1 uppercase font-medium">
                           {new Date(order.createdAt).toLocaleString()}
                         </div>
+                      </td>
+                        <td className="p-4">
+                        <div className="font-bold text-gray-900 text-base">{order?.orderSource}</div>
+                       
                       </td>
                       <td className="p-4">
                         <div className="font-semibold text-gray-800">{order?.customerName}</div>

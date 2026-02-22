@@ -62,18 +62,18 @@ export const ProductCard = ({ product }) => {
 
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                        {product.offerPrice > 0 ? (
+                        {product?.offerPrice > 0 ? (
                             <>
                                 <span className="text-sm font-bold text-primary">
-                                    ৳{product.offerPrice}
+                                    ৳{product?.offerPrice}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground line-through opacity-70">
-                                    ৳{product.price}
+                                    ৳{product?.price}
                                 </span>
                             </>
                         ) : (
                             <span className="text-sm font-bold text-[#1C546D]">
-                                ৳{product.price}
+                                ৳{product?.price}
                             </span>
                         )}
                     </div>
