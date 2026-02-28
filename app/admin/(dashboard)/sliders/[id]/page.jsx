@@ -68,7 +68,7 @@ export default function EditSliderPage() {
     if (loading) return <Loading />
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
+        <div className="p-4 ">
             <Link
                 href="/admin/sliders"
                 className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-[#1E556E] mb-8 group transition-colors"

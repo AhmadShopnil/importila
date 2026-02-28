@@ -7,17 +7,15 @@ import { usePathname, useRouter } from "next/navigation"
 import {
   Menu, X, BarChart3, Package, Tag, ShoppingCart,
   TrendingUp, ChevronsLeft, LayoutList, Settings,
-  ChevronDown, LogOut, GalleryVertical
+  ChevronDown, LogOut, GalleryVertical, MessageSquare, Image as ImageIcon
 } from "lucide-react"
 import Image from "next/image"
 import toast from "react-hot-toast"
 
 const adminNavItems = [
   { label: "Dashboard", href: "/admin", icon: BarChart3 },
-  { label: "Sliders", href: "/admin/sliders", icon: GalleryVertical },
   { label: "Products", href: "/admin/products", icon: LayoutList },
   { label: "Combos", href: "/admin/combos", icon: Package },
-  { label: "Categories", href: "/admin/categories", icon: Tag },
   {
     label: "Orders",
     icon: ShoppingCart,
@@ -27,16 +25,24 @@ const adminNavItems = [
       { label: "Manual Entry", href: "/admin/orders/new" },
     ],
   },
+  { label: "Media Library", href: "/admin/media", icon: ImageIcon },
+  { label: "Categories", href: "/admin/categories", icon: Tag },
+
+
+  { label: "Sliders", href: "/admin/sliders", icon: GalleryVertical },
+
   { label: "Stock", href: "/admin/stock", icon: TrendingUp },
   {
     label: "Reports",
     icon: BarChart3,
     children: [
       { label: "Sales Report", href: "/admin/reports" },
-      { label: "Source Analysis", href: "/admin/reports/sources" },
+      { label: "Best Selling", href: "/admin/reports/best-selling" },
+      // { label: "Source Analysis", href: "/admin/reports/sources" },
     ],
   },
   { label: "Settings", href: "/admin/settings", icon: Settings },
+  { label: "Reviews", href: "/admin/reviews", icon: MessageSquare },
 ]
 
 export default function AdminSidebarClient() {

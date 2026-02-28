@@ -11,9 +11,9 @@ export async function POST(req) {
     try {
         const { db } = await connectToDatabase()
 
-      
+
         // Get Steadfast Credentials
-       
+
         let settings = await db.collection("settings").findOne({ type: "courier" })
         let provider = settings?.providers?.find(
             p =>
@@ -80,9 +80,9 @@ export async function POST(req) {
 
         let result
 
-     
+
         // SINGLE ORDER
-      
+
         if (mappedOrders?.length === 1) {
             const res = await fetch(`${baseUrl}/create_order`, {
                 method: "POST",
@@ -91,7 +91,7 @@ export async function POST(req) {
             })
 
             result = await res.json();
-            console.log("in courier api response",result)
+            // console.log("in courier api response",result)
 
             if (result?.status === 200 && result?.consignment) {
                 await db.collection("orders").updateOne(
@@ -109,9 +109,9 @@ export async function POST(req) {
             return NextResponse.json(result)
         }
 
-     
+
         // BULK ORDER
-   
+
         const res = await fetch(`${baseUrl}/create_order/bulk-order`, {
             method: "POST",
             headers,

@@ -1,27 +1,36 @@
 "use client";
 
 import { Plus, X, Check } from "lucide-react";
+import Image from "next/image";
 import { useBundle } from "@/context/BundleContext";
 
 const ProductSlots = () => {
     const { state, setActiveSlot, removeFromSlot, updateSlotColor } = useBundle();
     const { slots, activeSlotIndex } = state;
 
+    const handleSlotClick = (index) => {
+        setActiveSlot(index);
+        const gridElement = document.getElementById("product-grid");
+        if (gridElement) {
+            gridElement.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    };
+
     if (slots.length === 0) return null;
 
     return (
-        <section className="py-12 bg-background">
+        <section id="selected-slots" className="py-6 md:py-12  bg-background">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-8">
-                    <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-                        Your Bundle Selection
+                    <h2 className="text-2xl md:text-3xl font-bold text-[#1E556E] mb-2">
+                        Your Selected Items 
                     </h2>
                     <p className="text-muted-foreground">
                         Click on a slot to select a product from the collection below
                     </p>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
+                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
                     {slots?.map((slot, index) => {
                         const isActive = activeSlotIndex === index;
                         const isFilled = slot.product !== null;
@@ -29,38 +38,50 @@ const ProductSlots = () => {
                         return (
                             <div
                                 key={index}
-                                onClick={() => setActiveSlot(index)}
-                                className={`relative aspect-square rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300 overflow-hidden ${isActive
-                                    ? "border-accent bg-accent/5 shadow-elevated scale-[1.02]"
+                                onClick={() => handleSlotClick(index)}
+                                role="button"
+                                aria-label={`${isFilled ? 'Filled' : 'Empty'} slot ${index + 1}. ${isFilled ? slot.product.name : 'Click to select a product'}`}
+                                aria-current={isActive}
+                                className={`relative aspect-square rounded-2xl border-2 cursor-pointer transition-all duration-300 overflow-hidden  ${isActive
+                                    ? "border-accent border-dashed bg-accent/5 shadow-elevated scale-[1.05] ring-4 ring-accent/20 z-20 animate-pulse-subtle"
                                     : isFilled
                                         ? "border-primary/50 bg-card"
                                         : "border-border bg-muted/30 hover:border-primary/30"
                                     }`}
                             >
                                 {/* Slot Label */}
-                                <div
+                                {/* <div
                                     className={`absolute top-2 left-2 z-10 text-xs font-bold px-2 py-1 rounded-full ${isFilled
                                         ? "bg-primary text-primary-foreground"
                                         : "bg-muted text-muted-foreground"
                                         }`}
                                 >
                                     Slot {index + 1}
-                                </div>
+                                </div> */}
 
                                 {isFilled && slot?.product ? (
                                     <>
                                         {/* Product Image */}
-                                        <img
-                                            src={slot.product.featuredImage || slot.product.image}
-                                            alt={slot.product.name}
-                                            className="w-full h-full object-cover"
+                                        <Image
+                                            src={slot?.product.image || slot?.product?.featuredImage}
+                                            alt={slot?.product?.name || "Product"}
+                                            fill
+                                            className="object-cover"
+                                            sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 20vw, 150px"
                                         />
 
                                         {/* Overlay with info */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-3">
-                                            <p className="text-white text-xs font-semibold truncate mb-2">
-                                                {slot.product.name}
+                                        <div className="absolute inset-0  flex flex-col justify-end p-3">
+                                            {/* <p className="text-white text-sm md:text-base font-semibold truncate mb-2">
+                                                {slot?.product.name}
                                             </p>
+                                            <p className="text-white text-sm md:text-base font-bold truncate mb-2">
+                                                Selected Colour:
+                                            </p> */}
+                                            {/* <p className="text-white text-sm md:text-base font-semibold truncate mb-2">
+                                                {slot?.selectedColor}
+                                            </p> */}
+
 
                                             {/* Color Selection */}
                                             <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
@@ -92,6 +113,7 @@ const ProductSlots = () => {
                                                 e.stopPropagation();
                                                 removeFromSlot(index);
                                             }}
+                                            aria-label={`Remove ${slot.product.name} from slot ${index + 1}`}
                                             className="absolute top-2 right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:scale-110 transition-transform"
                                         >
                                             <X size={14} />

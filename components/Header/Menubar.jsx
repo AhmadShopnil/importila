@@ -1,7 +1,30 @@
+"use client"
+
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
 import Container from "@/components/Container";
+import { useCart } from "@/context/CartContext";
+
+const CartTrigger = () => {
+  const { cartCount, setIsCartOpen } = useCart();
+
+  return (
+    <button
+      onClick={() => setIsCartOpen(true)}
+      aria-label="Shopping Cart"
+      className="relative p-2 rounded-full hover:bg-gray-100 transition"
+    >
+      <ShoppingCart className="w-6 h-6 text-gray-700" />
+      {cartCount > 0 && (
+        <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px]
+                         w-4 h-4 rounded-full flex items-center justify-center font-bold">
+          {cartCount}
+        </span>
+      )}
+    </button>
+  );
+};
 
 const Menubar = () => {
   return (
@@ -21,34 +44,42 @@ const Menubar = () => {
 
         {/* Desktop Menu */}
         <nav className="hidden lg:flex items-center gap-10">
-          {["Home", "Combos"].map((item) => (
-            <Link
-              key={item}
-              href={item === "Home" ? "/" : "/combo"}
-              className="relative text-[#34667B] font-medium transition-all
+          <Link
+
+            href="/"
+            className="relative text-[#34667B] font-medium transition-all text-base md:text-lg
                          after:absolute after:left-0 after:-bottom-1 after:h-[2px]
                          after:w-0 after:bg-primary after:transition-all
                          hover:after:w-full hover:text-primary"
-            >
-              {item}
-            </Link>
-          ))}
+          >
+            Home
+          </Link>
+          <Link
+
+            href="/shop"
+            className="relative text-[#34667B] font-medium transition-all text-base md:text-lg
+                         after:absolute after:left-0 after:-bottom-1 after:h-[2px]
+                         after:w-0 after:bg-primary after:transition-all
+                         hover:after:w-full hover:text-primary"
+          >
+            Shop
+          </Link>
+          <Link
+
+            href="/combo"
+            className="relative text-[#34667B] font-medium transition-all text-base md:text-lg
+                         after:absolute after:left-0 after:-bottom-1 after:h-[2px]
+                         after:w-0 after:bg-primary after:transition-all
+                         hover:after:w-full hover:text-primary"
+          >
+            Combo
+          </Link>
+
         </nav>
 
         {/* Cart */}
         <div className="flex items-center gap-4">
-          {/* <Link
-            href="/cart"
-            className="relative p-2 rounded-full hover:bg-gray-100 transition"
-          >
-            <ShoppingCart className="w-6 h-6 text-gray-700" />
-
-          
-            <span className="absolute -top-1 -right-1 bg-[#5F9498] text-white text-[10px]
-                             w-4 h-4 rounded-full flex items-center justify-center">
-              3
-            </span>
-          </Link> */}
+          <CartTrigger />
         </div>
 
       </Container>

@@ -2,26 +2,19 @@ import { connectToDatabase } from "@/lib/mongodb"
 import { NextResponse } from "next/server"
 import { getAdminAuth } from "@/lib/auth"
 
-export async function GET() {
+export async function GET(request) {
   const admin = await getAdminAuth()
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   try {
     const { db } = await connectToDatabase()
 
-    const now = new Date()
+    const { searchParams } = new URL(request.url)
+    const month = parseInt(searchParams.get("month")) || new Date().getMonth() + 1
+    const year = parseInt(searchParams.get("year")) || new Date().getFullYear()
 
-    const startOfMonth = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      1
-    )
-
-    const endOfMonth = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      1
-    )
+    const startOfMonth = new Date(year, month - 1, 1)
+    const endOfMonth = new Date(year, month, 1)
 
     const data = await db.collection("orders").aggregate([
       {
@@ -55,11 +48,7 @@ export async function GET() {
     ]).toArray()
 
     // 🔑 Fill missing days with zero
-    const daysInMonth = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      0
-    ).getDate()
+    const daysInMonth = new Date(year, month, 0).getDate()
 
     const result = Array.from({ length: daysInMonth }, (_, i) => {
       const day = i + 1

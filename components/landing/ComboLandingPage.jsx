@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import HeroSection from "@/components/landing/HeroSection";
 import BundleSelection from "@/components/landing/BundleSelection";
 import SizeSelection from "@/components/landing/SizeSelection";
@@ -8,39 +9,54 @@ import ProductGrid from "@/components/landing/ProductGrid";
 import CheckoutForm from "@/components/landing/CheckoutForm";
 import DesktopCTA from "@/components/landing/DesktopCTA";
 import StickyCTA from "@/components/landing/StickyCTA";
-import Footer from "@/components/landing/Footer";
+import ReviewSection from "@/components/landing/ReviewSection";
+import ProductDetails from "@/components/landing/ProductDetails";
 import { BundleProvider, useBundle } from "@/context/BundleContext";
+import SizeChart from "./SizeChart";
+import TopOfferCountdown from "./TopOfferCountdown";
+import Container from "../Container";
+import ComboSlider from "./ComboSlider";
 
-const LandingContent = ({ combo }) => {
-    const { state } = useBundle();
+const LandingContent = ({ combo,comboSliders }) => {
+    const { state, selectBundle } = useBundle();
+
+    useEffect(() => {
+        if (!state.selectedBundle && combo?.bundleOptions?.length > 0) {
+            selectBundle(combo.bundleOptions[0]);
+        }
+    }, [combo, state.selectedBundle, selectBundle]);
 
     return (
-        <div className="landing-page-theme min-h-screen bg-background font-nunito overflow-x-hidden  ">
-            <HeroSection />
+        <div className="landing-page-theme min-h-screen bg-background font-sans overflow-x-hidden  ">
 
-            <BundleSelection />
+            <TopOfferCountdown />
+            <HeroSection combo={combo} comboSliders={comboSliders} />
+            {/* <ComboSlider comboSliders={comboSliders}/> */}
+            <ProductDetails combo={combo} />
+            <ReviewSection />
+            <SizeChart />
+
+            <BundleSelection combo={combo} />
+            <ProductGrid combo={combo} />
 
             {state.selectedBundle && (
                 <ProductSlots />
             )}
+            <SizeSelection combo={combo} />
 
-            <ProductGrid combo={combo} />
+            <CheckoutForm combo={combo} />
 
-            <SizeSelection sizes={combo?.sizes} />
-
-            <CheckoutForm />
-
-            <DesktopCTA />
+            <DesktopCTA combo={combo} />
             {/* <Footer /> */}
-            <StickyCTA />
+            <StickyCTA combo={combo} />
         </div>
     );
 };
 
-const ComboLandingPage = ({ combo }) => {
+const ComboLandingPage = ({ combo,comboSliders }) => {
     return (
         <BundleProvider>
-            <LandingContent combo={combo} />
+            <LandingContent combo={combo} comboSliders={comboSliders} />
         </BundleProvider>
     );
 };

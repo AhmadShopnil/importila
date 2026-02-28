@@ -2,111 +2,88 @@
 
 import { useEffect, useState } from "react"
 import Loading from "@/components/Loader/Loading"
-import { BASE_URL } from "@/utils/baseUrl"
 import Link from "next/link"
 
-import { Truck, CheckSquare, Square, RefreshCw, Shield, ShieldAlert, ShieldCheck, List, LayoutGrid, Eye, MoreHorizontal, ExternalLink, Search, Filter } from "lucide-react"
+import { Truck, CheckSquare, Square, RefreshCw, Shield, ShieldAlert, ShieldCheck, List, LayoutGrid, Eye, MoreHorizontal, ExternalLink, Search, Filter, Printer, Trash2 } from "lucide-react"
 import toast from "react-hot-toast"
 
+import {
+  useGetOrdersQuery,
+  useUpdateOrderMutation,
+  useLazyCheckFraudRiskQuery,
+  useSendToCourierMutation,
+  useLazyCheckCourierStatusQuery,
+  useDeleteOrderMutation,
+  useDeleteMultipleOrdersMutation
+} from "@/lib/redux/api/orderApi"
+import InvoicePrint from "@/components/Dashboard/Order/InvoicePrint"
+
 export default function OrdersPage() {
-  const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
   const [selectedStatus, setSelectedStatus] = useState("")
   const [updatedStatuses, setUpdatedStatuses] = useState({})
   const [saving, setSaving] = useState(false)
   const [selectedOrders, setSelectedOrders] = useState([])
-  const [sendingToCourier, setSendingToCourier] = useState(false)
   const [riskData, setRiskData] = useState({})
-  const [viewType, setViewType] = useState("list") // default to list view
+  const [viewType, setViewType] = useState("list")
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalCount, setTotalCount] = useState(0)
   const [debouncedSearch, setDebouncedSearch] = useState("")
-  const [globalStats, setGlobalStats] = useState({ totalRevenue: 0, totalItems: 0 })
+  const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState(null)
+
+  const { data: responseData, isLoading: loading, isFetching } = useGetOrdersQuery({
+    status: selectedStatus,
+    search: debouncedSearch,
+    page: currentPage,
+    limit: 20
+  })
+
+  const orders = responseData?.orders || []
+  const totalPages = responseData?.pagination?.totalPages || 1
+  const totalCount = responseData?.pagination?.totalCount || 0
+  const globalStats = responseData?.summary || { totalRevenue: 0, totalItems: 0 }
+
+  const [updateOrder] = useUpdateOrderMutation()
+  const [checkFraudRisk] = useLazyCheckFraudRiskQuery()
+  const [sendToCourier, { isLoading: sendingToCourier }] = useSendToCourierMutation()
+  const [checkCourierStatus] = useLazyCheckCourierStatusQuery()
+  const [deleteOrder] = useDeleteOrderMutation()
+  const [deleteMultipleOrders, { isLoading: deletingMultiple }] = useDeleteMultipleOrdersMutation()
 
   // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery)
-      setCurrentPage(1) // Reset to first page on search
+      setCurrentPage(1)
     }, 500)
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  const handleCheckRisk = async (phone) => {
-    if (riskData[phone]) return // Already checked
+  // Reset local state when filters change if needed
+  useEffect(() => {
+    setUpdatedStatuses({})
+    setSelectedOrders([])
+  }, [selectedStatus, debouncedSearch, currentPage])
 
+  const handleCheckRisk = async (phone) => {
+    if (riskData[phone]) return
     const toastId = toast.loading("Analyzing risk...")
     try {
-      const res = await fetch(`${BASE_URL}/api/orders/fraud-check?phone=${phone}`)
-      const data = await res.json()
-
-      if (res.ok) {
-        setRiskData(prev => ({ ...prev, [phone]: data }))
-        toast.dismiss(toastId)
-        if (data.riskLevel === 'High') toast.error(`High Risk Customer! Cancelled/Returned: ${data.cancelled + data.returned}/${data.totalOrders}`)
-        else if (data.riskLevel === 'Medium') toast("Medium Risk Customer", { icon: '⚠️' })
-        else toast.success("Low Risk Customer")
-      } else {
-        toast.error("Failed to check risk", { id: toastId })
-      }
+      const data = await checkFraudRisk(phone).unwrap()
+      setRiskData(prev => ({ ...prev, [phone]: data }))
+      toast.dismiss(toastId)
+      if (data.riskLevel === 'High') toast.error(`High Risk Customer! Cancelled/Returned: ${data.cancelled + data.returned}/${data.totalOrders}`)
+      else if (data.riskLevel === 'Medium') toast("Medium Risk Customer", { icon: '⚠️' })
+      else toast.success("Low Risk Customer")
     } catch (error) {
       toast.error("Error checking risk", { id: toastId })
     }
   }
 
-
   const statuses = ["pending", "confirmed", "shipped", "delivered", "cancelled"]
 
-  // Note: Statistics might still need a separate API or full fetch if we want global stats, 
-  // but for pagination we usually use the totalCount from the paginated response.
-  // For industry standard, we keep the UI responsive.
-
-  const totalRevenue = orders.reduce((sum, order) => {
-    return sum + (order.totalPrice || order.offerPrice || order.price || 0)
-  }, 0)
-
-  const totalItemsCount = orders.reduce((sum, order) => {
-    const itemCount = order.items?.reduce(
-      (itemSum, item) => itemSum + (item.quantity || 0),
-      0
-    ) || 0
-    return sum + itemCount
-  }, 0)
-
+  const totalRevenue = globalStats.totalRevenue
   const totalOrders = totalCount;
-  const totalItems = totalItemsCount;
-
-  useEffect(() => {
-    fetchOrders()
-  }, [selectedStatus, currentPage, debouncedSearch])
-
-  const fetchOrders = async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams()
-      if (selectedStatus) params.append("status", selectedStatus)
-      if (debouncedSearch) params.append("search", debouncedSearch)
-      params.append("page", currentPage.toString())
-      params.append("limit", "20")
-
-      const res = await fetch(`${BASE_URL}/api/orders?${params.toString()}`)
-      const data = await res.json()
-
-      setOrders(data.orders || [])
-      setTotalPages(data.pagination?.totalPages || 1)
-      setTotalCount(data.pagination?.totalCount || 0)
-      setGlobalStats(data.summary || { totalRevenue: 0, totalItems: 0 })
-      setUpdatedStatuses({})
-      setSelectedOrders([])
-    } catch (error) {
-      console.error("Failed to fetch orders:", error)
-      toast.error("Failed to load orders")
-    } finally {
-      setLoading(false)
-    }
-  }
+  const totalItems = globalStats.totalItems;
 
   const handleStatusChange = (orderId, newStatus) => {
     setUpdatedStatuses((prev) => ({
@@ -124,13 +101,7 @@ export default function OrdersPage() {
 
     for (const [orderId, newStatus] of Object.entries(updatedStatuses)) {
       try {
-        const id = orderId
-        const res = await fetch(`${BASE_URL}/api/orders/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: newStatus }),
-        })
-        if (!res.ok) throw new Error(`Failed: ${orderId}`)
+        await updateOrder({ id: orderId, status: newStatus }).unwrap()
         successCount++
       } catch (error) {
         console.error(error)
@@ -139,8 +110,8 @@ export default function OrdersPage() {
     }
 
     toast.success(` ${successCount} orders updated${failCount > 0 ? `, ❌ ${failCount} failed` : ""}`)
-    fetchOrders()
     setSaving(false)
+    setUpdatedStatuses({})
   }
 
   const handleBulkStatusChange = async (newStatus) => {
@@ -154,13 +125,8 @@ export default function OrdersPage() {
 
     for (const orderId of selectedOrders) {
       try {
-        const res = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: newStatus }),
-        })
-        if (res.ok) successCount++
-        else failCount++
+        await updateOrder({ id: orderId, status: newStatus }).unwrap()
+        successCount++
       } catch (error) {
         failCount++
       }
@@ -168,7 +134,6 @@ export default function OrdersPage() {
 
     toast.success(`Updated ${successCount} orders. ${failCount > 0 ? `${failCount} failed.` : ''}`, { id: toastId })
     setSaving(false)
-    fetchOrders()
     setSelectedOrders([])
   }
 
@@ -194,7 +159,6 @@ export default function OrdersPage() {
       return
     }
 
-    setSendingToCourier(true)
     try {
       const selectedOrderDetails = orders
         .filter(o => selectedOrders.includes(o._id))
@@ -203,44 +167,25 @@ export default function OrdersPage() {
           recipient_name: order.customerName,
           recipient_address: order.address,
           recipient_phone: order.phone,
-          cod_amount: order.paymentStatus === 'paid' ? 0 : (order.totalPrice || order.offerPrice || order.price || 0),
+          cod_amount: order.paymentStatus === 'paid' ? 0 : (order?.totalAmount || order?.price),
           note: order.note
         }))
 
-      const res = await fetch(`${BASE_URL}/api/courier/create-order`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orders: selectedOrderDetails,
-        })
-      })
-
-      const result = await res.json()
-
-      if (res.ok) {
-        toast.success("Orders sent to courier successfully!")
-        fetchOrders()
-        setSelectedOrders([])
-      } else {
-        toast.error(result.error || "Failed to send to courier")
-      }
+      await sendToCourier({ orders: selectedOrderDetails }).unwrap()
+      toast.success("Orders sent to courier successfully!")
+      setSelectedOrders([])
     } catch (error) {
-      toast.error("An error occurred")
+      toast.error(error.data?.error || "An error occurred")
       console.error(error)
-    } finally {
-      setSendingToCourier(false)
     }
   }
 
   const handleCheckStatus = async (consignmentId) => {
     const toastId = toast.loading("Checking status...")
     try {
-      const res = await fetch(`${BASE_URL}/api/courier/check-status?consignmentId=${consignmentId}`)
-      const data = await res.json()
-
+      const data = await checkCourierStatus(consignmentId).unwrap()
       if (data.status === 200) {
         toast.success(`Status: ${data.delivery_status}`, { id: toastId })
-        fetchOrders()
       } else {
         toast.error("Failed to check status", { id: toastId })
       }
@@ -250,7 +195,29 @@ export default function OrdersPage() {
     }
   }
 
+  const handleDeleteOrder = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this order?")) return
+    try {
+      await deleteOrder(id).unwrap()
+      toast.success("Order deleted successfully")
+    } catch (error) {
+      toast.error("Failed to delete order")
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete ${selectedOrders.length} orders?`)) return
+    try {
+      await deleteMultipleOrders(selectedOrders).unwrap()
+      toast.success(`${selectedOrders.length} orders deleted successfully`)
+      setSelectedOrders([])
+    } catch (error) {
+      toast.error("Failed to delete orders")
+    }
+  }
+
   // if (loading) return <Loading />
+
 
   return (
     <div className="space-y-6 pb-20">
@@ -278,22 +245,22 @@ export default function OrdersPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border-l-4 border-green-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white border-1 border-green-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
           <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Revenue</p>
           <p className="text-2xl font-bold text-gray-800">৳ {globalStats.totalRevenue.toLocaleString()}</p>
         </div>
 
-        <div className="bg-white border-l-4 border-blue-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white border-1 border-blue-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
           <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Orders</p>
           <p className="text-2xl font-bold text-gray-800">{totalCount}</p>
         </div>
 
-        <div className="bg-white border-l-4 border-orange-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white border-1 border-orange-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
           <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Items Sold</p>
           <p className="text-2xl font-bold text-gray-800">{globalStats.totalItems}</p>
         </div>
 
-        <div className="bg-white border-l-4 border-purple-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white border-1 border-purple-500 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
           <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Avg Order Value</p>
           <p className="text-2xl font-bold text-gray-800">৳ {totalCount > 0 ? Math.round(globalStats.totalRevenue / totalCount).toLocaleString() : 0}</p>
         </div>
@@ -362,6 +329,15 @@ export default function OrdersPage() {
                   <option value="" disabled>Change Status</option>
                   {statuses.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                 </select>
+
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={deletingMultiple}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-all text-sm font-medium disabled:opacity-70 shadow-sm"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {deletingMultiple ? "Deleting..." : `Delete Selected`}
+                </button>
               </div>
             )}
           </div>
@@ -384,8 +360,10 @@ export default function OrdersPage() {
                 <tr className="bg-gray-50 border-b border-gray-100">
                   <th className="p-4 w-10"></th>
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Order Info</th>
+                  <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Order Source</th>
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Customer</th>
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Items</th>
+
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Amount</th>
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Status</th>
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Courier Info</th>
@@ -413,12 +391,16 @@ export default function OrdersPage() {
                           {new Date(order.createdAt).toLocaleString()}
                         </div>
                       </td>
+                        <td className="p-4">
+                        <div className="font-bold text-gray-900 text-base">{order?.orderSource}</div>
+                       
+                      </td>
                       <td className="p-4">
-                        <div className="font-semibold text-gray-800">{order.customerName}</div>
+                        <div className="font-semibold text-gray-800">{order?.customerName}</div>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-gray-500 text-xs">{order.phone}</span>
+                          <span className="text-gray-500 text-xs">{order?.phone}</span>
                           <button
-                            onClick={() => handleCheckRisk(order.phone)}
+                            onClick={() => handleCheckRisk(order?.phone)}
                             className="p-0.5 hover:bg-gray-200 rounded transition-colors"
                             title="Check Fraud Risk"
                           >
@@ -448,8 +430,8 @@ export default function OrdersPage() {
                         </div>
                       </td>
                       <td className="p-4">
-                        <div className="font-bold text-gray-900">৳ {(order.totalPrice || order.offerPrice || order.price || 0).toLocaleString()}</div>
-                        <div className="text-[10px] text-gray-400 uppercase font-medium">{order.paymentStatus || 'Unpaid'}</div>
+                        <div className="font-bold text-gray-900">৳ {(order?.totalAmount || order?.offerPrice || order?.price || 0).toLocaleString()}</div>
+                        {/* <div className="text-[10px] text-gray-400 uppercase font-medium">{order?.paymentStatus || 'Unpaid'}</div> */}
                       </td>
                       <td className="p-4">
                         <select
@@ -512,11 +494,21 @@ export default function OrdersPage() {
                             </button>
                           )}
                           <button
-                            onClick={() => handleCheckRisk(order.phone)}
-                            className="p-2 hover:bg-red-50 rounded text-red-500 transition-all bg-red-50/50"
-                            title="Check Risk"
+                            onClick={() => {
+                              setSelectedOrderForInvoice(order);
+                              setTimeout(() => window.print(), 100);
+                            }}
+                            className="p-2 hover:bg-blue-50 rounded text-blue-600 transition-all bg-blue-50/50"
+                            title="Print Invoice"
                           >
-                            <Shield className="w-4 h-4" />
+                            <Printer className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteOrder(order._id)}
+                            className="p-2 hover:bg-red-50 rounded text-red-600 transition-all bg-red-50/50"
+                            title="Delete Order"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -558,7 +550,7 @@ export default function OrdersPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-black text-xl text-gray-900">৳ {(order.totalPrice || order.offerPrice || order.price || 0).toLocaleString()}</p>
+                      <p className="font-black text-xl text-gray-900">৳ {(order.totalAmount || order.offerPrice || order.price || 0).toLocaleString()}</p>
                     </div>
                   </div>
 
@@ -636,12 +628,27 @@ export default function OrdersPage() {
 
                 {/* Actions Hover Layer */}
                 <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => {
+                      setSelectedOrderForInvoice(order);
+                      setTimeout(() => window.print(), 100);
+                    }}
+                    className="p-2 bg-white rounded-full shadow-lg text-blue-600 hover:bg-blue-600 hover:text-white transition-all"
+                  >
+                    <Printer className="w-4 h-4" />
+                  </button>
                   <Link
                     href={`/admin/orders/regular/${order._id}`}
                     className="p-2 bg-white rounded-full shadow-lg text-[#1E556E] hover:bg-[#1E556E] hover:text-white transition-all"
                   >
                     <Eye className="w-4 h-4" />
                   </Link>
+                  <button
+                    onClick={() => handleDeleteOrder(order._id)}
+                    className="p-2 bg-white rounded-full shadow-lg text-red-600 hover:bg-red-600 hover:text-white transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             )
@@ -716,6 +723,8 @@ export default function OrdersPage() {
           <span>{saving ? "Saving Updates..." : `Save ${Object.keys(updatedStatuses).length} changes`}</span>
         </button>
       </div>
+      {/* Hidden Printable Invoice Section */}
+      <InvoicePrint order={selectedOrderForInvoice} />
     </div>
   )
 }

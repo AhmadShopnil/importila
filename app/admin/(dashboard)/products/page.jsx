@@ -1,44 +1,22 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
-import { Plus, Search } from "lucide-react"
+import { Plus, Search, Trash2 } from "lucide-react"
 import Loading from "@/components/Loader/Loading"
 import TableRow from "@/components/Dashboard/Products/TableRow"
-import { BASE_URL } from "@/utils/baseUrl"
+
+import { useGetProductsQuery, useDeleteProductMutation } from "@/lib/redux/api/productApi"
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { data: products = [], isLoading: loading } = useGetProductsQuery()
+  const [deleteProduct] = useDeleteProductMutation()
   const [searchTerm, setSearchTerm] = useState("")
-
-  useEffect(() => {
-    console.log("products from dashboard")
-    fetchProducts()
-  }, [])
-
-  const fetchProducts = async () => {
-    try {
-
-      const res = await fetch(`${BASE_URL}/api/products`)
-      const data = await res.json()
-      //  console.log("products from dashboard",data )
-      setProducts(data)
-    } catch (error) {
-      console.error("Failed to fetch products:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
 
   const handleDelete = async (id) => {
     if (confirm("Are you sure you want to delete this product?")) {
       try {
-        const res = await fetch(`${BASE_URL}/api/products/${id}`, { method: "DELETE" })
-        if (res.ok) {
-          setProducts(products.filter((p) => p._id !== id))
-        }
+        await deleteProduct(id).unwrap()
       } catch (error) {
         console.error("Failed to delete product:", error)
       }
@@ -46,8 +24,10 @@ export default function ProductsPage() {
   }
 
   const filteredProducts = products?.filter((p) =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.designName?.toLowerCase().includes(searchTerm.toLowerCase())
+    !p.isTrashed && (
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.designName?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   ) || []
 
 
@@ -56,14 +36,26 @@ export default function ProductsPage() {
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-3xl sm:text-4xl font-bold">Products</h1>
-        <Link
-          href="/admin/products/new"
-          className="flex items-center gap-2 bg-[#1E556E] text-primary-foreground px-4 py-2 rounded-lg hover:opacity-90 w-full sm:w-auto justify-center sm:justify-start"
-        >
-          <Plus className="w-5 h-5" />
-          Add Product
-        </Link>
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-bold">Products</h1>
+          <p className="text-muted-foreground text-sm">Manage your inventory and product listings.</p>
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Link
+            href="/admin/products/trash"
+            className="flex items-center gap-2 bg-muted text-foreground px-4 py-2 rounded-lg hover:bg-muted/80 flex-1 sm:flex-initial justify-center"
+          >
+            <Trash2 className="w-5 h-5" />
+            Trash List
+          </Link>
+          <Link
+            href="/admin/products/new"
+            className="flex items-center gap-2 bg-[#1E556E] text-primary-foreground px-4 py-2 rounded-lg hover:opacity-90 flex-1 sm:flex-initial justify-center"
+          >
+            <Plus className="w-5 h-5" />
+            Add Product
+          </Link>
+        </div>
       </div>
 
       {/* Search Bar */}

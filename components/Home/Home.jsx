@@ -1,8 +1,11 @@
 
 import Combos from './ComboSection/Combos';
 import HeroSection from './HeroSection/HeroSection';
-import CustomCombo from './CustomComboBanner/CustomCombo';
+
 import { getCombos, getProducts, getSliders } from '../../utils/apiActions';
+import { expandProductsByColor } from '@/utils/productUtils';
+
+import ProductsList from './ProductList/ProductList';
 
 
 
@@ -15,7 +18,10 @@ import { getCombos, getProducts, getSliders } from '../../utils/apiActions';
 export default async function Home() {
 
   const banners = await getSliders("hero_home") || [];
+  // const productsResult = await getProducts();
+  // const products = expandProductsByColor(productsResult);
   const products = await getProducts();
+
   const combos = await getCombos();
 
 
@@ -28,7 +34,7 @@ export default async function Home() {
       <HeroSection banners={banners} />
       <Combos combos={combos} />
       {/* <CustomCombo /> */}
-      {/* <ProductsByGender products={products} /> */}
+      <ProductsList products={products} />
 
 
     </div>

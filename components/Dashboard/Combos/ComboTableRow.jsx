@@ -57,15 +57,23 @@ export default function ComboTableRow({ combo, handleDelete }) {
       {/* PRICE */}
       <td className="px-4 py-3 hidden sm:table-cell">
         <div>
-          {combo.offerPrice ? (
-            <>
-              <span className="font-semibold">৳{combo.offerPrice}</span>
-              <span className="text-xs line-through text-muted-foreground ml-2">
-                ৳{combo.price}
-              </span>
-            </>
+          {combo.bundleOptions?.length > 0 ? (
+            <span className="font-semibold text-primary">
+              ৳{Math.min(...combo.bundleOptions.map(o => o.price))} - ৳{Math.max(...combo.bundleOptions.map(o => o.price))}
+            </span>
           ) : (
-            <span className="font-semibold">৳{combo.price}</span>
+            <div>
+              {combo.offerPrice ? (
+                <>
+                  <span className="font-semibold">৳{combo.offerPrice}</span>
+                  <span className="text-xs line-through text-muted-foreground ml-2">
+                    ৳{combo.price}
+                  </span>
+                </>
+              ) : (
+                <span className="font-semibold">৳{combo.price}</span>
+              )}
+            </div>
           )}
         </div>
       </td>

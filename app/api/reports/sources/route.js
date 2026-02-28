@@ -33,7 +33,7 @@ export async function GET(request) {
                 $group: {
                     _id: { $ifNull: ["$orderSource", "website"] },
                     totalOrders: { $sum: 1 },
-                    totalRevenue: { $sum: { $ifNull: ["$totalPrice", "$offerPrice", 0] } },
+                    totalRevenue: { $sum: { $ifNull: ["$totalAmount", "$totalPrice", 0] } },
                     totalItems: {
                         $sum: {
                             $cond: [

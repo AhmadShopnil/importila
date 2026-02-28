@@ -21,7 +21,7 @@ export async function GET(request, context) {
       _id: new ObjectId(id),
     })
 
-    if (!product) {
+    if (!product || product.isTrashed) {
       return NextResponse.json(
         { error: "Product not found" },
         { status: 404 }
@@ -54,6 +54,7 @@ export async function PUT(request, context) {
 
     const name = formData.get("name")
     const description = formData.get("description")
+    const richDescription = formData.get("richDescription") || ""
     const categories = JSON.parse(formData.get("categories") || "[]")
     const price = Number(formData.get("price"))
     const offerPrice = Number(formData.get("offerPrice"))
@@ -75,11 +76,26 @@ export async function PUT(request, context) {
     const featuredFile = formData.get("featuredImage")
     const featuredURL = formData.get("featuredImageURL")
 
+    const { db } = await connectToDatabase()
+
     if (featuredFile instanceof File) {
-      featuredImage = await uploadToCloudinary(
+      const result = await uploadToCloudinary(
         featuredFile,
-        "products/featured"
+        "products"
       )
+      // Save to media collection
+      await db.collection("media").insertOne({
+        url: result.secure_url,
+        publicId: result.public_id,
+        folder: "products",
+        fileName: featuredFile.name,
+        fileSize: featuredFile.size,
+        format: result.format,
+        width: result.width,
+        height: result.height,
+        createdAt: new Date(),
+      })
+      featuredImage = result.secure_url
     } else if (featuredURL) {
       featuredImage = featuredURL
     }
@@ -89,14 +105,26 @@ export async function PUT(request, context) {
 
     for (const file of formData.getAll("images")) {
       if (file instanceof File && file.size > 0) {
-        const url = await uploadToCloudinary(file, "products/gallery")
-        if (url) images.push(url)
+        const result = await uploadToCloudinary(file, "products")
+        if (result) {
+          // Save to media collection
+          await db.collection("media").insertOne({
+            url: result.secure_url,
+            publicId: result.public_id,
+            folder: "products",
+            fileName: file.name,
+            fileSize: file.size,
+            format: result.format,
+            width: result.width,
+            height: result.height,
+            createdAt: new Date(),
+          })
+          images.push(result.secure_url)
+        }
       }
     }
 
     images.push(...formData.getAll("imageURLs"))
-
-    const { db } = await connectToDatabase()
 
     const result = await db.collection("products").updateOne(
       { _id: new ObjectId(id) },
@@ -104,6 +132,7 @@ export async function PUT(request, context) {
         $set: {
           name,
           description,
+          richDescription,
           categories,
           price,
           offerPrice,
@@ -149,19 +178,35 @@ export async function DELETE(request, context) {
     }
 
     const { db } = await connectToDatabase()
+    const { searchParams } = new URL(request.url)
+    const permanent = searchParams.get("permanent") === "true"
 
-    const result = await db.collection("products").deleteOne({
-      _id: new ObjectId(id),
-    })
+    if (permanent) {
+      const result = await db.collection("products").deleteOne({
+        _id: new ObjectId(id),
+      })
 
-    if (!result.deletedCount) {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
+      if (!result.deletedCount) {
+        return NextResponse.json(
+          { error: "Product not found" },
+          { status: 404 }
+        )
+      }
+      return NextResponse.json({ message: "Product permanently deleted" })
+    } else {
+      const result = await db.collection("products").updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { isTrashed: true, updatedAt: new Date() } }
       )
-    }
 
-    return NextResponse.json({ message: "Product deleted successfully" })
+      if (!result.matchedCount) {
+        return NextResponse.json(
+          { error: "Product not found" },
+          { status: 404 }
+        )
+      }
+      return NextResponse.json({ message: "Product moved to trash" })
+    }
   } catch (error) {
     console.error("DELETE product error:", error)
     return NextResponse.json(

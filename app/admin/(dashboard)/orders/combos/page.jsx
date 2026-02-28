@@ -2,28 +2,52 @@
 
 import { useEffect, useState } from "react"
 import Loading from "@/components/Loader/Loading"
-import { BASE_URL } from "@/utils/baseUrl"
 import Link from "next/link"
 
-import { Truck, CheckSquare, Square, RefreshCw, Shield, ShieldAlert, ShieldCheck, List, LayoutGrid, Eye, MoreHorizontal, ExternalLink, Search, Filter } from "lucide-react"
+import { Truck, CheckSquare, Square, RefreshCw, Shield, ShieldAlert, ShieldCheck, List, LayoutGrid, Eye, MoreHorizontal, ExternalLink, Search, Filter, Printer, Trash2 } from "lucide-react"
 import toast from "react-hot-toast"
 
+import {
+  useGetComboOrdersQuery,
+  useUpdateOrderMutation,
+  useLazyCheckFraudRiskQuery,
+  useSendToCourierMutation,
+  useLazyCheckCourierStatusQuery,
+  useDeleteOrderMutation,
+  useDeleteMultipleOrdersMutation
+} from "@/lib/redux/api/orderApi"
+import InvoicePrint from "@/components/Dashboard/Order/InvoicePrint"
+
 export default function ComboOrdersPage() {
-  const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
   const [selectedStatus, setSelectedStatus] = useState("")
   const [updatedStatuses, setUpdatedStatuses] = useState({})
   const [saving, setSaving] = useState(false)
   const [selectedOrders, setSelectedOrders] = useState([])
-  const [sendingToCourier, setSendingToCourier] = useState(false)
   const [riskData, setRiskData] = useState({})
-  const [viewType, setViewType] = useState("list") // default to list view
+  const [viewType, setViewType] = useState("list")
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalCount, setTotalCount] = useState(0)
   const [debouncedSearch, setDebouncedSearch] = useState("")
-  const [globalStats, setGlobalStats] = useState({ totalRevenue: 0, totalItems: 0 })
+  const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState(null)
+
+  const { data: responseData, isLoading: loading, isFetching } = useGetComboOrdersQuery({
+    status: selectedStatus,
+    search: debouncedSearch,
+    page: currentPage,
+    limit: 15
+  })
+
+  const orders = responseData?.orders || []
+  const totalPages = responseData?.pagination?.totalPages || 1
+  const totalCount = responseData?.pagination?.totalCount || 0
+  const globalStats = responseData?.summary || { totalRevenue: 0, totalItems: 0 }
+
+  const [updateOrder] = useUpdateOrderMutation()
+  const [checkFraudRisk] = useLazyCheckFraudRiskQuery()
+  const [sendToCourier, { isLoading: sendingToCourier }] = useSendToCourierMutation()
+  const [checkCourierStatus] = useLazyCheckCourierStatusQuery()
+  const [deleteOrder] = useDeleteOrderMutation()
+  const [deleteMultipleOrders, { isLoading: deletingMultiple }] = useDeleteMultipleOrdersMutation()
 
   // Debounce search query
   useEffect(() => {
@@ -34,23 +58,22 @@ export default function ComboOrdersPage() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
+  // Reset local state when filters change
+  useEffect(() => {
+    setUpdatedStatuses({})
+    setSelectedOrders([])
+  }, [selectedStatus, debouncedSearch, currentPage])
+
   const handleCheckRisk = async (phone) => {
     if (riskData[phone]) return
-
     const toastId = toast.loading("Analyzing risk...")
     try {
-      const res = await fetch(`${BASE_URL}/api/orders/fraud-check?phone=${phone}`)
-      const data = await res.json()
-
-      if (res.ok) {
-        setRiskData(prev => ({ ...prev, [phone]: data }))
-        toast.dismiss(toastId)
-        if (data?.riskLevel === 'High') toast.error(`High Risk! ${data.cancelled + data.returned}/${data.totalOrders}`)
-        else if (data?.riskLevel === 'Medium') toast("Medium Risk", { icon: '⚠️' })
-        else toast.success("Low Risk")
-      } else {
-        toast.error("Failed risk check", { id: toastId })
-      }
+      const data = await checkFraudRisk(phone).unwrap()
+      setRiskData(prev => ({ ...prev, [phone]: data }))
+      toast.dismiss(toastId)
+      if (data?.riskLevel === 'High') toast.error(`High Risk! ${data.cancelled + data.returned}/${data.totalOrders}`)
+      else if (data?.riskLevel === 'Medium') toast("Medium Risk", { icon: '⚠️' })
+      else toast.success("Low Risk")
     } catch (error) {
       toast.error("Error checking risk", { id: toastId })
     }
@@ -58,47 +81,9 @@ export default function ComboOrdersPage() {
 
   const statuses = ["pending", "confirmed", "shipped", "delivered", "cancelled"]
 
-  const totalRevenue = orders.reduce((sum, order) => {
-    return sum + (order.totalPrice || order.offerPrice || order.price || 0)
-  }, 0)
-
-  const totalItemsCount = orders.reduce((sum, order) => {
-    const itemCount = (order.items || order.products)?.reduce(
-      (itemSum, item) => itemSum + (item.quantity || 1),
-      0
-    ) || 1
-    return sum + itemCount
-  }, 0)
-
-  useEffect(() => {
-    fetchOrders()
-  }, [selectedStatus, currentPage, debouncedSearch])
-
-  const fetchOrders = async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams()
-      if (selectedStatus) params.append("status", selectedStatus)
-      if (debouncedSearch) params.append("search", debouncedSearch)
-      params.append("page", currentPage.toString())
-      params.append("limit", "15")
-
-      const res = await fetch(`${BASE_URL}/api/orders/combo?${params.toString()}`)
-      const data = await res.json()
-
-      setOrders(data.orders || [])
-      setTotalPages(data.pagination?.totalPages || 1)
-      setTotalCount(data.pagination?.totalCount || 0)
-      setGlobalStats(data.summary || { totalRevenue: 0, totalItems: 0 })
-      setUpdatedStatuses({})
-      setSelectedOrders([])
-    } catch (error) {
-      console.error("Failed to fetch orders:", error)
-      toast.error("Failed to load orders")
-    } finally {
-      setLoading(false)
-    }
-  }
+  const totalRevenue = globalStats.totalRevenue
+  const totalOrders = totalCount
+  const totalItems = globalStats.totalItems
 
   const handleStatusChange = (orderId, newStatus) => {
     setUpdatedStatuses((prev) => ({
@@ -116,13 +101,7 @@ export default function ComboOrdersPage() {
 
     for (const [orderId, newStatus] of Object.entries(updatedStatuses)) {
       try {
-        const id = orderId
-        const res = await fetch(`${BASE_URL}/api/orders/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: newStatus }),
-        })
-        if (!res.ok) throw new Error(`Failed: ${orderId}`)
+        await updateOrder({ id: orderId, status: newStatus }).unwrap()
         successCount++
       } catch (error) {
         console.error(error)
@@ -131,8 +110,8 @@ export default function ComboOrdersPage() {
     }
 
     toast.success(`${successCount} orders updated`)
-    fetchOrders()
     setSaving(false)
+    setUpdatedStatuses({})
   }
 
   const handleBulkStatusChange = async (newStatus) => {
@@ -146,13 +125,8 @@ export default function ComboOrdersPage() {
 
     for (const orderId of selectedOrders) {
       try {
-        const res = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: newStatus }),
-        })
-        if (res.ok) successCount++
-        else failCount++
+        await updateOrder({ id: orderId, status: newStatus }).unwrap()
+        successCount++
       } catch (error) {
         failCount++
       }
@@ -160,7 +134,6 @@ export default function ComboOrdersPage() {
 
     toast.success(`Updated ${successCount} orders.`, { id: toastId })
     setSaving(false)
-    fetchOrders()
     setSelectedOrders([])
   }
 
@@ -186,7 +159,6 @@ export default function ComboOrdersPage() {
       return
     }
 
-    setSendingToCourier(true)
     try {
       const selectedOrderDetails = orders
         .filter(o => selectedOrders.includes(o._id))
@@ -195,48 +167,54 @@ export default function ComboOrdersPage() {
           recipient_name: order.customerName,
           recipient_address: order.address,
           recipient_phone: order.phone,
-          cod_amount: order.paymentStatus === 'paid' ? 0 : (order.totalPrice || order.offerPrice || order.price || 0),
+          cod_amount: order.paymentStatus === 'paid' ? 0 : (order?.totalAmount || order?.price),
           note: order.note || " "
         }))
 
-      const res = await fetch(`${BASE_URL}/api/courier/create-order`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orders: selectedOrderDetails,
-          isBulk: selectedOrderDetails.length > 1
-        })
-      })
+      await sendToCourier({
+        orders: selectedOrderDetails,
+        isBulk: selectedOrderDetails.length > 1
+      }).unwrap()
 
-      if (res.ok) {
-        toast.success("Orders sent to courier!")
-        fetchOrders()
-        setSelectedOrders([])
-      } else {
-        const result = await res.json()
-        toast.error(result.error || "Failed to send to courier")
-      }
+      toast.success("Orders sent to courier!")
+      setSelectedOrders([])
     } catch (error) {
-      toast.error("An error occurred")
-    } finally {
-      setSendingToCourier(false)
+      toast.error(error.data?.error || "An error occurred")
     }
   }
 
   const handleCheckStatus = async (consignmentId) => {
     const toastId = toast.loading("Checking status...")
     try {
-      const res = await fetch(`${BASE_URL}/api/courier/check-status?consignmentId=${consignmentId}`)
-      const data = await res.json()
-
+      const data = await checkCourierStatus(consignmentId).unwrap()
       if (data?.status === 200) {
         toast.success(`Status: ${data?.delivery_status}`, { id: toastId })
-        fetchOrders()
       } else {
         toast.error("Failed to check status", { id: toastId })
       }
     } catch (error) {
       toast.error("Error checking status", { id: toastId })
+    }
+  }
+
+  const handleDeleteOrder = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this order?")) return
+    try {
+      await deleteOrder(id).unwrap()
+      toast.success("Order deleted successfully")
+    } catch (error) {
+      toast.error("Failed to delete order")
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete ${selectedOrders.length} orders?`)) return
+    try {
+      await deleteMultipleOrders(selectedOrders).unwrap()
+      toast.success(`${selectedOrders.length} orders deleted successfully`)
+      setSelectedOrders([])
+    } catch (error) {
+      toast.error("Failed to delete orders")
     }
   }
 
@@ -346,6 +324,15 @@ export default function ComboOrdersPage() {
                   <option value="" disabled>Change Status</option>
                   {statuses.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                 </select>
+
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={deletingMultiple}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-all text-sm font-medium disabled:opacity-70 shadow-sm"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {deletingMultiple ? "Deleting..." : `Delete Selected`}
+                </button>
               </div>
             )}
           </div>
@@ -411,7 +398,7 @@ export default function ComboOrdersPage() {
                         </div>
                       </td>
                       <td className="p-4 text-gray-900 font-bold font-mono">
-                        ৳ {(order.totalPrice || order.offerPrice || order.price).toLocaleString()}
+                        ৳ {(order?.totalAmount || order.totalPrice || order.offerPrice || order.price).toLocaleString()}
                       </td>
                       <td className="p-4">
                         <select
@@ -444,9 +431,26 @@ export default function ComboOrdersPage() {
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Link href={`/admin/orders/combos/${order._id}`} className="p-2 hover:bg-[#1E556E]/10 rounded bg-[#1E556E]/5 text-[#1E556E]">
+                          <button
+                            onClick={() => {
+                              setSelectedOrderForInvoice(order);
+                              setTimeout(() => window.print(), 100);
+                            }}
+                            className="p-2 hover:bg-blue-50 rounded bg-blue-50/50 text-blue-600 transition-all"
+                            title="Print Invoice"
+                          >
+                            <Printer className="w-4 h-4" />
+                          </button>
+                          <Link href={`/admin/orders/combos/${order._id}`} className="p-2 hover:bg-[#1E556E]/10 rounded bg-[#1E556E]/5 text-[#1E556E]" title="View Details">
                             <Eye className="w-4 h-4" />
                           </Link>
+                          <button
+                            onClick={() => handleDeleteOrder(order._id)}
+                            className="p-2 hover:bg-red-50 rounded text-red-600 transition-all bg-red-50/50"
+                            title="Delete Order"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -478,7 +482,7 @@ export default function ComboOrdersPage() {
                         <p className="text-[10px] text-gray-400 uppercase font-bold mt-0.5">{new Date(order.createdAt).toLocaleString()}</p>
                       </div>
                     </div>
-                    <p className="font-black text-xl text-gray-900 font-mono">৳ {(order.totalPrice || order.offerPrice || order.price).toLocaleString()}</p>
+                    <p className="font-black text-xl text-gray-900 font-mono">৳ {(order?.totalAmount || order.totalPrice || order.offerPrice || order.price).toLocaleString()}</p>
                   </div>
 
                   <div className="bg-gray-50 rounded-md p-4 space-y-3">
@@ -507,7 +511,7 @@ export default function ComboOrdersPage() {
                   </div>
                 </div>
 
-                {order.courierConsignmentId && (
+                {order?.courierConsignmentId && (
                   <div className="bg-[#1E556E]/5 px-5 py-4 border-t border-gray-100 space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-[#1E556E]">
@@ -522,9 +526,25 @@ export default function ComboOrdersPage() {
                 )}
 
                 <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => {
+                      setSelectedOrderForInvoice(order);
+                      setTimeout(() => window.print(), 100);
+                    }}
+                    className="p-2 bg-white rounded-full shadow-lg text-blue-600 hover:bg-blue-600 hover:text-white transition-all"
+                    title="Print Invoice"
+                  >
+                    <Printer className="w-4 h-4" />
+                  </button>
                   <Link href={`/admin/orders/combos/${order._id}`} className="p-2 bg-white rounded-full shadow-lg text-[#1E556E] hover:bg-[#1E556E] hover:text-white transition-all">
                     <Eye className="w-4 h-4" />
                   </Link>
+                  <button
+                    onClick={() => handleDeleteOrder(order._id)}
+                    className="p-2 bg-white rounded-full shadow-lg text-red-600 hover:bg-red-600 hover:text-white transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             )
@@ -585,6 +605,7 @@ export default function ComboOrdersPage() {
           <span>{saving ? "Saving..." : `Save ${Object.keys(updatedStatuses).length} changes`}</span>
         </button>
       </div>
+      <InvoicePrint order={selectedOrderForInvoice} />
     </div>
   )
 }

@@ -1,53 +1,56 @@
 "use client";
 
 import { Gift, Truck, Shield, Star } from "lucide-react";
+import ComboSlider from "./ComboSlider";
 
-const HeroSection = () => {
+const HeroSection = ({ combo, comboSliders }) => {
     const scrollToBundles = () => {
         document.getElementById("bundle-section")?.scrollIntoView({ behavior: "smooth" });
     };
 
     return (
-        <section className="relative  gradient-hero overflow-hidden">
+        <section className="relative  gradient-hero overflow-hidden py-6 md:py-10">
             {/* Decorative elements */}
-           
-             <div className="hidden md:flex absolute top-20 left-20 w-16 h-16 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "1s" }} />
-            <div className="hidden md:flex absolute top-40 right-20 w-16 h-16 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "1s" }} />
-              <div className="hidden md:flex absolute bottom-60 right-100 w-10 h-10 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "1s" }} />
-           
-            <div className="absolute bottom-20 right-1/3 w-24 h-24 rounded-full bg-mint/30 animate-float" style={{ animationDelay: "1.5s" }} />
 
-            <div className="container mx-auto px-4 pt-16 pb-20 flex flex-col items-center justify-center min-h-[85vh]">
+            <div className="hidden md:flex absolute top-20 left-20 w-16 h-16 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "1s" }} />
+            <div className="hidden md:flex absolute top-40 right-20 w-16 h-16 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "1s" }} />
+            <div className="hidden md:flex absolute bottom-60 right-100 w-10 h-10 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "1s" }} />
+
+            <div className="absolute bottom-20 right-1/3 md:w-24 md:h-24 rounded-full bg-mint/30 animate-float" style={{ animationDelay: "1.5s" }} />
+
+            <div className="container mx-auto px-4 md:pt-16 md:pb-10 flex flex-col items-center justify-center  ">
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6 animate-slide-up">
                     <Gift size={18} />
-                    <span className="text-sm font-semibold">Bundle & Save Up To 41%</span>
+                    <span className="text-sm font-semibold">{combo?.heroBadge || "Bundle & Save Up To 41%"}</span>
                 </div>
 
                 {/* Main Headline */}
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-center text-foreground leading-tight mb-6
+                <h1 className="text-[26px] md:text-5xl lg:text-6xl font-bold text-center text-[#1E556E] leading-10 md:leading-20  mb-6
                  animate-slide-up text-balance max-w-4xl">
-                    Adorable Kids Dress Sets <br />
-                    <span className="text-primary">Mix, Match & Save Big!</span>
+                    {combo?.landingPageTitle || "Adorable Kids Dress Sets"} <br />
+                    {/* <span className="text-primary">Mix, Match & Save Big!</span> */}
                 </h1>
 
+
+                <ComboSlider comboSliders={comboSliders} />
                 {/* Subheadline */}
-                <p className="text-lg md:text-xl text-muted-foreground text-center max-w-2xl mb-8 animate-slide-up" style={{ animationDelay: "0.1s" }}>
-                    Create the perfect wardrobe bundle for your little ones. Choose 3 to 10 pieces and enjoy massive savings on premium quality kids' clothing.
+                <p className="text-[14px] md:text-xl text-muted-foreground text-center max-w-2xl mb-8 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+                    {combo?.landingPageSubtitle || "Create the perfect wardrobe bundle for your little ones. Choose 3 to 10 pieces and enjoy massive savings on premium quality kids' clothing."}
                 </p>
 
                 {/* CTA Button */}
                 <button
                     onClick={scrollToBundles}
-                    className="gradient-cta text-accent-foreground font-bold text-lg md:text-lg px-10 py-2.5 md:py-4 rounded-full shadow-cta hover:scale-105 transition-all
-                     duration-300 animate-slide-up mb-12 "
+                    className="bg-[#25D366] text-accent-foreground font-bold text-[15px] md:text-lg px-10 py-2.5 md:py-4 rounded-full shadow-cta hover:scale-105 transition-all
+                     duration-300 animate-slide-up  "
                     style={{ animationDelay: "0.2s" }}
                 >
-                    Chose Your Bundle Now
+                    {combo?.heroCTA || "পছন্দের বান্ডেলটি বেছে নিন"}
                 </button>
 
                 {/* Trust Badges */}
-                <div className="flex flex-wrap justify-center gap-6 md:gap-10 animate-slide-up" style={{ animationDelay: "0.3s" }}>
+                {/* <div className="flex flex-wrap justify-center gap-6 md:gap-10 animate-slide-up" style={{ animationDelay: "0.3s" }}>
                     <div className="flex items-center gap-2 text-muted-foreground">
                         <Truck size={20} className="text-primary" />
                         <span className="text-sm font-medium">Free Shipping</span>
@@ -60,7 +63,7 @@ const HeroSection = () => {
                         <Star size={20} className="text-primary" />
                         <span className="text-sm font-medium">5000+ Happy Parents</span>
                     </div>
-                </div>
+                </div> */}
             </div>
 
             {/* Wave Divider */}

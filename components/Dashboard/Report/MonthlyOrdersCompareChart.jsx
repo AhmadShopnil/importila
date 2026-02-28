@@ -17,11 +17,17 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December"
 ]
 
-export default function MonthlyOrdersCompareChart() {
+export default function MonthlyOrdersCompareChart({ month: propMonth, year: propYear }) {
   const now = new Date()
-  const [month, setMonth] = useState(now.getMonth() + 1)
-  const [year, setYear] = useState(now.getFullYear())
+  const [month, setMonth] = useState(propMonth || now.getMonth() + 1)
+  const [year, setYear] = useState(propYear || now.getFullYear())
   const [data, setData] = useState([])
+
+  // Update local state when props change
+  useEffect(() => {
+    if (propMonth) setMonth(propMonth)
+    if (propYear) setYear(propYear)
+  }, [propMonth, propYear])
 
   useEffect(() => {
     fetch(
@@ -55,7 +61,7 @@ export default function MonthlyOrdersCompareChart() {
             onChange={(e) => setYear(Number(e.target.value))}
             className="border rounded-lg px-3 py-2"
           >
-            {[2025, 2026].map(y => (
+            {[2024, 2025, 2026].map(y => (
               <option key={y} value={y}>{y}</option>
             ))}
           </select>

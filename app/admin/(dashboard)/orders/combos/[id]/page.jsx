@@ -24,49 +24,27 @@ import {
 } from "lucide-react"
 import toast from "react-hot-toast"
 
+import {
+    useGetOrderQuery,
+    useUpdateOrderMutation,
+    useLazyCheckCourierStatusQuery
+} from "@/lib/redux/api/orderApi"
+import InvoicePrint from "@/components/Dashboard/Order/InvoicePrint"
+
 export default function ComboOrderDetailsPage({ params: paramsPromise }) {
     const params = use(paramsPromise)
     const { id } = params
-    const [order, setOrder] = useState(null)
-    const [loading, setLoading] = useState(true)
-    const [updating, setUpdating] = useState(false)
 
-    useEffect(() => {
-        fetchOrder()
-    }, [id])
-
-    const fetchOrder = async () => {
-        try {
-            const res = await fetch(`${BASE_URL}/api/orders/${id}`)
-            const data = await res.json()
-            if (res.ok) setOrder(data)
-            else toast.error("Failed to fetch order details")
-        } catch (error) {
-            console.error(error)
-            toast.error("An error occurred")
-        } finally {
-            setLoading(false)
-        }
-    }
+    const { data: order, isLoading: loading } = useGetOrderQuery(id)
+    const [updateOrder, { isLoading: updating }] = useUpdateOrderMutation()
+    const [checkCourierStatus] = useLazyCheckCourierStatusQuery()
 
     const handleUpdateStatus = async (status) => {
-        setUpdating(true)
         try {
-            const res = await fetch(`${BASE_URL}/api/orders/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status })
-            })
-            if (res.ok) {
-                toast.success(`Order status updated to ${status}`)
-                fetchOrder()
-            } else {
-                toast.error("Failed to update status")
-            }
+            await updateOrder({ id, status }).unwrap()
+            toast.success(`Order status updated to ${status}`)
         } catch (error) {
-            console.error(error)
-        } finally {
-            setUpdating(false)
+            toast.error(error.data?.error || "Failed to update status")
         }
     }
 
@@ -74,11 +52,9 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
         if (!order?.courierConsignmentId) return
         const toastId = toast.loading("Syncing with courier...")
         try {
-            const res = await fetch(`${BASE_URL}/api/courier/check-status?consignmentId=${order.courierConsignmentId}`)
-            const data = await res.json()
+            const data = await checkCourierStatus(order.courierConsignmentId).unwrap()
             if (data.status === 200) {
                 toast.success(`Sync Complete: ${data.delivery_status}`, { id: toastId })
-                fetchOrder()
             } else {
                 toast.error("Courier sync failed", { id: toastId })
             }
@@ -87,8 +63,10 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
         }
     }
 
-    if (loading) return <Loading />
-    if (!order) return <div className="p-10 text-center">Order not found</div>
+    if (loading) return <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    </div>
+    if (!order) return <div className="p-10 text-center text-muted-foreground">Order not found</div>
 
     const statusColors = {
         pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
@@ -146,11 +124,12 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
                 <div className="lg:col-span-2 space-y-6">
                     {/* Items Table */}
                     <div className="bg-white rounded-md border border-indigo-100 shadow-sm overflow-hidden">
-                        <div className="p-6 border-b border-indigo-50 flex items-center justify-between bg-indigo-50/30">
-                            <h3 className="font-bold text-indigo-900 flex items-center gap-2">
-                                <Gem className="w-5 h-5" />
-                                Bundle Selections ({orderItems.length || 1})
+                        <div className="p-6 border-b border-indigo-50 flex flex-wrap items-center justify-between bg-indigo-50/30">
+                            <h3 className="font-bold text-indigo-900 flex items-center gap-2 text-lg">
+
+                                Bundle Size :  {orderItems?.length || 1} Pieces
                             </h3>
+                            <h1 className="font-bold text-indigo-900 flex items-center gap-2 text-lg">Product Size: {order?.productSize} Years</h1>
                             <span className="text-[10px] font-black uppercase bg-indigo-600 text-white px-2 py-0.5 rounded shadow">Combo Offer</span>
                         </div>
                         <div className="overflow-x-auto">
@@ -206,13 +185,13 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
                                         <span className="font-medium text-gray-900 ">৳ {(order.price || 0).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-sm text-indigo-600 font-bold">
-                                        <span>Bundle Discount</span>
-                                        <span className="">- ৳ {((order?.totalAmount || 0) - (order.offerPrice || order?.price || 0)).toLocaleString()}</span>
+                                        <span>Shiping charge </span>
+                                        <span className="">+ ৳ {(order.shippingCharge || 0).toLocaleString()}</span>
                                     </div>
                                     <div className="h-px bg-indigo-100 my-2" />
                                     <div className="flex justify-between text-lg">
                                         <span className="font-bold text-gray-900">Paid Amount</span>
-                                        <span className="font-black text-indigo-700">৳ {(order.offerPrice || order.totalPrice || order.price).toLocaleString()}</span>
+                                        <span className="font-black text-indigo-700">৳ {(order.totalAmount || (order?.price + order?.shippingCharge)).toLocaleString()}</span>
                                     </div>
                                 </div>
                             </div>
@@ -266,10 +245,10 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
                             </div>
                         </div>
 
-                        {order.note && (
+                        {order?.note && (
                             <div className="mt-6 p-4 bg-white/10 rounded-xl border border-white/10 backdrop-blur-sm">
-                                <p className="text-[10px] uppercase font-black text-white/40 mb-1">Bundle Note</p>
-                                <p className="text-xs italic opacity-90">"{order?.note}"</p>
+                                <p className="text-[14px] uppercase font-black text-whitemb-1">Bundle Note</p>
+                                <p className="text-sm italic opacity-90">"{order?.note}"</p>
                             </div>
                         )}
                     </div>
@@ -335,6 +314,7 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
                     </div> */}
                 </div>
             </div>
+            <InvoicePrint order={order} />
         </div>
     )
 }

@@ -4,9 +4,11 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import toast from "react-hot-toast"
-import { ArrowLeft, Plus, Trash2, X } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, X, UploadCloud, Copy } from "lucide-react"
 import { BASE_URL } from "@/utils/baseUrl"
 import CategoryMultiSelect from "@/components/Dashboard/Products/CategoryMultiSelect"
+import RichTextEditor from "@/components/RichTextEditor"
+import MediaPicker from "@/components/Dashboard/MediaManager/MediaPicker"
 
 /* ---------- SKU Generator ---------- */
 const generateSKU = (color, size) => {
@@ -14,12 +16,17 @@ const generateSKU = (color, size) => {
   return `${color.replace(/\s+/g, "-").toUpperCase()}-${size.toUpperCase()}`
 }
 
+import {
+  useGetProductQuery,
+  useUpdateProductMutation
+} from "@/lib/redux/api/productApi"
+
 export default function EditProductPage() {
   const { id } = useParams()
   const router = useRouter()
 
-  const [loading, setLoading] = useState(false)
-  const [fetching, setFetching] = useState(true)
+  const { data: productData, isLoading: fetching } = useGetProductQuery(id)
+  const [updateProduct, { isLoading: loading }] = useUpdateProductMutation()
   const [categories, setCategories] = useState([])
 
   const [formData, setFormData] = useState({
@@ -35,7 +42,14 @@ export default function EditProductPage() {
     isFeatured: false,
     isActive: true,
     designName: "",
+    richDescription: "",
   })
+
+  const [showFeaturedMediaPicker, setShowFeaturedMediaPicker] = useState(false)
+  const [showGalleryMediaPicker, setShowGalleryMediaPicker] = useState(false)
+  const [variantImagePicker, setVariantImagePicker] = useState({ open: false, index: null })
+  const [selectedVariantIndexes, setSelectedVariantIndexes] = useState([])
+  const [showBulkImagePicker, setShowBulkImagePicker] = useState(false)
 
   /* ---------- Fetch Categories ---------- */
   useEffect(() => {
@@ -51,44 +65,30 @@ export default function EditProductPage() {
     fetchCategories()
   }, [])
 
-  /* ---------- Fetch Product ---------- */
+  /* ---------- Populates formData when productData is available ---------- */
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const res = await fetch(`${BASE_URL}/api/products/${id}`)
-        const data = await res.json()
-        if (!res.ok) {
-          toast.error("Failed to load product")
-          return
-        }
-
-        setFormData({
-          ...data,
-          price: String(data.price),
-          featuredImage: data.featuredImage || null,
-          images: data.images || [],
-          categories: Array.isArray(data.categories)
-            ? data.categories
-            : (data.category ? [data.category] : []),
-          isFeatured: !!data.isFeatured,
-          isActive: data.isActive !== undefined ? !!data.isActive : true,
-          designName: data.designName || "",
-          purchasePrice: data.purchasePrice ? String(data.purchasePrice) : "",
-          variants: data.variants.map((v) => ({
-            ...v,
-            stock: String(v.stock),
-            sku: generateSKU(v.colorName, v.size),
-          })),
-        })
-      } catch {
-        toast.error("Something went wrong")
-      } finally {
-        setFetching(false)
-      }
+    if (productData) {
+      setFormData({
+        ...productData,
+        price: String(productData.price),
+        featuredImage: productData.featuredImage || null,
+        images: productData.images || [],
+        categories: Array.isArray(productData.categories)
+          ? productData.categories
+          : (productData.category ? [productData.category] : []),
+        isFeatured: !!productData.isFeatured,
+        isActive: productData.isActive !== undefined ? !!productData.isActive : true,
+        designName: productData.designName || "",
+        richDescription: productData.richDescription || "",
+        purchasePrice: productData.purchasePrice ? String(productData.purchasePrice) : "",
+        variants: productData.variants.map((v) => ({
+          ...v,
+          stock: String(v.stock),
+          sku: generateSKU(v.colorName, v.size),
+        })),
+      })
     }
-
-    fetchProduct()
-  }, [id])
+  }, [productData])
 
   /* ---------- Product fields ---------- */
   const handleChange = (e) => {
@@ -121,7 +121,7 @@ export default function EditProductPage() {
       ...prev,
       variants: [
         ...prev.variants,
-        { colorName: "", colorHex: "#000000", size: "", stock: "", sku: "" },
+        { colorName: "", colorHex: "#000000", size: "", stock: "", sku: "", image: "" },
       ],
     }))
   }
@@ -139,6 +139,42 @@ export default function EditProductPage() {
       ...formData,
       variants: formData.variants.filter((_, i) => i !== index),
     })
+  }
+
+  const duplicateVariant = (index) => {
+    const variantToCopy = formData.variants[index]
+    const newVariant = { ...variantToCopy, sku: "" }
+
+    const updatedVariants = [...formData.variants]
+    updatedVariants.splice(index + 1, 0, newVariant)
+
+    setFormData({ ...formData, variants: updatedVariants })
+    toast.success("Variant duplicated")
+  }
+
+  const toggleVariantSelection = (index) => {
+    setSelectedVariantIndexes(prev =>
+      prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+    )
+  }
+
+  const selectAllVariants = () => {
+    if (selectedVariantIndexes.length === formData.variants.length) {
+      setSelectedVariantIndexes([])
+    } else {
+      setSelectedVariantIndexes(formData.variants.map((_, i) => i))
+    }
+  }
+
+  const applyBulkImage = (url) => {
+    const updated = [...formData.variants]
+    selectedVariantIndexes.forEach(index => {
+      updated[index].image = url
+    })
+    setFormData({ ...formData, variants: updated })
+    setShowBulkImagePicker(false)
+    setSelectedVariantIndexes([])
+    toast.success(`Image applied to ${selectedVariantIndexes.length} variants`)
   }
 
   /* ---------- Submit ---------- */
@@ -171,7 +207,6 @@ export default function EditProductPage() {
       }
     }
 
-    setLoading(true)
     try {
       const fd = new FormData()
       fd.append("name", formData.name)
@@ -183,15 +218,14 @@ export default function EditProductPage() {
       fd.append("isFeatured", formData.isFeatured)
       fd.append("isActive", formData.isActive)
       fd.append("designName", formData.designName)
+      fd.append("richDescription", formData.richDescription)
 
-      // Featured image (File or URL)
       if (formData.featuredImage instanceof File) {
         fd.append("featuredImage", formData.featuredImage)
       } else {
         fd.append("featuredImageURL", formData.featuredImage)
       }
 
-      // Extra images (Files or URL strings)
       formData.images.forEach((img) => {
         if (img instanceof File) {
           fd.append("images", img)
@@ -205,31 +239,25 @@ export default function EditProductPage() {
         JSON.stringify(formData.variants.map((v) => ({ ...v, stock: Number(v.stock) })))
       )
 
-      const res = await fetch(`${BASE_URL}/api/products/${id}`, {
-        method: "PUT",
-        body: fd,
-      })
-
-      if (res.ok) {
-        toast.success("Product updated successfully")
-        router.push("/admin/products")
-      } else {
-        toast.error("Update failed")
-      }
-    } catch {
-      toast.error("Something went wrong")
-    } finally {
-      setLoading(false)
+      await updateProduct({ id, body: fd }).unwrap()
+      toast.success("Product updated successfully")
+      router.push("/admin/products")
+    } catch (error) {
+      toast.error(error.data?.error || "Update failed")
     }
   }
 
-  if (fetching) return <p className="text-center py-10">Loading product...</p>
+  if (fetching) return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <div className="w-8 h-8 border-4 border-[#1E556E] border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  )
 
   return (
     <div className="w-full">
       <Link
         href="/admin/products"
-        className="inline-flex items-center gap-2 md:text-lg text-blue-500 mb-6"
+        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Products
@@ -334,8 +362,20 @@ export default function EditProductPage() {
               </div>
             </div>
 
+            <div className="mt-5 space-y-4">
+              <label className="text-sm font-semibold text-foreground flex justify-between items-center">
+                <span>Detailed Description (Rich Content)</span>
+                <span className="text-[10px] text-primary bg-primary/5 px-2 py-1 rounded">Visual Editor</span>
+              </label>
+              <RichTextEditor
+                value={formData.richDescription}
+                onChange={(content) => setFormData(prev => ({ ...prev, richDescription: content }))}
+                placeholder="Write detailed product information, specifications, etc..."
+              />
+            </div>
+
             <div className="mt-5">
-              <label className="form-label">Description</label>
+              <label className="form-label">Short Description</label>
               <textarea
                 rows={3}
                 name="description"
@@ -346,82 +386,223 @@ export default function EditProductPage() {
             </div>
 
             {/* Images */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
               {/* Featured Image */}
-              <div>
-                <label className="form-label">Featured Image *</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFeaturedImage}
-                  className="form-input cursor-pointer"
-                />
-                {formData.featuredImage && (
-                  <img
-                    src={
-                      formData.featuredImage instanceof File
-                        ? URL.createObjectURL(formData.featuredImage)
-                        : formData.featuredImage
-                    }
-                    alt="Featured"
-                    className="mt-3 h-32 w-32 object-cover rounded-xl border"
-                  />
-                )}
+              <div className="space-y-4">
+                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  Featured Image <span className="text-red-500">*</span>
+                </label>
+                <div className="relative group">
+                  {formData?.featuredImage ? (
+                    <div className="relative border border-border rounded-2xl overflow-hidden group h-64 bg-gray-50 flex items-center justify-center shadow-sm">
+                      <img
+                        src={
+                          formData.featuredImage instanceof File
+                            ? URL.createObjectURL(formData.featuredImage)
+                            : formData.featuredImage
+                        }
+                        alt="Featured"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center gap-3 backdrop-blur-[2px]">
+                        <button
+                          type="button"
+                          onClick={() => setShowFeaturedMediaPicker(true)}
+                          className="bg-white text-gray-900 px-5 py-2.5 rounded-xl text-sm font-bold shadow-xl hover:scale-105 transition-transform"
+                        >
+                          Choose from Library
+                        </button>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            className="flex items-center gap-2 bg-white text-gray-900 px-5 py-2.5 rounded-xl text-sm font-bold shadow-xl hover:scale-105 transition-transform"
+                          >
+                            <UploadCloud size={18} />
+                            Upload New
+                          </button>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFeaturedImage}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, featuredImage: null }))}
+                          className="text-white text-xs font-semibold hover:text-red-400 transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-border hover:border-primary rounded-2xl p-8 transition-all bg-muted/20">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                          <UploadCloud size={32} />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-bold text-foreground mb-3">Upload Featured Image</p>
+                          <div className="flex gap-3 justify-center">
+                            <label className="cursor-pointer bg-[#1E556E] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
+                              Upload New
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFeaturedImage}
+                                className="hidden"
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setShowFeaturedMediaPicker(true)}
+                              className="bg-white border-2 border-[#1E556E] text-[#1E556E] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#1E556E] hover:text-white transition-all"
+                            >
+                              Choose from Library
+                            </button>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-2">PNG, JPG or WebP (max. 5MB)</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Extra Images */}
-              <div>
-                <label className="form-label">Extra Images</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleExtraImages}
-                  className="form-input cursor-pointer"
-                />
-                {formData.images.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-3">
-                    {formData.images.map((img, i) => (
-                      <div key={i} className="relative">
-                        <img
-                          src={img instanceof File ? URL.createObjectURL(img) : img}
-                          className="h-20 w-20 rounded-lg border object-cover"
-                        />
+              <div className="space-y-4">
+                <label className="text-sm font-semibold text-foreground">Extra Images (Gallery)</label>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="border-2 border-dashed border-border hover:border-primary rounded-2xl p-6 transition-all bg-muted/20">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <Plus size={24} />
+                      </div>
+                      <p className="text-xs font-bold text-foreground">Add Gallery Images</p>
+                      <div className="flex gap-2">
+                        <label className="cursor-pointer bg-[#1E556E] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity">
+                          Upload New
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleExtraImages}
+                            className="hidden"
+                          />
+                        </label>
                         <button
                           type="button"
-                          onClick={() => removeExtraImage(i)}
-                          className="absolute -top-2 -right-2 bg-white rounded-full p-1 text-red-500 shadow-md"
+                          onClick={() => setShowGalleryMediaPicker(true)}
+                          className="bg-white border-2 border-[#1E556E] text-[#1E556E] px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#1E556E] hover:text-white transition-all"
                         >
-                          <X className="w-3 h-3" />
+                          Choose from Library
                         </button>
                       </div>
-                    ))}
+                    </div>
                   </div>
-                )}
+
+                  {formData.images.length > 0 && (
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+                      {formData.images.map((img, i) => (
+                        <div key={i} className="relative group aspect-square">
+                          <img
+                            src={img instanceof File ? URL.createObjectURL(img) : img}
+                            className="w-full h-full rounded-xl border border-border object-cover shadow-sm transition-transform group-hover:scale-[1.02]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeExtraImage(i)}
+                            className="absolute -top-2 -right-2 bg-white rounded-full p-1.5 text-red-500 shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-110 border border-red-50"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </section>
 
           {/* Variants */}
           <section>
-            <div className="flex justify-between mb-4">
-              <h2 className="text-lg font-semibold">Variants & Stock</h2>
-              <button
-                type="button"
-                onClick={addVariant}
-                className="inline-flex items-center gap-1 text-primary"
-              >
-                <Plus className="w-4 h-4" />
-                Add Variant
-              </button>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+              <div className="flex items-center gap-4">
+                <h2 className="text-lg font-semibold">Variants & Stock</h2>
+                {formData.variants.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={selectAllVariants}
+                    className="text-xs font-bold text-primary hover:underline"
+                  >
+                    {selectedVariantIndexes.length === formData.variants.length ? "Deselect All" : "Select All"}
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3">
+                {selectedVariantIndexes.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkImagePicker(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-xs font-bold hover:bg-primary/20 transition-colors"
+                  >
+                    <UploadCloud size={14} />
+                    Set Image for Selected ({selectedVariantIndexes.length})
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={addVariant}
+                  className="inline-flex items-center gap-1 text-sm md:text-base text-[#1E556E] font-bold"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Variant
+                </button>
+              </div>
             </div>
 
             <div className="space-y-4">
               {formData.variants.map((variant, index) => (
                 <div
                   key={index}
-                  className="border rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 bg-gray-50"
+                  className={`relative border rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4 items-end transition-colors ${selectedVariantIndexes.includes(index) ? 'bg-primary/5 border-primary/30' : 'bg-gray-50'}`}
                 >
+                  {/* Selection Checkbox */}
+                  <div className="absolute top-4 left-4 z-10">
+                    <input
+                      type="checkbox"
+                      checked={selectedVariantIndexes.includes(index)}
+                      onChange={() => toggleVariantSelection(index)}
+                      className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg h-[80px] w-[80px] mx-auto relative group overflow-hidden bg-white">
+                    {variant.image ? (
+                      <>
+                        <img src={variant.image} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => updateVariant(index, "image", "")}
+                          className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setVariantImagePicker({ open: true, index })}
+                        className="flex flex-col items-center text-gray-400 hover:text-primary transition-colors"
+                      >
+                        <Plus size={20} />
+                        <span className="text-[10px] font-bold">Image</span>
+                      </button>
+                    )}
+                  </div>
                   <div>
                     <label className="form-label">Color Name *</label>
                     <input
@@ -477,13 +658,22 @@ export default function EditProductPage() {
                     />
                   </div>
 
-                  <div className="flex items-end">
+                  <div className="flex items-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => duplicateVariant(index)}
+                      className="text-[#1E556E] mb-1.5 hover:scale-110 transition-transform"
+                      title="Duplicate Variant"
+                    >
+                      <Copy className="w-5 h-5" />
+                    </button>
                     <button
                       type="button"
                       onClick={() => removeVariant(index)}
-                      className="text-red-500"
+                      className="text-red-500 mb-1.5 hover:scale-110 transition-transform"
+                      title="Remove Variant"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
@@ -499,6 +689,51 @@ export default function EditProductPage() {
             {loading ? "Updating..." : "Update Product"}
           </button>
         </form>
+
+        {/* Media Pickers */}
+        <MediaPicker
+          isOpen={showFeaturedMediaPicker}
+          onClose={() => setShowFeaturedMediaPicker(false)}
+          onSelect={(url) => {
+            setFormData(prev => ({ ...prev, featuredImage: url }))
+            setShowFeaturedMediaPicker(false)
+          }}
+          folder="products"
+          multiple={false}
+        />
+
+        <MediaPicker
+          isOpen={showGalleryMediaPicker}
+          onClose={() => setShowGalleryMediaPicker(false)}
+          onSelect={(urls) => {
+            setFormData(prev => ({
+              ...prev,
+              images: [...prev.images, ...urls]
+            }))
+            setShowGalleryMediaPicker(false)
+          }}
+          folder="products"
+          multiple={true}
+        />
+
+        <MediaPicker
+          isOpen={variantImagePicker.open}
+          onClose={() => setVariantImagePicker({ open: false, index: null })}
+          onSelect={(url) => {
+            updateVariant(variantImagePicker.index, "image", url)
+            setVariantImagePicker({ open: false, index: null })
+          }}
+          folder="products"
+          multiple={false}
+        />
+
+        <MediaPicker
+          isOpen={showBulkImagePicker}
+          onClose={() => setShowBulkImagePicker(false)}
+          onSelect={applyBulkImage}
+          folder="products"
+          multiple={false}
+        />
       </div>
     </div>
   )

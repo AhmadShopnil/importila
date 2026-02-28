@@ -98,6 +98,53 @@ export async function POST(request) {
     // Generate order number
     const orderNumber = `ORD-${Date.now()}`
 
+    // Update stock for each item
+    if (body.items && Array.isArray(body.items)) {
+      const bulkUpdates = []
+      for (const item of body.items) {
+        if (!item.productId) continue
+
+        const product = await db.collection("products").findOne({ _id: new ObjectId(item.productId) })
+        if (!product) {
+          // console.error(`Product not found for stock update: ${item.productId}`)
+          continue
+        }
+
+        // Find the matching variant by color and size
+        // Note: For combos, size is global (body.productSize)
+        const variantIndex = product.variants?.findIndex(v =>
+          v.colorName === item.color && v.size === body.productSize
+        )
+
+        if (variantIndex === undefined || variantIndex === -1) {
+          // console.error(`Variant not found for product ${item.productId}, color ${item.color}, size ${body.productSize}`)
+          continue
+        }
+
+        const variant = product.variants[variantIndex]
+        if (variant.stock <= 0) {
+          // console.warn(`Attempting to order out of stock item: ${item.name} (${item.color}, ${body.productSize})`)
+          // We still decrease it to show negative stock, or we could skip. 
+          // Given the requirements, we'll decrease it.
+        }
+
+        bulkUpdates.push({
+          updateOne: {
+            filter: {
+              _id: new ObjectId(item.productId),
+              "variants.colorName": item.color,
+              "variants.size": body.productSize
+            },
+            update: { $inc: { "variants.$.stock": -1 } },
+          },
+        })
+      }
+
+      if (bulkUpdates.length > 0) {
+        await db.collection("products").bulkWrite(bulkUpdates)
+      }
+    }
+
     const orderFinalData = {
       ...body,
       orderNumber,
@@ -108,8 +155,6 @@ export async function POST(request) {
       createdAt: new Date(),
       updatedAt: new Date(),
     }
-
-    // console.log("orderFinalData from combo order api route",orderFinalData)
 
     const result = await db.collection("orders").insertOne(orderFinalData)
 

@@ -1,8 +1,7 @@
 "use client"
 
-import { useEffect, useState, use } from "react"
-import Loading from "@/components/Loader/Loading"
-import { BASE_URL } from "@/utils/baseUrl"
+import { use } from "react"
+
 import Link from "next/link"
 import {
     ArrowLeft,
@@ -23,49 +22,27 @@ import {
 } from "lucide-react"
 import toast from "react-hot-toast"
 
+import {
+    useGetOrderQuery,
+    useUpdateOrderMutation,
+    useLazyCheckCourierStatusQuery
+} from "@/lib/redux/api/orderApi"
+import InvoicePrint from "@/components/Dashboard/Order/InvoicePrint"
+
 export default function OrderDetailsPage({ params: paramsPromise }) {
     const params = use(paramsPromise)
     const { id } = params
-    const [order, setOrder] = useState(null)
-    const [loading, setLoading] = useState(true)
-    const [updating, setUpdating] = useState(false)
 
-    useEffect(() => {
-        fetchOrder()
-    }, [id])
-
-    const fetchOrder = async () => {
-        try {
-            const res = await fetch(`${BASE_URL}/api/orders/${id}`)
-            const data = await res.json()
-            if (res.ok) setOrder(data)
-            else toast.error("Failed to fetch order details")
-        } catch (error) {
-            console.error(error)
-            toast.error("An error occurred")
-        } finally {
-            setLoading(false)
-        }
-    }
+    const { data: order, isLoading: loading } = useGetOrderQuery(id)
+    const [updateOrder, { isLoading: updating }] = useUpdateOrderMutation()
+    const [checkCourierStatus] = useLazyCheckCourierStatusQuery()
 
     const handleUpdateStatus = async (status) => {
-        setUpdating(true)
         try {
-            const res = await fetch(`${BASE_URL}/api/orders/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status })
-            })
-            if (res.ok) {
-                toast.success(`Order status updated to ${status}`)
-                fetchOrder()
-            } else {
-                toast.error("Failed to update status")
-            }
+            await updateOrder({ id, status }).unwrap()
+            toast.success(`Order status updated to ${status}`)
         } catch (error) {
-            console.error(error)
-        } finally {
-            setUpdating(false)
+            toast.error(error.data?.error || "Failed to update status")
         }
     }
 
@@ -73,11 +50,9 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
         if (!order?.courierConsignmentId) return
         const toastId = toast.loading("Syncing with courier...")
         try {
-            const res = await fetch(`${BASE_URL}/api/courier/check-status?consignmentId=${order.courierConsignmentId}`)
-            const data = await res.json()
+            const data = await checkCourierStatus(order.courierConsignmentId).unwrap()
             if (data.status === 200) {
                 toast.success(`Sync Complete: ${data.delivery_status}`, { id: toastId })
-                fetchOrder()
             } else {
                 toast.error("Courier sync failed", { id: toastId })
             }
@@ -86,8 +61,10 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
         }
     }
 
-    if (loading) return <Loading />
-    if (!order) return <div className="p-10 text-center">Order not found</div>
+    if (loading) return <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    </div>
+    if (!order) return <div className="p-10 text-center text-muted-foreground">Order not found</div>
 
     const statusColors = {
         pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
@@ -98,7 +75,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
     }
 
     return (
-        <div className="space-y-6 pb-20 max-w-6xl mx-auto">
+        <div className="space-y-6 pb-6">
             {/* Header Actions */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -108,11 +85,11 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                             Order Details
-                            <span className="text-gray-400 font-normal">#{order.orderNumber}</span>
+                            <span className="text-gray-400 font-normal">#{order?.orderNumber}</span>
                         </h1>
                         <p className="text-sm text-gray-500 flex items-center gap-1">
                             <Calendar className="w-3.5 h-3.5" />
-                            Placed on {new Date(order.createdAt).toLocaleString()}
+                            Placed on {new Date(order?.createdAt).toLocaleString()}
                         </p>
                     </div>
                 </div>
@@ -146,12 +123,12 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                         <div className="p-6 border-b border-gray-50 flex items-center justify-between">
                             <h3 className="font-bold text-gray-900 flex items-center gap-2">
                                 <Package className="w-5 h-5 text-[#1E556E]" />
-                                Order Items ({order.items?.length || 0})
+                                Order Items ({order?.items?.length || 0})
                             </h3>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm text-left">
-                                <thead className="bg-gray-50 text-gray-600 font-bold uppercase text-[10px] tracking-widest">
+                                <thead className="bg-gray-50 text-gray-600 font-bold uppercase text-[14px] tracking-widest">
                                     <tr>
                                         <th className="p-4">Product Details</th>
                                         <th className="p-4 text-center">Qty</th>
@@ -172,12 +149,12 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-gray-900">{item.name}</p>
-                                                    <p className="text-[10px] text-gray-400 font-mono mt-0.5">SKU: {item.sku}</p>
+                                                    <p className="text-[14px] text-gray-400 font-mono mt-0.5">SKU: {item.sku}</p>
                                                 </div>
                                             </td>
                                             <td className="p-4 text-center font-medium text-gray-700">x{item.quantity}</td>
-                                            <td className="p-4 text-right font-medium text-gray-700">৳ {item.price.toLocaleString()}</td>
-                                            <td className="p-4 text-right font-bold text-gray-900">৳ {(item.price * item.quantity).toLocaleString()}</td>
+                                            <td className="p-4 text-right font-medium text-gray-700">৳ {item?.price?.toLocaleString()}</td>
+                                            <td className="p-4 text-right font-bold text-gray-900">৳ {(item?.price * item?.quantity)?.toLocaleString()}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -190,16 +167,26 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                                 <div className="w-full max-w-[240px] space-y-3">
                                     <div className="flex justify-between text-sm text-gray-500">
                                         <span>Subtotal</span>
-                                        <span className="font-medium text-gray-900">৳ {order.totalPrice?.toLocaleString()}</span>
+                                        <span className="font-medium text-gray-900">৳ {(order?.totalPrice)?.toLocaleString()}</span>
+
+                                        {/* <span className="font-medium text-gray-900">৳ {(order?.totalAmount - (order.shippingCharge || 0)).toLocaleString()}</span> */}
                                     </div>
                                     <div className="flex justify-between text-sm text-gray-500">
-                                        <span>Shipping Fee</span>
-                                        <span className="font-medium text-green-600">Free</span>
+                                        <span>Discount</span>
+                                        <span className="font-medium text-gray-900">- ৳ {(order?.discount)?.toLocaleString()}</span>
+
+
+                                    </div>
+                                    <div className="flex justify-between text-sm text-gray-500">
+                                        <span>Shipping Fee ({order.deliveryLocation === 'inside' ? 'Inside Dhaka' : 'Outside Dhaka'})</span>
+                                        <span className={`font-medium ${order.shippingCharge > 0 ? 'text-gray-900' : 'text-green-600'}`}>
+                                            {order.shippingCharge > 0 ? `+ ৳ ${order?.shippingCharge?.toLocaleString()}` : 'Free'}
+                                        </span>
                                     </div>
                                     <div className="h-px bg-gray-200 my-2" />
                                     <div className="flex justify-between text-lg">
                                         <span className="font-bold text-gray-900">Total</span>
-                                        <span className="font-black text-[#1E556E]">৳ {order.totalPrice?.toLocaleString()}</span>
+                                        <span className="font-black text-[#1E556E]">৳ {order?.totalAmount?.toLocaleString()}</span>
                                     </div>
                                 </div>
                             </div>
@@ -218,10 +205,10 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                                 <p className="font-bold text-gray-800 uppercase">{order.paymentMethod || 'Cash on Delivery'}</p>
                             </div>
                             <div className="space-y-1 text-right">
-                                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Status</p>
-                                <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase ${order.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                {/* <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Status</p>
+                                <span className={`inline-block px-3 py-1 rounded-full text-[14px] font-black uppercase ${order.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
                                     {order.paymentStatus || 'Unpaid'}
-                                </span>
+                                </span> */}
                             </div>
                         </div>
                     </div>
@@ -255,7 +242,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
 
                         {order.note && (
                             <div className="mt-6 p-4 bg-white/10 rounded-xl border border-white/10 backdrop-blur-sm">
-                                <p className="text-[10px] uppercase font-black text-white/40 mb-1">Customer Note</p>
+                                <p className="text-[14px] uppercase font-black text-white/40 mb-1">Customer Note</p>
                                 <p className="text-xs italic opacity-90">"{order.note}"</p>
                             </div>
                         )}
@@ -307,7 +294,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                     </div>
 
                     {/* Risk Card */}
-                    <div className="bg-red-50 rounded-2xl border border-red-100 p-6 space-y-4">
+                    {/* <div className="bg-red-50 rounded-2xl border border-red-100 p-6 space-y-4">
                         <h3 className="font-bold text-red-900 flex items-center gap-2 border-b border-red-200/50 pb-4">
                             <Shield className="w-5 h-5" />
                             Security Check
@@ -319,9 +306,12 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                                 <span className="text-sm font-bold uppercase tracking-tighter">Phone Verified</span>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
+
+            {/* Hidden Printable Invoice Section */}
+            <InvoicePrint order={order} />
         </div>
     )
 }

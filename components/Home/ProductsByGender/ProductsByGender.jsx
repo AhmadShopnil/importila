@@ -25,13 +25,7 @@ const ProductCard = ({ product }) => {
         </div>
 
 
-        {/* {product.isNew && (
-          <span
-            className={`absolute top-3 left-3 text-xs font-bold px-2 py-1 rounded-full text-white ${accentColor}`}
-          >
-            NEW
-          </span>
-        )} */}
+
 
 
       </div>

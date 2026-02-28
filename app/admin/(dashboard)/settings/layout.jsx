@@ -29,30 +29,30 @@ const settingsMenu = [
         icon: MenuIcon,
         description: "Configure navigation menus"
     },
-    {
-        label: "Order Settings",
-        href: "/admin/settings/orders",
-        icon: Tag,
-        description: "Order prefixes and configurations"
-    },
-    {
-        label: "Shipping & Delivery",
-        href: "/admin/settings/shipping",
-        icon: Truck,
-        description: "Delivery zones and charges"
-    },
-    {
-        label: "Notifications",
-        href: "/admin/settings/notifications",
-        icon: Bell,
-        description: "Email and SMS notifications"
-    },
-    {
-        label: "Advanced",
-        href: "/admin/settings/advanced",
-        icon: Shield,
-        description: "Advanced system settings"
-    },
+    // {
+    //     label: "Order Settings",
+    //     href: "/admin/settings/orders",
+    //     icon: Tag,
+    //     description: "Order prefixes and configurations"
+    // },
+    // {
+    //     label: "Shipping & Delivery",
+    //     href: "/admin/settings/shipping",
+    //     icon: Truck,
+    //     description: "Delivery zones and charges"
+    // },
+    // {
+    //     label: "Notifications",
+    //     href: "/admin/settings/notifications",
+    //     icon: Bell,
+    //     description: "Email and SMS notifications"
+    // },
+    // {
+    //     label: "Advanced",
+    //     href: "/admin/settings/advanced",
+    //     icon: Shield,
+    //     description: "Advanced system settings"
+    // },
     {
         label: "Courier Integration",
         href: "/admin/settings/courier",

@@ -12,21 +12,30 @@ import {
 } from "recharts"
 import { BASE_URL } from "@/utils/baseUrl"
 
-export default function DailyOrdersChart() {
+const MONTHS_LIST = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+]
+
+export default function DailyOrdersChart({ month, year }) {
   const [data, setData] = useState([])
 
   useEffect(() => {
-    fetch(`${BASE_URL}/api/orders/monthly`)
+    const queryParams = new URLSearchParams()
+    if (month) queryParams.append("month", month)
+    if (year) queryParams.append("year", year)
+
+    fetch(`${BASE_URL}/api/orders/monthly?${queryParams.toString()}`)
       .then(res => res.ok ? res.json() : [])
       .then(setData)
       .catch(() => setData([]))
-  }, [])
-  console.log("data", data)
+  }, [month, year])
+  // console.log("data", data)
 
   return (
     <div className="bg-white p-5 rounded-xl shadow">
       <h3 className="text-lg font-semibold mb-4">
-        Current Month Orders & Revenue
+        {month && year ? `${MONTHS_LIST[month - 1]} ${year}` : 'Current Month'} Orders & Revenue
       </h3>
 
       <div className="h-80">

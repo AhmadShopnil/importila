@@ -5,6 +5,8 @@ import { Save, Store, Mail, Phone, MapPin, DollarSign, Image as ImageIcon, Truck
 import toast from "react-hot-toast"
 import { BASE_URL } from "@/utils/baseUrl"
 import Loading from "@/components/Loader/Loading"
+import RichTextEditor from "@/components/RichTextEditor"
+import { FileText } from "lucide-react"
 
 export default function GeneralSettingsPage() {
     const [settings, setSettings] = useState({
@@ -21,7 +23,10 @@ export default function GeneralSettingsPage() {
         storeFavicon: "",
         timezone: "Asia/Dhaka",
         dateFormat: "DD/MM/YYYY",
-        timeFormat: "12h"
+        timeFormat: "12h",
+        insideDhakaCharge: 60,
+        outsideDhakaCharge: 120,
+        termsAndConditions: ""
     })
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -32,7 +37,9 @@ export default function GeneralSettingsPage() {
 
     const fetchSettings = async () => {
         try {
-            const res = await fetch(`${BASE_URL}/api/settings`)
+            const res = await fetch(`/api/settings`, {
+                credentials: "include"
+            })
             const data = await res.json()
             if (res.ok) {
                 setSettings(prev => ({ ...prev, ...data }))
@@ -50,16 +57,18 @@ export default function GeneralSettingsPage() {
         setSaving(true)
 
         try {
-            const res = await fetch(`${BASE_URL}/api/settings`, {
+            const res = await fetch(`/api/settings`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(settings),
+                credentials: "include"
             })
 
             if (res.ok) {
                 toast.success("Settings saved successfully!")
             } else {
-                toast.error("Failed to save settings")
+                const errorData = await res.json().catch(() => ({}))
+                toast.error(errorData.error || "Failed to save settings")
             }
         } catch (error) {
             console.error("Failed to save settings:", error)
@@ -244,6 +253,38 @@ export default function GeneralSettingsPage() {
                 </div>
             </div>
 
+            {/* Shipping Settings */}
+            <div className="bg-white rounded-xl border border-border shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-6">
+                    <Truck className="w-5 h-5 text-[#1E556E]" />
+                    <h2 className="text-xl font-semibold">Shipping Charges</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-semibold mb-2">Inside Dhaka Charge (৳)</label>
+                        <input
+                            type="number"
+                            value={settings.insideDhakaCharge}
+                            onChange={(e) => setSettings({ ...settings, insideDhakaCharge: Number(e.target.value) })}
+                            className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-[#1E556E] outline-none"
+                            placeholder="60"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold mb-2">Outside Dhaka Charge (৳)</label>
+                        <input
+                            type="number"
+                            value={settings.outsideDhakaCharge}
+                            onChange={(e) => setSettings({ ...settings, outsideDhakaCharge: Number(e.target.value) })}
+                            className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-[#1E556E] outline-none"
+                            placeholder="120"
+                        />
+                    </div>
+                </div>
+            </div>
+
             {/* Branding */}
             <div className="bg-white rounded-xl border border-border shadow-sm p-6">
                 <div className="flex items-center gap-2 mb-6">
@@ -278,9 +319,27 @@ export default function GeneralSettingsPage() {
                 </div>
             </div>
 
+            {/* Terms and Conditions */}
+            <div className="bg-white rounded-xl border border-border shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-6">
+                    <FileText className="w-5 h-5 text-[#1E556E]" />
+                    <h2 className="text-xl font-semibold">Legal & Policies</h2>
+                </div>
+
+                <div className="space-y-4">
+                    <label className="text-sm font-semibold text-foreground flex justify-between items-center">
+                        <span>Terms and Conditions</span>
+                        <span className="text-[10px] text-primary bg-primary/5 px-2 py-1 rounded">Rich Text Editor</span>
+                    </label>
+                    <RichTextEditor
+                        value={settings.termsAndConditions}
+                        onChange={(content) => setSettings(prev => ({ ...prev, termsAndConditions: content }))}
+                        placeholder="Write your store's terms and conditions here..."
+                    />
+                </div>
+            </div>
 
 
-            {/* Save Button */}
             <div className="sticky bottom-4 z-10">
                 <button
                     type="submit"

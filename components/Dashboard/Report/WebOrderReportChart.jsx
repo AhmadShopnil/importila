@@ -74,6 +74,7 @@ export default function WebOrderReportChart({
                         {[
                             { id: "today", label: "Today" },
                             { id: "yesterday", label: "Yesterday" },
+                            { id: "7d", label: "7D" },
                             { id: "30d", label: "30D" },
                             { id: "all", label: "All" }
                         ].map((tab) => (

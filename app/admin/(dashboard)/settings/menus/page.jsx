@@ -18,7 +18,9 @@ export default function MenuManagementPage() {
 
     const fetchMenus = async () => {
         try {
-            const res = await fetch(`${BASE_URL}/api/menus`)
+            const res = await fetch(`${BASE_URL}/api/menus`, {
+                credentials: "include"
+            })
             const data = await res.json()
             if (res.ok) {
                 setMenus(Array.isArray(data) ? data : [])
@@ -57,6 +59,7 @@ export default function MenuManagementPage() {
                 method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(editingMenu),
+                credentials: "include"
             })
 
             if (res.ok) {
@@ -80,6 +83,7 @@ export default function MenuManagementPage() {
         try {
             const res = await fetch(`${BASE_URL}/api/menus?id=${id}`, {
                 method: "DELETE",
+                credentials: "include"
             })
 
             if (res.ok) {

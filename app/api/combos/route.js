@@ -24,32 +24,83 @@ export async function POST(request) {
     const formData = await request.formData();
 
     const title = formData.get("title");
+    const slug = formData.get("slug");
+    const landingPageTitle = formData.get("landingPageTitle");
+    const landingPageSubtitle = formData.get("landingPageSubtitle");
+    const landingPageDetails = formData.get("landingPageDetails");
+
+    const heroBadge = formData.get("heroBadge");
+    const heroCTA = formData.get("heroCTA");
+    const bundleTitle = formData.get("bundleTitle");
+    const bundleSubtitle = formData.get("bundleSubtitle");
+    const productGridTitle = formData.get("productGridTitle");
+    const sizeSelectionTitle = formData.get("sizeSelectionTitle");
+    const checkoutFormTitle = formData.get("checkoutFormTitle");
+    const checkoutFormSubtitle = formData.get("checkoutFormSubtitle");
+    const checkoutCTA = formData.get("checkoutCTA");
+    const whatsappNumber = formData.get("whatsappNumber");
+    const messengerUsername = formData.get("messengerUsername");
+    const helpTitle = formData.get("helpTitle");
+    const helpSubtitle = formData.get("helpSubtitle");
+
     const description = formData.get("description");
-    const price = Number(formData.get("price"));
-    const offerPrice = Number(formData.get("offerPrice"));
+    const price = Number(formData.get("price")) || 0;
+    const offerPrice = Number(formData.get("offerPrice")) || 0;
     const sizes = JSON.parse(formData.get("sizes") || "[]");
     const products = JSON.parse(formData.get("products") || "[]");
+    const bundleOptions = JSON.parse(formData.get("bundleOptions") || "[]");
     const imageFile = formData.get("featuredImage");
 
-    if (!title || products.length === 0 || sizes.length === 0) {
+    if (!title || !slug || products.length === 0 || sizes.length === 0) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    const featuredImage = await uploadToCloudinary(
+    const { db } = await connectToDatabase();
+
+    // Upload and save to media collection
+    const imageResult = await uploadToCloudinary(
       imageFile,
-      "combos/featured"
+      "combos"
     );
 
-    const { db } = await connectToDatabase();
+    await db.collection("media").insertOne({
+      url: imageResult.secure_url,
+      publicId: imageResult.public_id,
+      folder: "combos",
+      fileName: imageFile.name,
+      fileSize: imageFile.size,
+      format: imageResult.format,
+      width: imageResult.width,
+      height: imageResult.height,
+      createdAt: new Date(),
+    });
 
     const result = await db.collection("combos").insertOne({
       title,
+      slug,
+      landingPageTitle,
+      landingPageSubtitle,
+      landingPageDetails,
+      heroBadge,
+      heroCTA,
+      bundleTitle,
+      bundleSubtitle,
+      productGridTitle,
+      sizeSelectionTitle,
+      checkoutFormTitle,
+      checkoutFormSubtitle,
+      checkoutCTA,
+      whatsappNumber,
+      messengerUsername,
+      helpTitle,
+      helpSubtitle,
       description,
       price,
       offerPrice,
       sizes,
       products,
-      featuredImage,
+      bundleOptions,
+      featuredImage: imageResult.secure_url, // Store only URL
       createdAt: new Date(),
       updatedAt: new Date(),
     });
