@@ -31,8 +31,8 @@ const CheckoutForm = ({ combo }) => {
                     const data = await res.json();
                     if (data?.shipping) {
                         setShippingRates({
-                            inside: Number(data.shipping.insideDhaka) || 60,
-                            outside: Number(data.shipping.outsideDhaka) || 120
+                            inside: Number(data?.shipping?.insideDhaka) || 60,
+                            outside: Number(data?.shipping?.outsideDhaka) || 120
                         });
                     }
                 }
@@ -49,7 +49,7 @@ const CheckoutForm = ({ combo }) => {
     // If flag is true, use selected location rate. If false, free (0).
     const isShippingChargeable = selectedBundleOption?.isShippingChargeable === true;
     const shippingCharge = isShippingChargeable
-        ? (deliveryLocation === "inside" ? shippingRates.inside : shippingRates.outside)
+        ? (deliveryLocation === "inside" ? shippingRates?.inside : shippingRates?.outside)
         : 0;
 
     const totalAmount = bundlePrice + shippingCharge;

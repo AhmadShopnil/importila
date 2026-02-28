@@ -11,6 +11,13 @@ import WebOrderReportChart from "@/components/Dashboard/Report/WebOrderReportCha
 import { useGetDashboardStatsQuery } from "@/lib/redux/api/dashboardApi"
 import DashboardSkeleton from "@/components/Dashboard/DashboardSkeleton"
 
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+]
+
+const YEARS = [2024, 2025, 2026]
+
 export default function AdminDashboard() {
   const [filter, setFilter] = useState("all")
   const [month, setMonth] = useState(new Date().getMonth() + 1)
@@ -95,11 +102,78 @@ export default function AdminDashboard() {
 
   return (
     <div className="bg-gray-50/50 min-h-screen  ">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Main Dashboard</h1>
-        <div className="bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm text-sm font-medium text-gray-600 flex items-center gap-2">
-          <Package className="w-4 h-4 text-teal-600" />
-          {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Main Dashboard</h1>
+          <p className="text-gray-500 text-sm mt-1 font-medium">Overview of your store's performance</p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm transition-all duration-300">
+          {/* Main Filter Tabs */}
+          <div className="flex bg-gray-50 p-1 rounded-xl">
+            {[
+              { id: "today", label: "Today" },
+              { id: "yesterday", label: "Yesterday" },
+              { id: "7d", label: "7D" },
+              { id: "30d", label: "30D" },
+              { id: "all", label: "All Time" }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setFilter(tab.id)}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 ${filter === tab.id
+                  ? "bg-teal-600 text-white shadow-md transform scale-105"
+                  : "text-gray-500 hover:text-teal-600 hover:bg-teal-50"
+                  }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="h-6 w-[1px] bg-gray-200 hidden md:block mx-1"></div>
+
+          {/* Month/Year Selection */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setFilter("month")}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 ${filter === "month"
+                ? "bg-teal-600 text-white shadow-md transform scale-105"
+                : "bg-gray-50 text-gray-500 hover:text-teal-600 hover:bg-teal-50"
+                }`}
+            >
+              Month View
+            </button>
+
+            {filter === "month" && (
+              <div className="flex gap-2 animate-in fade-in slide-in-from-right-2 duration-300">
+                <select
+                  value={month}
+                  onChange={(e) => {
+                    setMonth(Number(e.target.value))
+                    setFilter("month")
+                  }}
+                  className="bg-gray-50 border border-gray-100 text-xs font-bold rounded-lg px-3 py-2 text-gray-700 focus:ring-2 focus:ring-teal-500 cursor-pointer outline-none transition-all"
+                >
+                  {MONTHS.map((m, i) => (
+                    <option key={m} value={i + 1}>{m}</option>
+                  ))}
+                </select>
+                <select
+                  value={year}
+                  onChange={(e) => {
+                    setYear(Number(e.target.value))
+                    setFilter("month")
+                  }}
+                  className="bg-gray-50 border border-gray-100 text-xs font-bold rounded-lg px-3 py-2 text-gray-700 focus:ring-2 focus:ring-teal-500 cursor-pointer outline-none transition-all"
+                >
+                  {YEARS.map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -153,8 +227,8 @@ export default function AdminDashboard() {
         </div>
 
         <div className="grid grid-cols-1 gap-8">
-          <DailyOrdersChart />
-          <MonthlyOrdersCompareChart />
+          <DailyOrdersChart month={month} year={year} />
+          <MonthlyOrdersCompareChart month={month} year={year} />
         </div>
       </div>
 

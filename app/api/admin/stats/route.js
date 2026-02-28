@@ -33,11 +33,15 @@ export async function GET(request) {
                     $lte: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999),
                 },
             }
+        } else if (filter === "7d") {
+            const start = new Date()
+            start.setDate(now.getDate() - 7)
+            dateQuery = { createdAt: { $gte: start } }
         } else if (filter === "30d") {
             const start = new Date()
             start.setDate(now.getDate() - 30)
             dateQuery = { createdAt: { $gte: start } }
-        } else if (month && year) {
+        } else if (filter === "month" && month && year) {
             dateQuery = {
                 createdAt: {
                     $gte: new Date(year, month - 1, 1),
