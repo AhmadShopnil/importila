@@ -20,8 +20,10 @@ import {
     CheckCircle2,
     Clock,
     AlertCircle,
-    Gem
+    Gem,
+    X
 } from "lucide-react"
+import Image from "next/image"
 import toast from "react-hot-toast"
 
 import {
@@ -38,6 +40,7 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
     const { data: order, isLoading: loading } = useGetOrderQuery(id)
     const [updateOrder, { isLoading: updating }] = useUpdateOrderMutation()
     const [checkCourierStatus] = useLazyCheckCourierStatusQuery()
+    const [selectedImage, setSelectedImage] = useState(null)
 
     const handleUpdateStatus = async (status) => {
         try {
@@ -135,7 +138,7 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
                         <div className="overflow-x-auto">
                             {orderItems.length > 0 ? (
                                 <table className="w-full text-sm text-left">
-                                    <thead className="bg-gray-50 text-gray-600 font-bold uppercase text-[10px] tracking-widest">
+                                    <thead className="bg-gray-50 text-gray-600 font-bold uppercase text-base tracking-widest">
                                         <tr>
                                             <th className="p-4">Product Details</th>
                                             <th className="p-4 text-center">Qty</th>
@@ -143,22 +146,30 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
-                                        {orderItems.map((item, idx) => (
+                                        {orderItems?.map((item, idx) => (
                                             <tr key={idx} className="hover:bg-indigo-50/20 transition-colors">
-                                                <td className="p-4 flex items-center gap-4">
-                                                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-50">
-                                                        {item.image || item.mainImage ? (
-                                                            <img src={item.image || item.mainImage} alt={item.name || item.title} className="w-full h-full object-cover" />
+                                                <td className="p-4 flex  gap-4">
+                                                    <div
+                                                        className="w-18 h-18 md:w-28 md:h-28 bg-gray-100 rounded-sm flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-50 cursor-zoom-in relative"
+                                                        onClick={() => setSelectedImage(item?.image || item.mainImage)}
+                                                    >
+                                                        {item?.image || item.mainImage ? (
+                                                            <Image
+                                                                src={item?.image || item.mainImage}
+                                                                alt={item.name || item.title}
+                                                                fill
+                                                                className="object-cover hover:scale-110 transition-transform duration-300"
+                                                            />
                                                         ) : (
                                                             <Package className="w-8 h-8 text-gray-300" />
                                                         )}
                                                     </div>
-                                                    <div>
-                                                        <p className="font-bold text-gray-900">{item.name || item.title || "Selected Item"}</p>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            {item.sku && <p className="text-[10px] text-gray-400 font-mono">SKU: {item.sku}</p>}
-                                                            {item.size && <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded font-bold uppercase">Size: {item.size}</span>}
-                                                            {item.color && <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded font-bold uppercase">Color: {item.color}</span>}
+                                                    <div className="">
+                                                        <p className="font-bold text-base text-gray-900">{item.name || item.title || "Selected Item"}</p>
+                                                        <div className="flex items-center gap-2 mt-1 ">
+                                                            {item.sku && <p className="text-base text-gray-400 font-mono">SKU: {item.sku}</p>}
+                                                            {item.size && <span className="text-base bg-gray-100 px-1.5 py-0.5 rounded font-bold uppercase">Size: {item.size}</span>}
+                                                            {item.color && <span className="text-base bg-gray-100 px-1.5 py-0.5 rounded font-bold uppercase">Color: {item.color}</span>}
                                                         </div>
                                                     </div>
                                                 </td>
@@ -235,20 +246,20 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
                         </div>
 
                         <div className="relative z-10 space-y-4 text-sm font-medium">
-                            <div className="flex gap-3">
+                            <div className="flex gap-3 text-base">
                                 <Phone className="w-4 h-4 text-white/40 mt-0.5" />
                                 <p>{order.phone}</p>
                             </div>
                             <div className="flex gap-3">
                                 <MapPin className="w-4 h-4 text-white/40 mt-0.5" />
-                                <p className="line-clamp-3 leading-relaxed opacity-90">{order?.address}</p>
+                                <p className="text-base  leading-relaxed opacity-90">{order?.address}</p>
                             </div>
                         </div>
 
                         {order?.note && (
-                            <div className="mt-6 p-4 bg-white/10 rounded-xl border border-white/10 backdrop-blur-sm">
-                                <p className="text-[14px] uppercase font-black text-whitemb-1">Bundle Note</p>
-                                <p className="text-sm italic opacity-90">"{order?.note}"</p>
+                            <div className="mt-6 p-4 bg-white/5 rounded-md border border-white/10 backdrop-blur-sm">
+                                <p className="text-base uppercase font-black text-whitemb-1">Bundle Note</p>
+                                <p className="text-base italic opacity-90">"{order?.note}"</p>
                             </div>
                         )}
                     </div>
@@ -315,6 +326,37 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
                 </div>
             </div>
             <InvoicePrint order={order} />
+
+            {/* Image Lightbox */}
+            {selectedImage && (
+                <div
+                    className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300"
+                    onClick={() => setSelectedImage(null)}
+                >
+                    <button
+                        className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedImage(null);
+                        }}
+                    >
+                        <X className="w-8 h-8" />
+                    </button>
+                    <div
+                        className="relative w-full max-w-4xl aspect-[4/5] md:aspect-auto md:h-[85vh] bg-transparent rounded-lg overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <Image
+                            src={selectedImage}
+                            alt="Large product preview"
+                            fill
+                            className="object-contain"
+                            priority
+                            sizes="(max-width: 1024px) 100vw, 80vw"
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
