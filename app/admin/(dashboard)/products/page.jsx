@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Plus, Search, Trash2 } from "lucide-react"
+import { Plus, Search, Trash2, X } from "lucide-react"
+import Image from "next/image"
 import Loading from "@/components/Loader/Loading"
 import TableRow from "@/components/Dashboard/Products/TableRow"
 
@@ -12,6 +13,7 @@ export default function ProductsPage() {
   const { data: products = [], isLoading: loading } = useGetProductsQuery()
   const [deleteProduct] = useDeleteProductMutation()
   const [searchTerm, setSearchTerm] = useState("")
+  const [selectedImage, setSelectedImage] = useState(null)
 
   const handleDelete = async (id) => {
     if (confirm("Are you sure you want to delete this product?")) {
@@ -91,6 +93,7 @@ export default function ProductsPage() {
                 key={product._id}
                 product={product}
                 handleDelete={handleDelete}
+                onClickImage={setSelectedImage}
               />
             ))}
           </tbody>
@@ -100,6 +103,37 @@ export default function ProductsPage() {
       {filteredProducts.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
           {products.length === 0 ? "No products yet. Add one to get started!" : "No products match your search."}
+        </div>
+      )}
+
+      {/* Image Lightbox */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button
+            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedImage(null);
+            }}
+          >
+            <X className="w-8 h-8" />
+          </button>
+          <div
+            className="relative w-full max-w-4xl aspect-[4/5] md:aspect-auto md:h-[85vh] bg-transparent rounded-lg overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={selectedImage}
+              alt="Large product preview"
+              fill
+              className="object-contain"
+              priority
+              sizes="(max-width: 1024px) 100vw, 80vw"
+            />
+          </div>
         </div>
       )}
     </div>

@@ -102,7 +102,7 @@ const CheckoutForm = ({ combo }) => {
                     productId: slot.product._id || slot.product.id,
                     name: slot.product.name,
                     color: slot.selectedColor,
-                    image: slot.product.featuredImage || slot.product.image,
+                    image: slot.product.image || slot.product.featuredImage,
                     price: bundlePrice / selectedBundle
                 })),
                 totalAmount: totalAmount,
@@ -230,7 +230,7 @@ const CheckoutForm = ({ combo }) => {
                                             >
                                                 <div className="relative w-10 h-10 flex-shrink-0">
                                                     <Image
-                                                        src={slot.product?.featuredImage || slot.product?.image}
+                                                        src={slot.product?.image || slot.product?.featuredImage}
                                                         alt={slot.product?.name || "Product"}
                                                         fill
                                                         className="rounded-lg object-cover"

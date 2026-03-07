@@ -257,13 +257,13 @@ export default function EditProductPage() {
     <div className="w-full">
       <Link
         href="/admin/products"
-        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary mb-6"
+        className="inline-flex items-center gap-2 text-lg text-gray-500 hover:text-primary mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Products
       </Link>
 
-      <div className="bg-white border rounded-xl shadow-sm p-6 md:p-8">
+      <div className="bg-white border rounded-md shadow-sm p-6 md:p-8">
         <h1 className="text-2xl font-semibold mb-8">Edit Product</h1>
 
         <form onSubmit={handleSubmit} className="space-y-10">

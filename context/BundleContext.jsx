@@ -47,14 +47,24 @@ function bundleReducer(state, action) {
                     if (product) {
                         const variants = product.variants || [];
                         const colors = getUniqueColors(variants);
+                        const selectedColor = colors.length > 0 ? colors[0].name : null;
+
+                        let initialImage = product.featuredImage || product.image;
+                        if (selectedColor && variants.length > 0) {
+                            const variant = variants.find(v => v.colorName === selectedColor);
+                            if (variant?.image) {
+                                initialImage = variant.image;
+                            }
+                        }
+
                         return {
                             product: {
                                 ...product,
                                 displayColors: colors,
                                 id: product._id || product.id,
-                                image: product.featuredImage || product.image
+                                image: initialImage
                             },
-                            selectedColor: colors.length > 0 ? colors[0].name : null,
+                            selectedColor: selectedColor,
                         };
                     }
                     return { product: null, selectedColor: null };
