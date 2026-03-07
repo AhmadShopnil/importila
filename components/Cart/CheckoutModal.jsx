@@ -77,11 +77,11 @@ const CheckoutModal = ({ isOpen, onClose, items, total }) => {
                     color: item.selectedColor,
                     size: item.selectedSize,
                     sku: item.sku,
-                    image: item.featuredImage || item.image,
+                    image: item.image || item.featuredImage,
                     price: item.offerPrice || item.price,
                     quantity: item.quantity
                 })),
-                totalPrice:total,
+                totalPrice: total,
                 totalAmount: finalTotal,
                 productType: "regular",
                 status: "pending"
@@ -129,7 +129,7 @@ const CheckoutModal = ({ isOpen, onClose, items, total }) => {
                             {items.map((item, idx) => (
                                 <div key={idx} className="flex gap-3">
                                     <img
-                                        src={item.featuredImage || "/placeholder.svg"}
+                                        src={item?.image || item.featuredImage || "/placeholder.svg"}
                                         className="w-10 h-10 rounded-lg object-cover bg-background"
                                     />
                                     <div className="flex-1 min-w-0">

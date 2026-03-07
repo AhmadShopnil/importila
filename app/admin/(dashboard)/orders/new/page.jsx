@@ -169,7 +169,7 @@ export default function ManualOrderEntry() {
             design: variant?.design || "",
             color: variant?.colorName || variant?.color || "",
             size: variant?.size || "",
-            image: product.featuredImage || product.image
+            image: variant?.image || product.featuredImage || product.image
         }
 
         setFormData(prev => {
@@ -202,9 +202,34 @@ export default function ManualOrderEntry() {
     }, [formData.selectedBundleOption, orderType])
 
     const handleUpdateComboSlot = (slotIndex, product, color = "") => {
+        if (!product) {
+            setComboSlots(prev => {
+                const newSlots = [...prev]
+                newSlots[slotIndex] = { product: null, selectedColor: "" }
+                return newSlots
+            })
+            return
+        }
+
+        const selectedColor = color || (product?.colors?.[0]?.name || product?.variants?.[0]?.colorName || "N/A");
+
+        let displayImage = product?.featuredImage || product?.image;
+
+        // Try to find color-specific image in 'colors' (common in combos) or 'variants' (common in products)
+        if (product.colors && product.colors.length > 0) {
+            const colorObj = product.colors.find(c => c.name === selectedColor);
+            if (colorObj?.image) displayImage = colorObj.image;
+        } else if (product.variants && product.variants.length > 0) {
+            const variantObj = product.variants.find(v => v.colorName === selectedColor || v.color === selectedColor);
+            if (variantObj?.image) displayImage = variantObj.image;
+        }
+
         setComboSlots(prev => {
             const newSlots = [...prev]
-            newSlots[slotIndex] = { product, selectedColor: color || (product?.colors?.[0]?.name || "N/A") }
+            newSlots[slotIndex] = {
+                product: { ...product, image: displayImage },
+                selectedColor: selectedColor
+            }
             return newSlots
         })
     }
@@ -230,7 +255,7 @@ export default function ManualOrderEntry() {
                 productId: slot.product._id || slot.product.productId,
                 name: slot.product.name,
                 color: slot.selectedColor,
-                image: slot.product.featuredImage || slot.product.image,
+                image: slot.product.image || slot.product.featuredImage,
                 price: slot.product.price || 0
             }))
         }
@@ -833,7 +858,7 @@ export default function ManualOrderEntry() {
                                                                 </button>
                                                             ) : (
                                                                 <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
-                                                                    <img src={slot.product.featuredImage || slot.product.image} className="w-full h-full object-cover" />
+                                                                    <img src={slot.product.image || slot.product.featuredImage} className="w-full h-full object-cover" />
                                                                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-4 text-center">
                                                                         <p className="text-white text-[10px] font-black uppercase mb-2">{slot.product.name}</p>
                                                                         <div className="flex gap-1.5 flex-wrap justify-center border-t border-white/20 pt-2 mb-3 w-full">
