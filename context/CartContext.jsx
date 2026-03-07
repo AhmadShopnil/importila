@@ -47,6 +47,7 @@ export const CartProvider = ({ children }) => {
                 selectedColorHex: variant.colorHex,
                 selectedSize: variant.size,
                 sku: variant.sku,
+                image: variant?.image || product?.featuredImage || product?.image,
                 quantity
             }]
         })

@@ -84,7 +84,8 @@ const ProductDetailsClient = ({ product }) => {
             colorName: selectedVariant.colorName,
             colorHex: selectedVariant.colorHex,
             size: selectedVariant.size,
-            sku: selectedVariant.sku
+            sku: selectedVariant.sku,
+            image: selectedVariant.image
         }, quantity)
     }
 
@@ -102,6 +103,7 @@ const ProductDetailsClient = ({ product }) => {
         selectedColorHex: selectedVariant?.colorHex,
         selectedSize: selectedVariant?.size,
         sku: selectedVariant?.sku,
+        image: selectedVariant?.image || product.featuredImage || product.image,
         quantity: quantity
     }]), [product, selectedVariant, quantity])
 

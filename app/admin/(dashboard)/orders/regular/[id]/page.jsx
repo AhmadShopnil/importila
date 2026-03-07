@@ -1,6 +1,6 @@
 "use client"
 
-import { use } from "react"
+import { use, useState } from "react"
 
 import Link from "next/link"
 import {
@@ -18,8 +18,10 @@ import {
     RefreshCw,
     CheckCircle2,
     Clock,
-    AlertCircle
+    AlertCircle,
+    X
 } from "lucide-react"
+import Image from "next/image"
 import toast from "react-hot-toast"
 
 import {
@@ -36,6 +38,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
     const { data: order, isLoading: loading } = useGetOrderQuery(id)
     const [updateOrder, { isLoading: updating }] = useUpdateOrderMutation()
     const [checkCourierStatus] = useLazyCheckCourierStatusQuery()
+    const [selectedImage, setSelectedImage] = useState(null)
 
     const handleUpdateStatus = async (status) => {
         try {
@@ -140,9 +143,17 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                                     {order.items?.map((item, idx) => (
                                         <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
                                             <td className="p-4 flex items-center gap-4">
-                                                <div className="w-16 h-16 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-50">
+                                                <div
+                                                    className="w-16 h-16 md:w-24 md:h-24 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-50 cursor-zoom-in relative"
+                                                    onClick={() => setSelectedImage(item.image)}
+                                                >
                                                     {item.image ? (
-                                                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                                        <Image
+                                                            src={item.image}
+                                                            alt={item.name}
+                                                            fill
+                                                            className="object-cover hover:scale-110 transition-transform duration-300"
+                                                        />
                                                     ) : (
                                                         <Package className="w-8 h-8 text-gray-300" />
                                                     )}
@@ -312,6 +323,37 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
 
             {/* Hidden Printable Invoice Section */}
             <InvoicePrint order={order} />
+
+            {/* Image Lightbox */}
+            {selectedImage && (
+                <div
+                    className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300"
+                    onClick={() => setSelectedImage(null)}
+                >
+                    <button
+                        className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedImage(null);
+                        }}
+                    >
+                        <X className="w-8 h-8" />
+                    </button>
+                    <div
+                        className="relative w-full max-w-4xl aspect-[4/5] md:aspect-auto md:h-[85vh] bg-transparent rounded-lg overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <Image
+                            src={selectedImage}
+                            alt="Large product preview"
+                            fill
+                            className="object-contain"
+                            priority
+                            sizes="(max-width: 1024px) 100vw, 80vw"
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

@@ -90,7 +90,7 @@ const CartDrawer = () => {
                                     <div key={`${item._id}-${item.selectedColor}-${item.selectedSize}`} className="flex gap-4 group">
                                         <div className="relative w-20 h-24 rounded-xl overflow-hidden bg-muted border border-border/50 flex-shrink-0">
                                             <img
-                                                src={item.featuredImage || "/placeholder.svg"}
+                                                src={item.image || item.featuredImage || "/placeholder.svg"}
                                                 alt={item.name}
                                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                             />
