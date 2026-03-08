@@ -21,7 +21,10 @@ import {
     Clock,
     AlertCircle,
     Gem,
-    X
+    X,
+    Edit2,
+    Check,
+    Save
 } from "lucide-react"
 import Image from "next/image"
 import toast from "react-hot-toast"
@@ -42,12 +45,43 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
     const [checkCourierStatus] = useLazyCheckCourierStatusQuery()
     const [selectedImage, setSelectedImage] = useState(null)
 
+    // Edit states
+    const [isEditingAddress, setIsEditingAddress] = useState(false)
+    const [editedAddress, setEditedAddress] = useState("")
+
+    const [isEditingGlobalSize, setIsEditingGlobalSize] = useState(false)
+    const [editedGlobalSize, setEditedGlobalSize] = useState("")
+
     const handleUpdateStatus = async (status) => {
         try {
             await updateOrder({ id, status }).unwrap()
             toast.success(`Order status updated to ${status}`)
         } catch (error) {
             toast.error(error.data?.error || "Failed to update status")
+        }
+    }
+
+    const handleUpdateAddress = async () => {
+        try {
+            await updateOrder({ id, address: editedAddress }).unwrap()
+            setIsEditingAddress(false)
+            toast.success("Address updated successfully")
+        } catch (error) {
+            toast.error("Failed to update address")
+        }
+    }
+
+    const handleUpdateGlobalSize = async () => {
+        try {
+            const updateData = { id, productSize: editedGlobalSize }
+            if (order.items) updateData.items = order.items.map(i => ({ ...i, size: editedGlobalSize }))
+            if (order.products) updateData.products = order.products.map(p => ({ ...p, size: editedGlobalSize }))
+
+            await updateOrder(updateData).unwrap()
+            setIsEditingGlobalSize(false)
+            toast.success("Product size updated successfully")
+        } catch (error) {
+            toast.error("Failed to update size")
         }
     }
 
@@ -132,7 +166,50 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
 
                                 Bundle Size :  {orderItems?.length || 1} Pieces
                             </h3>
-                            <h1 className="font-bold text-indigo-900 flex items-center gap-2 text-lg">Product Size: {order?.productSize} Years</h1>
+                            <div className="flex items-center gap-3 bg-white px-3 py-1.5 rounded-lg border border-indigo-100 group/size relative">
+                                <h1 className="font-bold text-indigo-900 flex items-center gap-2 text-lg">
+                                    Product Size: {isEditingGlobalSize ? (
+                                        <div className="flex items-center gap-1.5">
+                                            <input
+                                                type="text"
+                                                value={editedGlobalSize}
+                                                onChange={(e) => setEditedGlobalSize(e.target.value)}
+                                                className="w-20 px-2 py-0.5 border-2 border-indigo-200 rounded text-sm focus:ring-0 focus:outline-none"
+                                                placeholder="e.g. 5-6"
+                                            />
+                                            <span className="text-gray-400 text-sm">Years</span>
+                                            <button
+                                                onClick={handleUpdateGlobalSize}
+                                                className="p-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+                                                title="Save"
+                                            >
+                                                <Check className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                                onClick={() => setIsEditingGlobalSize(false)}
+                                                className="p-1 border border-indigo-200 text-indigo-600 rounded hover:bg-indigo-50 transition-colors"
+                                                title="Cancel"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {order?.productSize} Years
+                                            <button
+                                                onClick={() => {
+                                                    setEditedGlobalSize(order.productSize)
+                                                    setIsEditingGlobalSize(true)
+                                                }}
+                                                className="p-1 hover:bg-indigo-50 rounded text-indigo-400 opacity-0 group-hover/size:opacity-100 transition-all"
+                                                title="Edit Size"
+                                            >
+                                                <Edit2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </>
+                                    )}
+                                </h1>
+                            </div>
                             <span className="text-[10px] font-black uppercase bg-indigo-600 text-white px-2 py-0.5 rounded shadow">Combo Offer</span>
                         </div>
                         <div className="overflow-x-auto">
@@ -250,9 +327,46 @@ export default function ComboOrderDetailsPage({ params: paramsPromise }) {
                                 <Phone className="w-4 h-4 text-white/40 mt-0.5" />
                                 <p>{order.phone}</p>
                             </div>
-                            <div className="flex gap-3">
-                                <MapPin className="w-4 h-4 text-white/40 mt-0.5" />
-                                <p className="text-base  leading-relaxed opacity-90">{order?.address}</p>
+                            <div className="flex gap-3 text-base group/address relative">
+                                <MapPin className="w-4 h-4 text-white/40 mt-1" />
+                                {isEditingAddress ? (
+                                    <div className="flex-1 space-y-2">
+                                        <textarea
+                                            value={editedAddress}
+                                            onChange={(e) => setEditedAddress(e.target.value)}
+                                            className="w-full text-sm bg-white/10 border border-white/20 rounded p-2 focus:outline-none focus:ring-1 focus:ring-white/40 text-white"
+                                            rows="3"
+                                        />
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={handleUpdateAddress}
+                                                className="px-2 py-1 bg-white text-[#1E556E] rounded text-xs font-bold flex items-center gap-1"
+                                            >
+                                                <Check className="w-3 h-3" /> Save
+                                            </button>
+                                            <button
+                                                onClick={() => setIsEditingAddress(false)}
+                                                className="px-2 py-1 text-white border border-white/20 rounded text-xs"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex justify-between items-start flex-1 gap-2">
+                                        <p className="text-base leading-relaxed opacity-90">{order?.address}</p>
+                                        <button
+                                            onClick={() => {
+                                                setEditedAddress(order.address)
+                                                setIsEditingAddress(true)
+                                            }}
+                                            className="p-1 hover:bg-white/10 rounded-md transition-all opacity-0 group-hover/address:opacity-100"
+                                            title="Edit Address"
+                                        >
+                                            <Edit2 className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

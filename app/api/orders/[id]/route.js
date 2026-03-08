@@ -40,7 +40,7 @@ export async function PUT(request, context) {
     const { db } = await connectToDatabase()
 
     // Only allow updating specific fields
-    const allowedFields = ["status", "paymentStatus"]
+    const allowedFields = ["status", "paymentStatus", "address", "productSize", "items", "products"]
     const updateData = {}
     for (const key of allowedFields) {
       if (body[key] !== undefined) updateData[key] = body[key]
