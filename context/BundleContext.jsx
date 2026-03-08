@@ -14,6 +14,7 @@ const initialState = {
         address: "",
         note: "",
     },
+    isProductModalOpen: false,
 };
 
 const BundleContext = createContext(null);
@@ -175,6 +176,16 @@ function bundleReducer(state, action) {
                 activeSlotIndex: index, // Make this slot active when cleared
             };
         }
+        case "OPEN_PRODUCT_MODAL":
+            return {
+                ...state,
+                isProductModalOpen: true,
+            };
+        case "CLOSE_PRODUCT_MODAL":
+            return {
+                ...state,
+                isProductModalOpen: false,
+            };
         case "UPDATE_CUSTOMER_INFO": {
             return {
                 ...state,
@@ -222,6 +233,14 @@ export const BundleProvider = ({ children }) => {
         dispatch({ type: "UPDATE_CUSTOMER_INFO", payload: { field, value } });
     }, []);
 
+    const openProductModal = useCallback(() => {
+        dispatch({ type: "OPEN_PRODUCT_MODAL" });
+    }, []);
+
+    const closeProductModal = useCallback(() => {
+        dispatch({ type: "CLOSE_PRODUCT_MODAL" });
+    }, []);
+
     const isComplete =
         !!state.selectedBundle &&
         !!state.selectedSize &&
@@ -251,6 +270,8 @@ export const BundleProvider = ({ children }) => {
                 updateCustomerInfo,
                 isComplete,
                 getFilledSlotsCount,
+                openProductModal,
+                closeProductModal,
             }}
         >
             {children}
