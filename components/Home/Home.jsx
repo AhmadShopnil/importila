@@ -21,11 +21,7 @@ export default async function Home() {
   // const productsResult = await getProducts();
   // const products = expandProductsByColor(productsResult);
   const products = await getProducts();
-
   const combos = await getCombos();
-
-
-  // console.log("banners",banners)
 
 
 
