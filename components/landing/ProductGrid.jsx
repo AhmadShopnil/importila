@@ -53,7 +53,7 @@ const ProductGrid = ({ combo }) => {
         if (selectedProductForColor) {
             addProductToSlot(selectedProductForColor, colorName, variantImage);
 
-             toast.success(`${selectedProductForColor.name} (${colorName}) added in your list`);
+            toast.success(`${selectedProductForColor.name} (${colorName}) added in your list`);
 
             setSelectedProductForColor(null);
 

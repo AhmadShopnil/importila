@@ -16,8 +16,9 @@ import SizeChart from "./SizeChart";
 import TopOfferCountdown from "./TopOfferCountdown";
 import Container from "../Container";
 import ComboSlider from "./ComboSlider";
+import ProductSelectionModal from "./ProductSelectionModal";
 
-const LandingContent = ({ combo,comboSliders }) => {
+const LandingContent = ({ combo, comboSliders }) => {
     const { state, selectBundle } = useBundle();
 
     useEffect(() => {
@@ -49,11 +50,12 @@ const LandingContent = ({ combo,comboSliders }) => {
             <DesktopCTA combo={combo} />
             {/* <Footer /> */}
             <StickyCTA combo={combo} />
+            <ProductSelectionModal combo={combo} />
         </div>
     );
 };
 
-const ComboLandingPage = ({ combo,comboSliders }) => {
+const ComboLandingPage = ({ combo, comboSliders }) => {
     return (
         <BundleProvider>
             <LandingContent combo={combo} comboSliders={comboSliders} />

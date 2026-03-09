@@ -431,6 +431,9 @@ export default function ComboOrdersPage() {
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <Link href={`/admin/orders/combos/${order._id}`} className="p-2 hover:bg-[#1E556E]/10 rounded bg-[#1E556E]/5 text-[#1E556E]" title="View Details">
+                            <Eye className="w-5 h-5" />
+                          </Link>
                           <button
                             onClick={() => {
                               setSelectedOrderForInvoice(order);
@@ -441,9 +444,7 @@ export default function ComboOrdersPage() {
                           >
                             <Printer className="w-4 h-4" />
                           </button>
-                          <Link href={`/admin/orders/combos/${order._id}`} className="p-2 hover:bg-[#1E556E]/10 rounded bg-[#1E556E]/5 text-[#1E556E]" title="View Details">
-                            <Eye className="w-4 h-4" />
-                          </Link>
+
                           <button
                             onClick={() => handleDeleteOrder(order._id)}
                             className="p-2 hover:bg-red-50 rounded text-red-600 transition-all bg-red-50/50"
@@ -526,6 +527,10 @@ export default function ComboOrdersPage() {
                 )}
 
                 <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                  <Link href={`/admin/orders/combos/${order._id}`} className="p-2 bg-white rounded-full shadow-lg text-[#1E556E] hover:bg-[#1E556E] hover:text-white transition-all">
+                    <Eye className="w-4 h-4" />
+                  </Link>
                   <button
                     onClick={() => {
                       setSelectedOrderForInvoice(order);
@@ -536,9 +541,6 @@ export default function ComboOrdersPage() {
                   >
                     <Printer className="w-4 h-4" />
                   </button>
-                  <Link href={`/admin/orders/combos/${order._id}`} className="p-2 bg-white rounded-full shadow-lg text-[#1E556E] hover:bg-[#1E556E] hover:text-white transition-all">
-                    <Eye className="w-4 h-4" />
-                  </Link>
                   <button
                     onClick={() => handleDeleteOrder(order._id)}
                     className="p-2 bg-white rounded-full shadow-lg text-red-600 hover:bg-red-600 hover:text-white transition-all"

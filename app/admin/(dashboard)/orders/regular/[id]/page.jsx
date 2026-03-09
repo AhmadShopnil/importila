@@ -19,7 +19,10 @@ import {
     CheckCircle2,
     Clock,
     AlertCircle,
-    X
+    X,
+    Edit2,
+    Check,
+    Save
 } from "lucide-react"
 import Image from "next/image"
 import toast from "react-hot-toast"
@@ -40,12 +43,39 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
     const [checkCourierStatus] = useLazyCheckCourierStatusQuery()
     const [selectedImage, setSelectedImage] = useState(null)
 
+    // Edit states
+    const [isEditingAddress, setIsEditingAddress] = useState(false)
+    const [editedAddress, setEditedAddress] = useState("")
+
+    const [isEditingSizes, setIsEditingSizes] = useState(false)
+    const [editedItems, setEditedItems] = useState([])
+
     const handleUpdateStatus = async (status) => {
         try {
             await updateOrder({ id, status }).unwrap()
             toast.success(`Order status updated to ${status}`)
         } catch (error) {
             toast.error(error.data?.error || "Failed to update status")
+        }
+    }
+
+    const handleUpdateAddress = async () => {
+        try {
+            await updateOrder({ id, address: editedAddress }).unwrap()
+            setIsEditingAddress(false)
+            toast.success("Address updated successfully")
+        } catch (error) {
+            toast.error("Failed to update address")
+        }
+    }
+
+    const handleUpdateSizes = async () => {
+        try {
+            await updateOrder({ id, items: editedItems }).unwrap()
+            setIsEditingSizes(false)
+            toast.success("Product sizes updated successfully")
+        } catch (error) {
+            toast.error("Failed to update sizes")
         }
     }
 
@@ -134,9 +164,26 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                                 <thead className="bg-gray-50 text-gray-600 font-bold uppercase text-[14px] tracking-widest">
                                     <tr>
                                         <th className="p-4">Product Details</th>
+                                        <th className="p-4 text-center">Size</th>
                                         <th className="p-4 text-center">Qty</th>
                                         <th className="p-4 text-right">Price</th>
-                                        <th className="p-4 text-right">Total</th>
+                                        <th className="p-4 text-right flex items-center justify-end gap-2">
+                                            Total
+                                            <button
+                                                onClick={() => {
+                                                    if (isEditingSizes) {
+                                                        setIsEditingSizes(false)
+                                                    } else {
+                                                        setEditedItems([...order.items])
+                                                        setIsEditingSizes(true)
+                                                    }
+                                                }}
+                                                className="p-1 hover:bg-gray-200 rounded transition-colors text-[#1E556E]"
+                                                title="Edit Sizes"
+                                            >
+                                                {isEditingSizes ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
+                                            </button>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
@@ -163,11 +210,51 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                                                     <p className="text-[14px] text-gray-400 font-mono mt-0.5">SKU: {item.sku}</p>
                                                 </div>
                                             </td>
+                                            <td className="p-4 text-center font-medium text-gray-700">
+                                                {isEditingSizes ? (
+                                                    <input
+                                                        type="text"
+                                                        value={editedItems[idx]?.size || ""}
+                                                        onChange={(e) => {
+                                                            const newItems = [...editedItems]
+                                                            newItems[idx] = { ...newItems[idx], size: e.target.value }
+                                                            setEditedItems(newItems)
+                                                        }}
+                                                        className="w-20 px-2 py-1 border rounded text-xs focus:ring-1 focus:ring-[#1E556E]"
+                                                        placeholder="Size"
+                                                    />
+                                                ) : (
+                                                    <span className="bg-gray-100 px-2 py-0.5 rounded text-xs uppercase font-bold text-gray-600">
+                                                        {item.size || "N/A"}
+                                                    </span>
+                                                )}
+                                            </td>
                                             <td className="p-4 text-center font-medium text-gray-700">x{item.quantity}</td>
                                             <td className="p-4 text-right font-medium text-gray-700">৳ {item?.price?.toLocaleString()}</td>
                                             <td className="p-4 text-right font-bold text-gray-900">৳ {(item?.price * item?.quantity)?.toLocaleString()}</td>
                                         </tr>
                                     ))}
+                                    {isEditingSizes && (
+                                        <tr className="bg-[#1E556E]/5">
+                                            <td colSpan={5} className="p-4 text-right">
+                                                <div className="flex items-center justify-end gap-3">
+                                                    <button
+                                                        onClick={() => setIsEditingSizes(false)}
+                                                        className="px-4 py-1.5 border border-gray-200 rounded-lg hover:bg-white text-gray-600 text-xs font-bold transition-all"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                    <button
+                                                        onClick={handleUpdateSizes}
+                                                        className="px-4 py-1.5 bg-[#1E556E] text-white rounded-lg hover:bg-[#1E556E]/90 text-xs font-bold flex items-center gap-2 shadow-sm transition-all"
+                                                    >
+                                                        <Save className="w-3.5 h-3.5" />
+                                                        Save Changes
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -245,9 +332,46 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                                 <Phone className="w-4 h-4 text-white/40 mt-0.5" />
                                 <p>{order.phone}</p>
                             </div>
-                            <div className="flex gap-3">
+                            <div className="flex gap-3 group/address">
                                 <MapPin className="w-4 h-4 text-white/40 mt-0.5" />
-                                <p className="line-clamp-3 leading-relaxed opacity-90">{order.address}</p>
+                                {isEditingAddress ? (
+                                    <div className="flex-1 space-y-2">
+                                        <textarea
+                                            value={editedAddress}
+                                            onChange={(e) => setEditedAddress(e.target.value)}
+                                            className="w-full text-sm bg-white/10 border border-white/20 rounded p-2 focus:outline-none focus:ring-1 focus:ring-white/40 text-white"
+                                            rows="3"
+                                        />
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={handleUpdateAddress}
+                                                className="px-2 py-1 bg-white text-[#1E556E] rounded text-xs font-bold flex items-center gap-1"
+                                            >
+                                                <Check className="w-3 h-3" /> Save
+                                            </button>
+                                            <button
+                                                onClick={() => setIsEditingAddress(false)}
+                                                className="px-2 py-1 text-white border border-white/20 rounded text-xs"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex justify-between items-start flex-1 gap-2">
+                                        <p className="line-clamp-3 leading-relaxed opacity-90">{order.address}</p>
+                                        <button
+                                            onClick={() => {
+                                                setEditedAddress(order.address)
+                                                setIsEditingAddress(true)
+                                            }}
+                                            className="p-1 hover:bg-white/10 rounded-md transition-all opacity-0 group-hover/address:opacity-100"
+                                            title="Edit Address"
+                                        >
+                                            <Edit2 className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

@@ -360,7 +360,6 @@ export default function OrdersPage() {
                 <tr className="bg-gray-50 border-b border-gray-100">
                   <th className="p-4 w-10"></th>
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Order Info</th>
-                  <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Order Source</th>
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Customer</th>
                   <th className="p-4 font-bold text-gray-700 uppercase tracking-wider text-xs">Items</th>
 
@@ -391,9 +390,9 @@ export default function OrdersPage() {
                           {new Date(order.createdAt).toLocaleString()}
                         </div>
                       </td>
-                        <td className="p-4">
+                      <td className="p-4">
                         <div className="font-bold text-gray-900 text-base">{order?.orderSource}</div>
-                       
+
                       </td>
                       <td className="p-4">
                         <div className="font-semibold text-gray-800">{order?.customerName}</div>
@@ -482,7 +481,7 @@ export default function OrdersPage() {
                             className="p-2 hover:bg-[#1E556E]/10 rounded shadow-sm text-[#1E556E] transition-all bg-[#1E556E]/5"
                             title="View Details"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-5 h-5" />
                           </Link>
                           {order.courierConsignmentId && (
                             <button

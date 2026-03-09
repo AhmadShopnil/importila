@@ -5,15 +5,12 @@ import Image from "next/image";
 import { useBundle } from "@/context/BundleContext";
 
 const ProductSlots = () => {
-    const { state, setActiveSlot, removeFromSlot, updateSlotColor } = useBundle();
+    const { state, setActiveSlot, removeFromSlot, updateSlotColor, openProductModal } = useBundle();
     const { slots, activeSlotIndex } = state;
 
     const handleSlotClick = (index) => {
         setActiveSlot(index);
-        const gridElement = document.getElementById("product-grid");
-        if (gridElement) {
-            gridElement.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
+        openProductModal();
     };
 
     if (slots.length === 0) return null;
@@ -23,14 +20,14 @@ const ProductSlots = () => {
             <div className="container mx-auto px-4">
                 <div className="text-center mb-8">
                     <h2 className="text-2xl md:text-3xl font-bold text-[#1E556E] mb-2">
-                        Your Selected Items 
+                        Your Selected Items
                     </h2>
                     <p className="text-muted-foreground">
-                        Click on a slot to select a product from the collection below
+                        Click on a slot to select a product from the collections
                     </p>
                 </div>
 
-                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
                     {slots?.map((slot, index) => {
                         const isActive = activeSlotIndex === index;
                         const isFilled = slot.product !== null;
@@ -128,7 +125,7 @@ const ProductSlots = () => {
                                             <Plus size={24} />
                                         </div>
                                         <span className="text-[10px] md:text-xs font-medium text-muted-foreground">
-                                            {isActive ? "Select Below" : "Add Item"}
+                                            {isActive ? "Add Item" : "Add Item"}
                                         </span>
                                     </div>
                                 )}

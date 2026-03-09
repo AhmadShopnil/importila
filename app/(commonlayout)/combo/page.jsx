@@ -49,22 +49,30 @@ export default async function page() {
                             {/* Image */}
                             <div className="relative p-2 bg-linear-to-br from-muted to-white ">
                                 <div className="relative w-full aspect-square  overflow-hidden">
-                                    <Image
-                                        src={combo?.featuredImage}
-                                        alt={combo?.title}
-                                        fill
-                                        priority
-                                        sizes="(max-width: 768px) 100vw, 50vw"
-                                        className="object-cover transition-transform duration-500 group-hover:scale-105 rounded-sm"
-                                    />
+
+                                    <Link
+                                        href={`/combo/kids/${combo?.slug}`}
+                                    >
+                                        <Image
+                                            src={combo?.featuredImage}
+                                            alt={combo?.title}
+                                            fill
+                                            priority
+                                            sizes="(max-width: 768px) 100vw, 50vw"
+                                            className="object-cover transition-transform duration-500 group-hover:scale-105 rounded-sm"
+                                        />
+                                    </Link>
+
                                 </div>
                             </div>
 
                             {/* Content */}
                             <div className="px-5">
-                                <h3 className="font-semibold text-sm  md:text-base text-[#1C546D] ">
+                                <Link
+                                    href={`/combo/kids/${combo?.slug}`}
+                                    className="font-semibold text-sm  md:text-base text-[#1C546D] ">
                                     {combo?.title}
-                                </h3>
+                                </Link>
 
                                 {/* Price  */}
                                 <div className="flex items-center justify-between ">
