@@ -80,7 +80,7 @@ export default function ManualOrderEntry() {
                 totalAmount: Math.max(0, prev.totalPrice + actualCharge - (prev.discount || 0))
             }
         })
-    }, [formData.items, formData.deliveryLocation, shippingRates, orderType, formData.discount])
+    }, [formData.items, formData?.deliveryLocation, shippingRates, orderType, formData.discount])
 
     useEffect(() => {
         const timer = setTimeout(() => {
