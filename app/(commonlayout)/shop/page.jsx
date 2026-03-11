@@ -1,5 +1,4 @@
 
-import ProductsList from '@/components/Home/ProductList/ProductList'
 import ShopPage from '@/components/Shop/ShopPage'
 import { BASE_URL } from "@/utils/baseUrl"
 
@@ -12,7 +11,7 @@ export default async function Page() {
 
   try {
     const res = await fetch(`${BASE_URL}/api/products`, {
-      next: { revalidate: 30 },
+      next: { revalidate: 60 },
     })
     if (res.ok) {
       products = await res.json()
