@@ -30,39 +30,38 @@ export async function GET(request) {
       ]
     }
 
-    const orders = await db.collection("orders")
-      .find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .toArray()
-
-    const totalCount = await db.collection("orders").countDocuments(query)
-    const totalPages = Math.ceil(totalCount / limit)
-
-    // Calculate total statistics for the matching query
-    const stats = await db.collection("orders").aggregate([
-      { $match: query },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: {
-            $sum: {
-              $ifNull: ["$totalPrice", { $ifNull: ["$offerPrice", { $ifNull: ["$price", 0] }] }]
-            }
-          },
-          totalItems: {
-            $sum: {
-              $add: [
-                { $size: { $ifNull: ["$items", []] } },
-                { $size: { $ifNull: ["$products", []] } }
-              ]
+    const [orders, totalCount, stats] = await Promise.all([
+      db.collection("orders")
+        .find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray(),
+      db.collection("orders").countDocuments(query),
+      db.collection("orders").aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: {
+              $sum: {
+                $ifNull: ["$totalPrice", { $ifNull: ["$offerPrice", { $ifNull: ["$price", 0] }] }]
+              }
+            },
+            totalItems: {
+              $sum: {
+                $add: [
+                  { $size: { $ifNull: ["$items", []] } },
+                  { $size: { $ifNull: ["$products", []] } }
+                ]
+              }
             }
           }
         }
-      }
-    ]).toArray()
+      ]).toArray()
+    ])
 
+    const totalPages = Math.ceil(totalCount / limit)
     const summary = stats[0] || { totalRevenue: 0, totalItems: 0 }
 
     return NextResponse.json({
@@ -101,10 +100,23 @@ export async function POST(request) {
     // Update stock for each item
     if (body.items && Array.isArray(body.items)) {
       const bulkUpdates = []
+      
+      // 🚀 OPTIMIZATION: Fetch all products in a single database query instead of looping
+      const productIds = body.items.map(item => {
+        try {
+          return new ObjectId(item.productId)
+        } catch (e) {
+          return null
+        }
+      }).filter(Boolean)
+
+      const products = await db.collection("products").find({ _id: { $in: productIds } }).toArray()
+      const productMap = new Map(products.map(p => [p._id.toString(), p]))
+
       for (const item of body.items) {
         if (!item.productId) continue
 
-        const product = await db.collection("products").findOne({ _id: new ObjectId(item.productId) })
+        const product = productMap.get(item.productId?.toString())
         if (!product) {
           // console.error(`Product not found for stock update: ${item.productId}`)
           continue
