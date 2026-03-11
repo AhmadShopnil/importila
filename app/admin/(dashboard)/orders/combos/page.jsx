@@ -416,7 +416,7 @@ export default function ComboOrdersPage() {
                         </select>
                       </td>
                       <td className="p-4">
-                        {order.courierConsignmentId ? (
+                        {order?.courierConsignmentId ? (
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-1.5 font-bold">
                               <span className="text-[10px] text-gray-400">Steadfast:</span>
