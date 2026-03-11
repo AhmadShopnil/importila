@@ -38,7 +38,7 @@ const LandingContent = ({ combo, comboSliders }) => {
             <SizeChart />
 
             <BundleSelection combo={combo} />
-            <ProductGrid combo={combo} />
+            {/* <ProductGrid combo={combo} /> */}
 
             {state.selectedBundle && (
                 <ProductSlots />

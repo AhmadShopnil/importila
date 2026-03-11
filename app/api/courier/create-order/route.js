@@ -90,7 +90,12 @@ export async function POST(req) {
                 body: JSON.stringify(mappedOrders[0])
             })
 
-            result = await res.json();
+            const responseText = await res.text();
+            try {
+                result = JSON.parse(responseText);
+            } catch (e) {
+                throw new Error(`Steadfast API response: ${responseText}`);
+            }
             // console.log("in courier api response",result)
 
             if (result?.status === 200 && result?.consignment) {
@@ -120,7 +125,12 @@ export async function POST(req) {
             })
         })
 
-        result = await res.json()
+        const responseText = await res.text()
+        try {
+            result = JSON.parse(responseText)
+        } catch (e) {
+            throw new Error(`Steadfast API returned non-JSON response: ${responseText}`);
+        }
 
         if (Array.isArray(result)) {
             const bulkOps = result
