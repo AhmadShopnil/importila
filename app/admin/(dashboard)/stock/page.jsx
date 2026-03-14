@@ -36,8 +36,8 @@ export default function StockPage() {
       // Initialize local stock state
       const stockObj = {}
       productsData.forEach((product) => {
-        product.variants.forEach((variant) => {
-          stockObj[variant.sku] = variant.stock
+        product.variants?.forEach((variant) => {
+          stockObj[`${product._id}-${variant.sku}`] = variant.stock || 0
         })
       })
       setLocalStock(stockObj)
@@ -46,8 +46,8 @@ export default function StockPage() {
 
   const products = productsData || []
 
-  const handleInputChange = (sku, value) => {
-    setLocalStock((prev) => ({ ...prev, [sku]: value }))
+  const handleInputChange = (productId, sku, value) => {
+    setLocalStock((prev) => ({ ...prev, [`${productId}-${sku}`]: value }))
   }
 
   const toggleProductExpansion = (productId) => {
@@ -61,19 +61,20 @@ export default function StockPage() {
   }
 
   const handleSaveStock = async (productId, sku) => {
-    const newStock = Number(localStock[sku])
+    const stockKey = `${productId}-${sku}`
+    const newStock = Number(localStock[stockKey])
     if (isNaN(newStock) || newStock < 0) {
       toast.error("Invalid stock value")
       return
     }
 
     try {
-      setSavingStock((prev) => ({ ...prev, [sku]: true }))
+      setSavingStock((prev) => ({ ...prev, [stockKey]: true }))
 
       const product = products.find((p) => p._id === productId)
       if (!product) return
 
-      const updatedVariant = product.variants.find((v) => v.sku === sku)
+      const updatedVariant = product.variants?.find((v) => v.sku === sku)
       if (!updatedVariant) return
 
       await updateProductStock({
@@ -86,7 +87,7 @@ export default function StockPage() {
       console.error("Failed to save stock:", error)
       toast.error(`Failed to update stock for ${sku}`)
     } finally {
-      setSavingStock((prev) => ({ ...prev, [sku]: false }))
+      setSavingStock((prev) => ({ ...prev, [stockKey]: false }))
     }
   }
 
@@ -131,11 +132,11 @@ export default function StockPage() {
   // Calculate statistics for the dashboard
   const activeProducts = products.filter(p => !p.isTrashed)
   const totalOverallStock = activeProducts.reduce((acc, p) =>
-    acc + (p.variants?.reduce((vAcc, v) => vAcc + (Number(localStock[v.sku]) || 0), 0) || 0), 0
+    acc + (p.variants?.reduce((vAcc, v) => vAcc + (Number(localStock[`${p._id}-${v.sku}`]) || 0), 0) || 0), 0
   )
   const totalVariantsCount = activeProducts.reduce((acc, p) => acc + (p.variants?.length || 0), 0)
   const lowStockVariantsCount = activeProducts.reduce((acc, p) =>
-    acc + (p.variants?.filter(v => (Number(localStock[v.sku]) || 0) < 10).length || 0), 0
+    acc + (p.variants?.filter(v => (Number(localStock[`${p._id}-${v.sku}`]) || 0) < 10).length || 0), 0
   )
 
   return (
@@ -264,8 +265,8 @@ export default function StockPage() {
           <div className="grid grid-cols-1 gap-6">
             {filteredProducts.map((product) => {
               const isExpanded = expandedProducts.has(product._id)
-              const lowStockCount = product.variants.filter(v => v.stock < 10).length
-              const totalStock = product.variants.reduce((acc, v) => acc + (localStock[v.sku] || 0), 0)
+              const lowStockCount = product.variants.filter(v => (localStock[`${product._id}-${v.sku}`] || 0) < 10).length
+              const totalStock = product.variants.reduce((acc, v) => acc + (localStock[`${product._id}-${v.sku}`] || 0), 0)
 
               return (
                 <div
@@ -371,18 +372,18 @@ export default function StockPage() {
                                     <input
                                       type="number"
                                       min="0"
-                                      value={localStock[variant.sku]}
-                                      onChange={(e) => handleInputChange(variant.sku, e.target.value)}
-                                      className={`w-20 px-3 py-1.5 bg-white border rounded-lg text-sm font-semibold transition-all outline-none focus:ring-2 ${(localStock[variant.sku] < 10)
+                                      value={localStock[`${product._id}-${variant.sku}`] ?? ''}
+                                      onChange={(e) => handleInputChange(product._id, variant.sku, e.target.value)}
+                                      className={`w-20 px-3 py-1.5 bg-white border rounded-lg text-sm font-semibold transition-all outline-none focus:ring-2 ${(localStock[`${product._id}-${variant.sku}`] < 10)
                                         ? 'border-red-200 focus:ring-red-500/20 text-red-600'
                                         : 'border-gray-200 focus:ring-indigo-500/20 text-gray-900'
                                         }`}
-                                      disabled={savingStock[variant.sku]}
+                                      disabled={savingStock[`${product._id}-${variant.sku}`]}
                                     />
                                   </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                  {localStock[variant.sku] < 10 ? (
+                                  {(localStock[`${product._id}-${variant.sku}`] || 0) < 10 ? (
                                     <span className="flex items-center gap-1.5 text-red-600 font-bold text-xs uppercase">
                                       <AlertCircle className="w-3.5 h-3.5" />
                                       Low
@@ -400,14 +401,14 @@ export default function StockPage() {
                                       e.stopPropagation();
                                       handleSaveStock(product._id, variant.sku);
                                     }}
-                                    disabled={savingStock[variant.sku]}
-                                    className={`inline-flex items-center justify-center p-2 rounded-lg transition-all ${savingStock[variant.sku]
+                                    disabled={savingStock[`${product._id}-${variant.sku}`]}
+                                    className={`inline-flex items-center justify-center p-2 rounded-lg transition-all ${savingStock[`${product._id}-${variant.sku}`]
                                       ? 'bg-gray-100 text-gray-400'
                                       : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md hover:shadow-lg active:scale-95'
                                       }`}
                                     title="Save Stock"
                                   >
-                                    {savingStock[variant.sku] ? (
+                                    {savingStock[`${product._id}-${variant.sku}`] ? (
                                       <div className="w-5 h-5 border-2 border-gray-300 border-t-white rounded-full animate-spin"></div>
                                     ) : (
                                       <Save className="w-5 h-5" />
@@ -473,15 +474,15 @@ export default function StockPage() {
                           <input
                             type="number"
                             min="0"
-                            value={localStock[variant.sku]}
-                            onChange={(e) => handleInputChange(variant.sku, e.target.value)}
-                            className={`w-20 px-3 py-1.5 border rounded-xl text-sm font-semibold transition-all focus:ring-2 ${localStock[variant.sku] < 10
+                            value={localStock[`${variant.productId}-${variant.sku}`] ?? ''}
+                            onChange={(e) => handleInputChange(variant.productId, variant.sku, e.target.value)}
+                            className={`w-20 px-3 py-1.5 border rounded-xl text-sm font-semibold transition-all focus:ring-2 ${(localStock[`${variant.productId}-${variant.sku}`] || 0) < 10
                               ? 'border-red-200 bg-red-50 text-red-600 focus:ring-red-500/20'
                               : 'border-gray-200 bg-white text-gray-900 focus:ring-indigo-500/20'
                               }`}
-                            disabled={savingStock[variant.sku]}
+                            disabled={savingStock[`${variant.productId}-${variant.sku}`]}
                           />
-                          {localStock[variant.sku] < 10 && (
+                          {(localStock[`${variant.productId}-${variant.sku}`] || 0) < 10 && (
                             <AlertTriangle className="w-5 h-5 text-red-500" />
                           )}
                         </div>
@@ -489,13 +490,13 @@ export default function StockPage() {
                       <td className="px-6 py-4 text-center">
                         <button
                           onClick={() => handleSaveStock(variant.productId, variant.sku)}
-                          disabled={savingStock[variant.sku]}
-                          className={`px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm active:scale-95 ${savingStock[variant.sku]
+                          disabled={savingStock[`${variant.productId}-${variant.sku}`]}
+                          className={`px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm active:scale-95 ${savingStock[`${variant.productId}-${variant.sku}`]
                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                             : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-200'
                             }`}
                         >
-                          {savingStock[variant.sku] ? "..." : "Update"}
+                          {savingStock[`${variant.productId}-${variant.sku}`] ? "..." : "Update"}
                         </button>
                       </td>
                     </tr>
