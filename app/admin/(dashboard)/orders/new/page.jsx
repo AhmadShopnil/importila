@@ -98,8 +98,8 @@ export default function ManualOrderEntry() {
         setLoading(true)
         try {
             const url = search
-                ? `${BASE_URL}/api/products?search=${encodeURIComponent(search)}&limit=20`
-                : `${BASE_URL}/api/products?limit=20`
+                ? `${BASE_URL}/api/admin/products?search=${encodeURIComponent(search)}&limit=20`
+                : `${BASE_URL}/api/admin/products?limit=20`
             const res = await fetch(url)
             const data = await res.json()
             const productsList = Array.isArray(data) ? data : (data.products || [])
@@ -768,9 +768,10 @@ export default function ManualOrderEntry() {
                                                 >
                                                     <div>
                                                         <p className="font-bold text-lg">{variant.design} {variant.color}</p>
-                                                        <p className="font-bold text-muted-foreground bg-muted inline-block px-2 py-0.5 rounded text-xs mt-1">
+                                                        <p className="font-bold text-muted-foreground bg-muted inline-block px-2 py-0.5 rounded text-sm md:text-base mt-1">
                                                             Size: {variant.size} | SKU: {variant.sku}
                                                         </p>
+                                                        <p className="font-bold text-base ml-2">Stock:  {variant?.stock}</p>
                                                     </div>
                                                     <div className="bg-[#1E556E] text-white p-2 rounded-xl">
                                                         <Plus className="w-5 h-5" />
