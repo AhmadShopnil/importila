@@ -79,7 +79,7 @@ export default function ComboOrdersPage() {
     }
   }
 
-  const statuses = ["pending", "confirmed", "shipped", "delivered", "cancelled"]
+  const statuses = ["pending", "confirmed", "shipped", "delivered", "cancelled", "returned"]
 
   const totalRevenue = globalStats.totalRevenue
   const totalOrders = totalCount
@@ -157,6 +157,10 @@ export default function ComboOrdersPage() {
     if (selectedOrders.length === 0) {
       toast.error("Please select at least one order")
       return
+    }
+
+    if (!window.confirm("Are you sure you want to send the selected orders to the courier?")) {
+      return;
     }
 
     try {
@@ -408,7 +412,8 @@ export default function ComboOrdersPage() {
                             ${localStatus === 'pending' ? 'bg-yellow-500 text-yellow-700' :
                               localStatus === 'confirmed' ? 'bg-blue-500 text-blue-700' :
                                 localStatus === 'shipped' ? 'bg-indigo-500 text-indigo-700' :
-                                  localStatus === 'delivered' ? 'bg-green-500 text-green-700' : 'bg-red-500 text-red-700'}`}
+                                  localStatus === 'delivered' ? 'bg-green-500 text-green-700' :
+                                    localStatus === 'returned' ? 'bg-gray-500 text-gray-700' : 'bg-red-500 text-red-700'}`}
                         >
                           {statuses.map((status) => (
                             <option key={status} value={status} className="bg-white text-gray-800">{status.toUpperCase()}</option>
@@ -468,7 +473,7 @@ export default function ComboOrdersPage() {
             const localStatus = updatedStatuses[order?._id] || order?.status
             return (
               <div key={order?._id} className="relative group border border-gray-100 bg-white rounded-md shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden">
-                <div className={`h-1.5 w-full ${localStatus === 'pending' ? 'bg-yellow-400' : localStatus === 'confirmed' ? 'bg-blue-400' : localStatus === 'shipped' ? 'bg-indigo-400' : localStatus === 'delivered' ? 'bg-green-400' : 'bg-red-400'}`} />
+                <div className={`h-1.5 w-full ${localStatus === 'pending' ? 'bg-yellow-400' : localStatus === 'confirmed' ? 'bg-blue-400' : localStatus === 'shipped' ? 'bg-indigo-400' : localStatus === 'delivered' ? 'bg-green-400' : localStatus === 'returned' ? 'bg-gray-400' : 'bg-red-400'}`} />
                 <div className="p-5 flex-1 space-y-4">
                   <div className="flex justify-between items-start">
                     <div className="flex items-start gap-3">

@@ -104,7 +104,8 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
         confirmed: "bg-blue-100 text-blue-700 border-blue-200",
         shipped: "bg-indigo-100 text-indigo-700 border-indigo-200",
         delivered: "bg-green-100 text-green-700 border-green-200",
-        cancelled: "bg-red-100 text-red-700 border-red-200"
+        cancelled: "bg-red-100 text-red-700 border-red-200",
+        returned: "bg-gray-200 text-gray-700 border-gray-300"
     }
 
     return (
@@ -141,7 +142,7 @@ export default function OrderDetailsPage({ params: paramsPromise }) {
                         onChange={(e) => handleUpdateStatus(e.target.value)}
                         className={`px-4 py-2 rounded-lg font-bold text-sm border-2 cursor-pointer transition-all focus:ring-0 ${statusColors[order.status]}`}
                     >
-                        {["pending", "confirmed", "shipped", "delivered", "cancelled"].map(s => (
+                        {["pending", "confirmed", "shipped", "delivered", "cancelled", "returned"].map(s => (
                             <option key={s} value={s} className="bg-white text-gray-800">{s.toUpperCase()}</option>
                         ))}
                     </select>
