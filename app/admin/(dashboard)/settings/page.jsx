@@ -26,6 +26,7 @@ export default function GeneralSettingsPage() {
         timeFormat: "12h",
         insideDhakaCharge: 60,
         outsideDhakaCharge: 120,
+        lowStockThreshold: 10,
         termsAndConditions: ""
     })
     const [loading, setLoading] = useState(true)
@@ -281,6 +282,29 @@ export default function GeneralSettingsPage() {
                             className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-[#1E556E] outline-none"
                             placeholder="120"
                         />
+                    </div>
+                </div>
+            </div>
+
+            {/* Inventory Settings */}
+            <div className="bg-white rounded-xl border border-border shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-6">
+                    <Store className="w-5 h-5 text-[#1E556E]" />
+                    <h2 className="text-xl font-semibold">Inventory Settings</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-semibold mb-2">Low Stock Alert Threshold</label>
+                        <input
+                            type="number"
+                            min="0"
+                            value={settings.lowStockThreshold}
+                            onChange={(e) => setSettings({ ...settings, lowStockThreshold: Number(e.target.value) })}
+                            className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-[#1E556E] outline-none"
+                            placeholder="10"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">Products with stock under this amount will trigger a low stock alert.</p>
                     </div>
                 </div>
             </div>

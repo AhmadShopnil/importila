@@ -30,6 +30,15 @@ export default function StockPage() {
   const [localStock, setLocalStock] = useState({})
   const [savingStock, setSavingStock] = useState({})
   const [expandedProducts, setExpandedProducts] = useState(new Set())
+  const [lowStockThreshold, setLowStockThreshold] = useState(10)
+
+  useEffect(() => {
+    fetch('/api/settings').then(res => res.json()).then(data => {
+      if (data.lowStockThreshold !== undefined) {
+         setLowStockThreshold(data.lowStockThreshold)
+      }
+    }).catch(err => console.error(err))
+  }, [])
 
   useEffect(() => {
     if (productsData) {
@@ -103,7 +112,7 @@ export default function StockPage() {
     if (!matchesSearch) return false
 
     if (filterLowStock) {
-      return product.variants.some(v => v.stock < 10)
+      return product.variants.some(v => v.stock < lowStockThreshold)
     }
 
     return true
@@ -118,7 +127,7 @@ export default function StockPage() {
         variant.sku.toLowerCase().includes(searchTerm.toLowerCase())
 
       if (!matchesSearch) return
-      if (filterLowStock && variant.stock >= 10) return
+      if (filterLowStock && variant.stock >= lowStockThreshold) return
 
       allVariants.push({
         productId: product._id,
@@ -136,7 +145,7 @@ export default function StockPage() {
   )
   const totalVariantsCount = activeProducts.reduce((acc, p) => acc + (p.variants?.length || 0), 0)
   const lowStockVariantsCount = activeProducts.reduce((acc, p) =>
-    acc + (p.variants?.filter(v => (Number(localStock[`${p._id}-${v.sku}`]) || 0) < 10).length || 0), 0
+    acc + (p.variants?.filter(v => (Number(localStock[`${p._id}-${v.sku}`]) || 0) < lowStockThreshold).length || 0), 0
   )
 
   return (
@@ -265,7 +274,7 @@ export default function StockPage() {
           <div className="grid grid-cols-1 gap-6">
             {filteredProducts.map((product) => {
               const isExpanded = expandedProducts.has(product._id)
-              const lowStockCount = product.variants.filter(v => (localStock[`${product._id}-${v.sku}`] || 0) < 10).length
+              const lowStockCount = product.variants.filter(v => (localStock[`${product._id}-${v.sku}`] || 0) < lowStockThreshold).length
               const totalStock = product.variants.reduce((acc, v) => acc + (localStock[`${product._id}-${v.sku}`] || 0), 0)
 
               return (
@@ -305,7 +314,7 @@ export default function StockPage() {
                         </span>
                         <div className="w-1 h-1 rounded-full bg-gray-300"></div>
                         <span className="text-sm font-medium text-gray-500">
-                          Total Stock: <span className={totalStock < 10 ? "text-red-500 font-bold" : "text-gray-900 font-bold"}>{totalStock}</span>
+                          Total Stock: <span className={totalStock < lowStockThreshold ? "text-red-500 font-bold" : "text-gray-900 font-bold"}>{totalStock}</span>
                         </span>
                       </div>
                     </div>
@@ -374,7 +383,7 @@ export default function StockPage() {
                                       min="0"
                                       value={localStock[`${product._id}-${variant.sku}`] ?? ''}
                                       onChange={(e) => handleInputChange(product._id, variant.sku, e.target.value)}
-                                      className={`w-20 px-3 py-1.5 bg-white border rounded-lg text-sm font-semibold transition-all outline-none focus:ring-2 ${(localStock[`${product._id}-${variant.sku}`] < 10)
+                                      className={`w-20 px-3 py-1.5 bg-white border rounded-lg text-sm font-semibold transition-all outline-none focus:ring-2 ${(localStock[`${product._id}-${variant.sku}`] < lowStockThreshold)
                                         ? 'border-red-200 focus:ring-red-500/20 text-red-600'
                                         : 'border-gray-200 focus:ring-indigo-500/20 text-gray-900'
                                         }`}
@@ -383,7 +392,7 @@ export default function StockPage() {
                                   </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                  {(localStock[`${product._id}-${variant.sku}`] || 0) < 10 ? (
+                                  {(localStock[`${product._id}-${variant.sku}`] || 0) < lowStockThreshold ? (
                                     <span className="flex items-center gap-1.5 text-red-600 font-bold text-xs uppercase">
                                       <AlertCircle className="w-3.5 h-3.5" />
                                       Low
@@ -476,13 +485,13 @@ export default function StockPage() {
                             min="0"
                             value={localStock[`${variant.productId}-${variant.sku}`] ?? ''}
                             onChange={(e) => handleInputChange(variant.productId, variant.sku, e.target.value)}
-                            className={`w-20 px-3 py-1.5 border rounded-xl text-sm font-semibold transition-all focus:ring-2 ${(localStock[`${variant.productId}-${variant.sku}`] || 0) < 10
+                            className={`w-20 px-3 py-1.5 border rounded-xl text-sm font-semibold transition-all focus:ring-2 ${(localStock[`${variant.productId}-${variant.sku}`] || 0) < lowStockThreshold
                               ? 'border-red-200 bg-red-50 text-red-600 focus:ring-red-500/20'
                               : 'border-gray-200 bg-white text-gray-900 focus:ring-indigo-500/20'
                               }`}
                             disabled={savingStock[`${variant.productId}-${variant.sku}`]}
                           />
-                          {(localStock[`${variant.productId}-${variant.sku}`] || 0) < 10 && (
+                          {(localStock[`${variant.productId}-${variant.sku}`] || 0) < lowStockThreshold && (
                             <AlertTriangle className="w-5 h-5 text-red-500" />
                           )}
                         </div>

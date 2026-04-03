@@ -117,9 +117,12 @@ export async function GET(request) {
         const financials = stats[0].financials[0] || {}
 
         /* -------------------- Extra Stats -------------------- */
+        const settingsDoc = await db.collection("settings").findOne({ type: "general" })
+        const lowStockThreshold = settingsDoc?.lowStockThreshold || 10
+
         const totalProducts = await db.collection("products").countDocuments()
         const lowStockItems = await db.collection("products").countDocuments({
-            "variants.stock": { $lt: 10 },
+            "variants.stock": { $lt: lowStockThreshold },
         })
 
         const totalSales = financials.totalSales || 0
