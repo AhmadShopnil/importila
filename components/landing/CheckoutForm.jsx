@@ -22,6 +22,7 @@ const CheckoutForm = ({ combo }) => {
 
     const [shippingRates, setShippingRates] = useState({ inside: 60, outside: 120 });
     const [deliveryLocation, setDeliveryLocation] = useState("inside"); // Default to inside
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -351,10 +352,24 @@ const CheckoutForm = ({ combo }) => {
                                 />
                             </div>
 
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="checkbox"
+                                    id="terms"
+                                    required
+                                    checked={acceptedTerms}
+                                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                                    className="w-5 h-5 text-primary border-2 border-border rounded focus:ring-primary focus:border-primary transition-colors cursor-pointer"
+                                />
+                                <label htmlFor="terms" className="text-sm text-foreground cursor-pointer select-none font-medium">
+                                    I accept the <a href="/terms-conditions" target="_blank" className="text-primary hover:underline font-bold" onClick={(e) => e.stopPropagation()}>Terms and Conditions</a>
+                                </label>
+                            </div>
+
                             <button
                                 type="submit"
-                                disabled={!isComplete || isSubmitting}
-                                className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 ${isComplete && !isSubmitting
+                                disabled={!isComplete || isSubmitting || !acceptedTerms}
+                                className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 ${isComplete && !isSubmitting && acceptedTerms
                                     ? "gradient-cta text-accent-foreground shadow-cta hover:scale-[1.02]"
                                     : "bg-muted text-muted-foreground cursor-not-allowed"
                                     }`}

@@ -1,14 +1,46 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 import { uploadToCloudinary } from "@/lib/cloudinary";
-import { getAdminAuth } from "@/lib/auth"
+import { getAdminAuth } from "@/lib/auth";
+import { ObjectId } from "mongodb";
 
 /* ================= GET ================= */
 export async function GET() {
   try {
     const { db } = await connectToDatabase();
     const combos = await db.collection("combos").find().toArray();
-    return NextResponse.json(combos);
+    
+    const allProductIds = new Set();
+    combos.forEach(combo => {
+      if (Array.isArray(combo.products)) {
+        combo.products.forEach(p => {
+           const idStr = typeof p === 'object' && p !== null ? (p._id || p.id) : p;
+           if (idStr) allProductIds.add(String(idStr));
+        });
+      }
+    });
+
+    const objectIds = Array.from(allProductIds).filter(id => ObjectId.isValid(id)).map(id => new ObjectId(id));
+    
+    let populatedProductsHash = {};
+    if (objectIds.length > 0) {
+      const populatedProducts = await db.collection("products").find({ _id: { $in: objectIds } }).toArray();
+      populatedProducts.forEach(p => {
+        populatedProductsHash[String(p._id)] = p;
+      });
+    }
+
+    const combosWithProducts = combos.map(combo => {
+      if (Array.isArray(combo.products)) {
+        combo.products = combo.products.map(p => {
+          const idStr = typeof p === 'object' && p !== null ? (p._id || p.id) : p;
+          return populatedProductsHash[String(idStr)] || null;
+        }).filter(Boolean);
+      }
+      return combo;
+    });
+
+    return NextResponse.json(combosWithProducts);
   } catch (error) {
     console.error("GET /api/combos", error);
     return NextResponse.json({ error: "Failed to fetch combos" }, { status: 500 });
@@ -47,7 +79,11 @@ export async function POST(request) {
     const price = Number(formData.get("price")) || 0;
     const offerPrice = Number(formData.get("offerPrice")) || 0;
     const sizes = JSON.parse(formData.get("sizes") || "[]");
-    const products = JSON.parse(formData.get("products") || "[]");
+    const productsRaw = JSON.parse(formData.get("products") || "[]");
+    const products = productsRaw.map(p => {
+      if (typeof p === 'object' && p !== null) return p._id || p.id;
+      return p;
+    }).filter(Boolean);
     const bundleOptions = JSON.parse(formData.get("bundleOptions") || "[]");
     const imageFile = formData.get("featuredImage");
 

@@ -19,6 +19,22 @@ export async function GET(request, context) {
     if (!combo) {
       return NextResponse.json({ error: "Combo not found" }, { status: 404 })
     }
+    
+    if (Array.isArray(combo.products) && combo.products.length > 0) {
+      const idStrings = combo.products.map(p => typeof p === 'object' && p !== null ? (p._id || p.id) : p).filter(Boolean);
+      const objectIds = idStrings.filter(id => ObjectId.isValid(id)).map(id => new ObjectId(id));
+      
+      let populatedProductsHash = {};
+      if (objectIds.length > 0) {
+        const populatedProducts = await db.collection("products").find({ _id: { $in: objectIds } }).toArray();
+        populatedProducts.forEach(p => {
+          populatedProductsHash[String(p._id)] = p;
+        });
+      }
+      
+      combo.products = idStrings.map(id => populatedProductsHash[String(id)] || null).filter(Boolean);
+    }
+    
     return NextResponse.json(combo)
   } catch (error) {
     console.error("GET /api/combos/[id] error:", error)
@@ -59,7 +75,11 @@ export async function PUT(request, context) {
     const price = Number(formData.get("price")) || 0
     const offerPrice = Number(formData.get("offerPrice")) || 0
     const sizes = JSON.parse(formData.get("sizes") || "[]")
-    const products = JSON.parse(formData.get("products") || "[]")
+    const productsRaw = JSON.parse(formData.get("products") || "[]")
+    const products = productsRaw.map(p => {
+      if (typeof p === 'object' && p !== null) return p._id || p.id;
+      return p;
+    }).filter(Boolean);
     const bundleOptions = JSON.parse(formData.get("bundleOptions") || "[]")
 
     const featuredImageFile = formData.get("featuredImage")

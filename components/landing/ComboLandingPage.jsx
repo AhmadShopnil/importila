@@ -40,10 +40,11 @@ const LandingContent = ({ combo, comboSliders }) => {
             <BundleSelection combo={combo} />
             {/* <ProductGrid combo={combo} /> */}
 
-            {state.selectedBundle && (
+            <SizeSelection combo={combo} />
+
+            {state.selectedBundle && state.selectedSize && (
                 <ProductSlots />
             )}
-            <SizeSelection combo={combo} />
 
             <CheckoutForm combo={combo} />
 
