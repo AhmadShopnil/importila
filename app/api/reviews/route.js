@@ -10,7 +10,12 @@ export async function GET(request) {
             .sort({ createdAt: -1 })
             .toArray()
 
-        return NextResponse.json(reviews)
+        const normalizedReviews = reviews.map(review => ({
+            ...review,
+            imageUrl: typeof review.imageUrl === 'object' && review.imageUrl !== null ? (review.imageUrl.secure_url || review.imageUrl.url) : review.imageUrl
+        }))
+
+        return NextResponse.json(normalizedReviews)
     } catch (error) {
         console.error("GET /api/reviews error:", error)
         return NextResponse.json({ error: "Failed to fetch reviews" }, { status: 500 })
@@ -29,10 +34,15 @@ export async function POST(request) {
             return NextResponse.json({ error: "Image URL is required" }, { status: 400 })
         }
 
+        let finalImageUrl = imageUrl;
+        if (typeof imageUrl === 'object' && imageUrl !== null) {
+            finalImageUrl = imageUrl.secure_url || imageUrl.url || "";
+        }
+
         const { db } = await connectToDatabase()
 
         const result = await db.collection("reviews").insertOne({
-            imageUrl,
+            imageUrl: finalImageUrl,
             customerName: customerName || "Customer",
             isActive: isActive ?? true,
             createdAt: new Date(),
