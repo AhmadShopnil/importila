@@ -143,30 +143,59 @@ const ProductSelectionModal = ({ combo }) => {
                             </div>
                             <p className=" text-lg font-semibold text-center text-[#1E556E] mb-1">Choose  Colour</p>
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-2 md:gap-4">
-                                {getUniqueColors(selectedProductForColor?.variants).map((variant, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => confirmColorAndAdd(variant.colorName, variant.image)}
-                                        className="group flex flex-col items-center gap-3 p-1 md:p-2 rounded-md border-2 border-transparent bg-white shadow-sm hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all duration-300 text-left"
-                                    >
-                                        <div className="relative w-full aspect-[4/5] rounded-md overflow-hidden shadow-sm">
-                                            <Image
-                                                src={variant?.image || selectedProductForColor.featuredImage || selectedProductForColor.image}
-                                                alt={variant.colorName}
-                                                fill
-                                                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                                sizes="(max-width: 640px) 40vw, 200px"
-                                            />
-                                        </div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <div
-                                                className="w-5 h-5 rounded-full border shadow-sm"
-                                                style={{ backgroundColor: variant.colorHex }}
-                                            />
-                                            <span className="text-sm font-bold text-slate-700">{variant.colorName}</span>
-                                        </div>
-                                    </button>
-                                ))}
+                                {getUniqueColors(selectedProductForColor?.variants).map((variant, i) => {
+                                    const cleanSelectedSize = String(state.selectedSize || "").trim().toLowerCase();
+                                    const cleanVariantColor = String(variant.colorName || "").trim().toLowerCase();
+                                    
+                                    const variantForSize = selectedProductForColor?.variants?.find(v => 
+                                        String(v.colorName || "").trim().toLowerCase() === cleanVariantColor && 
+                                        String(v.size || "").trim().toLowerCase() === cleanSelectedSize
+                                    );
+                                    
+                                    let isOutOfStock = false;
+                                    
+                                    if (selectedProductForColor?.variants && selectedProductForColor.variants.length > 0) {
+                                        if (!variantForSize) {
+                                            isOutOfStock = true;
+                                        } else {
+                                            const stockVal = Number(variantForSize.stock);
+                                            if (isNaN(stockVal) || stockVal <= 0) {
+                                                isOutOfStock = true;
+                                            }
+                                        }
+                                    }
+
+                                    return (
+                                        <button
+                                            key={i}
+                                            onClick={() => !isOutOfStock && confirmColorAndAdd(variant.colorName, variant.image)}
+                                            disabled={isOutOfStock}
+                                            className={`group flex flex-col items-center gap-3 p-1 md:p-2 rounded-md border-2 ${isOutOfStock ? 'border-red-500 bg-red-50 opacity-70 cursor-not-allowed' : 'border-transparent bg-white hover:border-primary hover:bg-primary/5 cursor-pointer'} shadow-sm hover:shadow-md transition-all duration-300 text-left relative overflow-hidden`}
+                                        >
+                                            <div className="relative w-full aspect-[4/5] rounded-md overflow-hidden shadow-sm">
+                                                <Image
+                                                    src={variant?.image || selectedProductForColor.featuredImage || selectedProductForColor.image}
+                                                    alt={variant.colorName}
+                                                    fill
+                                                    className={`object-cover transition-transform duration-500 ${!isOutOfStock && 'group-hover:scale-105'}`}
+                                                    sizes="(max-width: 640px) 40vw, 200px"
+                                                />
+                                                {isOutOfStock && (
+                                                    <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] flex flex-col items-center justify-center">
+                                                        <span className="bg-red-500 text-white text-[10px] md:text-xs font-bold px-2 py-1 rounded shadow-md">Stock Out</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <div
+                                                    className="w-5 h-5 rounded-full border shadow-sm"
+                                                    style={{ backgroundColor: variant.colorHex }}
+                                                />
+                                                <span className={`text-sm font-bold ${isOutOfStock ? 'text-red-500' : 'text-slate-700'}`}>{variant.colorName}</span>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}

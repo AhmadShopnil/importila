@@ -31,6 +31,26 @@ const ProductSlots = () => {
                     {slots?.map((slot, index) => {
                         const isActive = activeSlotIndex === index;
                         const isFilled = slot.product !== null;
+                        
+                        let isSlotOutOfStock = false;
+                        if (isFilled && slot.product.variants?.length > 0 && state.selectedSize) {
+                            const cleanSelectedSize = String(state.selectedSize || "").trim().toLowerCase();
+                            const cleanVariantColor = String(slot.selectedColor || "").trim().toLowerCase();
+                            
+                            const variantForSize = slot.product.variants.find(v => 
+                                String(v.colorName || "").trim().toLowerCase() === cleanVariantColor && 
+                                String(v.size || "").trim().toLowerCase() === cleanSelectedSize
+                            );
+                            
+                            if (!variantForSize) {
+                                isSlotOutOfStock = true;
+                            } else {
+                                const stockVal = Number(variantForSize.stock);
+                                if (isNaN(stockVal) || stockVal <= 0) {
+                                    isSlotOutOfStock = true;
+                                }
+                            }
+                        }
 
                         return (
                             <div
@@ -41,9 +61,11 @@ const ProductSlots = () => {
                                 aria-current={isActive}
                                 className={`relative aspect-square rounded-2xl border-2 cursor-pointer transition-all duration-300 overflow-hidden  ${isActive
                                     ? "border-accent border-dashed bg-accent/5 shadow-elevated scale-[1.05] ring-4 ring-accent/20 z-20 animate-pulse-subtle"
-                                    : isFilled
-                                        ? "border-primary/50 bg-card"
-                                        : "border-border bg-muted/30 hover:border-primary/30"
+                                    : isSlotOutOfStock
+                                        ? "border-red-500 bg-red-50 opacity-80"
+                                        : isFilled
+                                            ? "border-primary/50 bg-card"
+                                            : "border-border bg-muted/30 hover:border-primary/30"
                                     }`}
                             >
                                 {/* Slot Label */}
@@ -67,8 +89,15 @@ const ProductSlots = () => {
                                             sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 20vw, 150px"
                                         />
 
+                                        {/* Out of Stock Overlay */}
+                                        {isSlotOutOfStock && (
+                                            <div className="absolute inset-0 bg-white/40 flex items-center justify-center backdrop-blur-[1px] z-10 pointer-events-none">
+                                                <span className="bg-red-500 text-white text-[10px] md:text-xs font-bold px-2 py-1 rounded shadow-md">Stock Out</span>
+                                            </div>
+                                        )}
+
                                         {/* Overlay with info */}
-                                        <div className="absolute inset-0  flex flex-col justify-end p-3">
+                                        <div className="absolute inset-0  flex flex-col justify-end p-3 z-20">
                                             {/* <p className="text-white text-sm md:text-base font-semibold truncate mb-2">
                                                 {slot?.product.name}
                                             </p>
@@ -82,25 +111,51 @@ const ProductSlots = () => {
 
                                             {/* Color Selection */}
                                             <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-                                                {slot.product.displayColors?.map((color) => (
-                                                    <button
-                                                        key={color.name}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            updateSlotColor(index, color.name);
-                                                        }}
-                                                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${slot.selectedColor === color.name
-                                                            ? "border-white scale-110"
-                                                            : "border-transparent hover:scale-105"
-                                                            }`}
-                                                        style={{ backgroundColor: color.hex }}
-                                                        title={color.name}
-                                                    >
-                                                        {slot.selectedColor === color.name && (
-                                                            <Check size={10} className="text-white drop-shadow-lg" />
-                                                        )}
-                                                    </button>
-                                                ))}
+                                                {slot.product.displayColors?.map((color) => {
+                                                    const cleanSelectedSize = String(state.selectedSize || "").trim().toLowerCase();
+                                                    const cleanVariantColor = String(color.name || "").trim().toLowerCase();
+                                                    
+                                                    const variantForSize = slot.product?.variants?.find(v => 
+                                                        String(v.colorName || "").trim().toLowerCase() === cleanVariantColor && 
+                                                        String(v.size || "").trim().toLowerCase() === cleanSelectedSize
+                                                    );
+                                                    
+                                                    let isColorOutOfStock = false;
+                                                    if (slot.product?.variants?.length > 0 && state.selectedSize) {
+                                                        if (!variantForSize) {
+                                                            isColorOutOfStock = true;
+                                                        } else {
+                                                            const stockVal = Number(variantForSize.stock);
+                                                            if (isNaN(stockVal) || stockVal <= 0) {
+                                                                isColorOutOfStock = true;
+                                                            }
+                                                        }
+                                                    }
+                                                    
+                                                    return (
+                                                        <button
+                                                            key={color.name}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                if (!isColorOutOfStock) {
+                                                                    updateSlotColor(index, color.name);
+                                                                }
+                                                            }}
+                                                            disabled={isColorOutOfStock}
+                                                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${isColorOutOfStock ? 'opacity-30 cursor-not-allowed border-red-500' : (slot.selectedColor === color.name
+                                                                ? "border-white scale-110"
+                                                                : "border-transparent hover:scale-105")
+                                                                }`}
+                                                            style={{ backgroundColor: color.hex }}
+                                                            title={isColorOutOfStock ? `${color.name} (Out of Stock)` : color.name}
+                                                        >
+                                                            {isColorOutOfStock && <X size={12} className="text-red-500 drop-shadow-md absolute z-10" />}
+                                                            {slot.selectedColor === color.name && !isColorOutOfStock && (
+                                                                <Check size={10} className="text-white drop-shadow-lg z-10" />
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
 

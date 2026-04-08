@@ -245,7 +245,25 @@ export const BundleProvider = ({ children }) => {
         !!state.selectedBundle &&
         !!state.selectedSize &&
         state.slots.length > 0 &&
-        state.slots.every((slot) => slot.product !== null && slot.selectedColor !== null) &&
+        state.slots.every((slot) => {
+            if (slot.product === null || slot.selectedColor === null) return false;
+            
+            // Check stock for the selected color and state.selectedSize
+            if (slot.product.variants && slot.product.variants.length > 0) {
+                const cleanSelectedSize = String(state.selectedSize || "").trim().toLowerCase();
+                const cleanVariantColor = String(slot.selectedColor || "").trim().toLowerCase();
+                const variantForSize = slot.product.variants.find(v => 
+                    String(v.colorName || "").trim().toLowerCase() === cleanVariantColor && 
+                    String(v.size || "").trim().toLowerCase() === cleanSelectedSize
+                );
+                
+                if (!variantForSize) return false;
+                const stockVal = Number(variantForSize.stock);
+                if (isNaN(stockVal) || stockVal <= 0) return false;
+            }
+            
+            return true;
+        }) &&
         !!state.customerInfo.name &&
         !!state.customerInfo.name.trim() &&
         !!state.customerInfo.phone &&
